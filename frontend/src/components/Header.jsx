@@ -1,6 +1,7 @@
+import WCBadge from './WCBadge'
 import './Header.css'
 
-export default function Header({ activeTab, onTabChange, onToggleSidebar, onDonateClick }) {
+export default function Header({ activeTab, onTabChange, onToggleSidebar, onDonateClick, wcMode, wcAcknowledged, onToggleWcMode }) {
   return (
     <header className="header glass-strong camo-bg" id="main-header">
       <div className="header-left">
@@ -46,6 +47,11 @@ export default function Header({ activeTab, onTabChange, onToggleSidebar, onDona
       </nav>
 
       <div className="header-right">
+        <WCBadge 
+          wcMode={wcMode} 
+          onToggle={onToggleWcMode} 
+          acknowledged={wcAcknowledged} 
+        />
         <span className="header-status">
           <span className="status-dot"></span>
           <span className="status-text">LIVE</span>
