@@ -354,7 +354,7 @@ export const OVERLAYS = {
 /**
  * Build a MapLibre GL raster style object for a basemap key.
  */
-export function buildMapStyle(basemapKey, activeOverlays = []) {
+export function buildMapStyle(basemapKey, activeOverlays = [], routeGeoJSON = null) {
   const basemap = BASEMAPS[basemapKey] || BASEMAPS[DEFAULT_BASEMAP]
 
   const sources = {
@@ -440,6 +440,39 @@ export function buildMapStyle(basemapKey, activeOverlays = []) {
           },
         })
       }
+    }
+  })
+
+  // ─── TACTICAL ROUTE DRAWING ───────────────────────────
+  // Always include an empty route-source so it survives basemap switches
+  sources['route-source'] = {
+    type: 'geojson',
+    data: routeGeoJSON || { type: 'FeatureCollection', features: [] }
+  }
+
+  // Outer glow
+  layers.push({
+    id: 'route-glow',
+    type: 'line',
+    source: 'route-source',
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': '#00ffcc', // var(--accent)
+      'line-width': 12,
+      'line-opacity': 0.3,
+      'line-blur': 10
+    }
+  })
+
+  // Inner core
+  layers.push({
+    id: 'route-core',
+    type: 'line',
+    source: 'route-source',
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': '#e6fff9', // var(--accent-light)
+      'line-width': 4
     }
   })
 

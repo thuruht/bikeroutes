@@ -14,6 +14,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
   const map = useRef(null)
   const [activeBasemap, setActiveBasemap] = useState(DEFAULT_BASEMAP)
   const [activeOverlays, setActiveOverlays] = useState(['cycling_routes'])
+  const [routeGeoJSON, setRouteGeoJSON] = useState(null)
 
   const markersRef = useRef([])
 
@@ -23,7 +24,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: buildMapStyle(activeBasemap, activeOverlays),
+      style: buildMapStyle(activeBasemap, activeOverlays, routeGeoJSON),
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
       maxZoom: 22,
@@ -57,40 +58,6 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
       new maplibregl.ScaleControl({ maxWidth: 120 }),
       'bottom-left'
     )
-
-    map.current.on('load', () => {
-      // Add empty route source & glowing layers
-      map.current.addSource('route-source', {
-        type: 'geojson',
-        data: { type: 'FeatureCollection', features: [] }
-      })
-
-      // Outer glow
-      map.current.addLayer({
-        id: 'route-glow',
-        type: 'line',
-        source: 'route-source',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': 'var(--accent)',
-          'line-width': 12,
-          'line-opacity': 0.3,
-          'line-blur': 10
-        }
-      })
-
-      // Inner core
-      map.current.addLayer({
-        id: 'route-core',
-        type: 'line',
-        source: 'route-source',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': 'var(--accent-light)',
-          'line-width': 4
-        }
-      })
-    })
 
     return () => {
       if (map.current) {
@@ -139,9 +106,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
   // Fetch Route when 2 waypoints are set
   useEffect(() => {
     if (waypoints.length !== 2) {
-      if (map.current && map.current.getSource('route-source')) {
-        map.current.getSource('route-source').setData({ type: 'FeatureCollection', features: [] })
-      }
+      setRouteGeoJSON(null)
       return
     }
 
@@ -157,21 +122,22 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
         const data = await res.json()
         
         if (data.trip && data.trip.legs) {
-          // Decode polyline6 (we'll implement this helper next)
           import('../lib/polyline.js').then(({ decodePolyline }) => {
             const coords = decodePolyline(data.trip.legs[0].shape)
             
-            // Draw on map
-            map.current.getSource('route-source').setData({
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates: coords
-              }
-            })
+            const geojson = {
+              type: 'FeatureCollection',
+              features: [{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'LineString',
+                  coordinates: coords
+                }
+              }]
+            }
+            setRouteGeoJSON(geojson)
 
-            // Send stats to Sidebar
             onRouteCalculated({
               distance: data.trip.summary.length.toFixed(1),
               elevation: Math.round(data.trip.summary.elevation || 0),
@@ -187,25 +153,26 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     fetchRoute()
   }, [waypoints, onRouteCalculated])
 
+  // Update map style when basemap, overlays, or route changes
+  useEffect(() => {
+    if (map.current) {
+      map.current.setStyle(buildMapStyle(activeBasemap, activeOverlays, routeGeoJSON))
+    }
+  }, [activeBasemap, activeOverlays, routeGeoJSON])
+
   // Update map style when basemap or overlays change
   const handleBasemapChange = useCallback((key) => {
     setActiveBasemap(key)
-    if (map.current) {
-      map.current.setStyle(buildMapStyle(key, activeOverlays))
-    }
-  }, [activeOverlays])
+  }, [])
 
   const handleOverlayToggle = useCallback((key) => {
     setActiveOverlays(prev => {
       const next = prev.includes(key)
         ? prev.filter(k => k !== key)
         : [...prev, key]
-      if (map.current) {
-        map.current.setStyle(buildMapStyle(activeBasemap, next))
-      }
       return next
     })
-  }, [activeBasemap])
+  }, [])
 
   return (
     <div className="map-container" id="map-container">
