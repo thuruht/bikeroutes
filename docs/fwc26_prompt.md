@@ -3,9 +3,10 @@
 ## Repository
 `https://github.com/thuruht/bikeroutes.git`
 Frontend: Vite + React (JSX), located in `frontend/src/`. Key files:
-- `frontend/src/App.jsx` — root component; manages `activeTab` state ('explore', 'community', 'about'), global route/waypoint/filter state
+- `frontend/src/App.jsx` — root component; manages `activeTab` state ('explore', 'community', 'about'), global route/waypoint/filter state, and GPS snapping (`handleSnapToLocation`)
 - `frontend/src/components/Header.jsx` / `Header.css` — top nav bar with tab buttons + donate CTA
-- `frontend/src/components/Sidebar.jsx` / `Sidebar.css` — left panel; route options, filters, maneuver list
+- `frontend/src/components/Sidebar.jsx` / `Sidebar.css` — left panel; route options, filters, maneuver list, mobile tabs, and GPS snap button
+- `frontend/src/components/CommunityView.jsx` — Live field reports and user authentication
 - `frontend/src/components/MapView.jsx` / `MapView.css` — Maplibre GL map
 - `frontend/src/components/DonateBanner.jsx` / `DonateBanner.css` — modal-style overlay
 - `frontend/src/index.css` — global CSS variables (dark/light mode)
@@ -70,7 +71,7 @@ A horizontal row of compact buttons, each pre-loading a venue as a map destinati
 - 🌉 **West Bottoms Fan Zone** — `[-94.5950, 39.1020]`
 - 🏞️ **Berkley Riverfront** — `[-94.5784, 39.1082]`
 
-Clicking a venue button sets it as the B waypoint. If no A is set, trigger the existing `handleSnapToLocation` (snap to user GPS). This gives visitors an instant "bike from here to the game" flow.
+Clicking a venue button sets it as the B waypoint. If no A is set, trigger the existing `handleSnapToLocation` (snap to user GPS) passed down from `App.jsx`. This leverages the app's existing geolocation to give visitors an instant "bike from here to the game" flow.
 
 #### b. Matchday Route Profiles (toggle chips)
 Three selectable route profile chips that adjust `routeOptions` and `activeFilters` to match World Cup context:
@@ -113,9 +114,9 @@ Pass `wcMode` as a prop to `MapView`.
 
 ***
 
-### 5. Community Tab — WC Leaderboard Placeholder
+### 5. Community Tab — WC Leaderboard Integration
 
-In `App.jsx`, the `community` tab currently shows a "coming soon" stub. Replace it with a **WC26 Community Leaderboard** view — a proper component: `frontend/src/components/WCLeaderboard.jsx`.
+In the existing `CommunityView.jsx`, we currently show a live feed of field reports and an authentication form. When `wcMode === true`, inject the **WC26 Community Leaderboard** component (`frontend/src/components/WCLeaderboard.jsx`) at the top of the `CommunityView` layout, above the field reports.
 
 This component should render a **styled placeholder leaderboard** that shows the feature's intent clearly enough to demo to KC2026 stakeholders:
 
@@ -131,9 +132,9 @@ This component should render a **styled placeholder leaderboard** that shows the
    - Example routes: "Midtown to Arrowhead via MKT Trail", "Union Station to Power & Light Loop", "Riverfront Connector", etc.
    - Clicking "Try this route" switches to `explore` tab AND activates `wcMode` AND pre-loads that route's waypoints
 
-3. **Share Your Ride** — A CTA card encouraging visitors to share routes, with a placeholder "Submit" button (no backend needed — just a modal saying "Coming soon!")
+3. **Share Your Ride** — A CTA card encouraging visitors to submit their own Match Day routes (placeholder "Submit" button). If the user is authenticated (via the existing `authStatus` in `CommunityView`), it says "Submit Route"; if unauthenticated, it prompts them to "Verify Scout Email Below" to participate.
 
-Style the whole view with the KC2026 red/navy palette to make it immediately distinct from the regular app.
+Style the leaderboard with the KC2026 red/navy palette to make it immediately distinct from the live reports feed below it.
 
 ***
 
@@ -159,8 +160,7 @@ Style the whole view with the KC2026 red/navy palette to make it immediately dis
 - Add `wcAcknowledged` state: `const [wcAcknowledged, setWcAcknowledged] = useState(false)`
 - Pass `wcMode`, `setWcMode`, `wcAcknowledged`, `setWcAcknowledged` down to `Header`
 - Render `<WCContextBar>` between `<Header>` and `<main>` when `wcMode` is true
-- Pass `wcMode` to `Sidebar` and `MapView`
-- In the `community` tab branch, replace the stub with `<WCLeaderboard onRouteSelect={(waypoints) => { setWaypoints(waypoints); setWcMode(true); setActiveTab('explore'); }} />`
+- Pass `wcMode` to `Sidebar`, `MapView`, and `CommunityView`
 
 #### `frontend/src/components/Header.jsx`
 - Import and render `<WCBadge>` with `wcMode`, `onToggle`, `acknowledged` props
@@ -215,7 +215,7 @@ Style the whole view with the KC2026 red/navy palette to make it immediately dis
 - [ ] Route profile chips update `routeOptions` and filters correctly
 - [ ] Venue markers appear on map in WC mode; disappear when WC mode is off (no layer leaks)
 - [ ] MKT corridor highlight layer renders and is removed cleanly on toggle
-- [ ] Community tab shows WCLeaderboard (not the old stub)
+- [ ] Community tab injects WCLeaderboard above the Live Field Reports when WC mode is active
 - [ ] "Try this route" on leaderboard cards switches tab, activates WC mode, loads waypoints
 - [ ] No ESLint errors in new files
 - [ ] UI is functional and non-broken at 375px mobile width
