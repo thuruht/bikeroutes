@@ -1,0 +1,171 @@
+/* ======================================================
+   WC Sidebar Panel — World Cup Mode Overlay
+   ====================================================== */
+
+.wc-sidebar-panel {
+  border: 1px solid rgba(200, 16, 46, 0.3);
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, rgba(0, 48, 135, 0.12), rgba(200, 16, 46, 0.08));
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  animation: wcPanelSlideIn 180ms ease-out;
+}
+
+.wc-panel-section {
+  margin-bottom: var(--space-md);
+}
+
+.wc-panel-section:last-child {
+  margin-bottom: 0;
+}
+
+.wc-panel-title {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #c8102e;
+  margin-bottom: var(--space-sm);
+}
+
+/* ─── Venue Grid ─────────────────────────────────────── */
+
+.wc-venue-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wc-venue-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: 1px solid rgba(200, 16, 46, 0.25);
+  border-radius: var(--radius-sm);
+  background: rgba(200, 16, 46, 0.08);
+  color: var(--text-primary);
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.wc-venue-btn:hover {
+  background: rgba(200, 16, 46, 0.2);
+  border-color: #c8102e;
+  transform: translateY(-1px);
+}
+
+.wc-venue-icon {
+  font-size: 0.85rem;
+}
+
+.wc-venue-name {
+  font-family: var(--font-body);
+}
+
+/* ─── Route Profile Chips ────────────────────────────── */
+
+.wc-profile-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.wc-profile-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full, 9999px);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.wc-profile-chip:hover {
+  border-color: #c8102e;
+  color: var(--text-primary);
+}
+
+.wc-profile-chip.active {
+  background: linear-gradient(135deg, #c8102e, #003087);
+  border-color: #c8102e;
+  color: #FFD700;
+  font-weight: 800;
+  box-shadow: 0 0 8px rgba(200, 16, 46, 0.3);
+}
+
+/* ─── Visitor Tips ───────────────────────────────────── */
+
+.wc-tips-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.wc-tips-toggle:hover {
+  color: var(--text-primary);
+}
+
+.wc-tips-title {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.wc-tips-chevron {
+  transition: transform 150ms ease;
+  font-size: 0.7rem;
+}
+
+.wc-tips-chevron.open {
+  transform: rotate(90deg);
+}
+
+.wc-tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--space-sm);
+}
+
+.wc-tip-item {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  padding: 6px 8px;
+  border-left: 2px solid rgba(200, 16, 46, 0.4);
+  background: rgba(0, 48, 135, 0.06);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  line-height: 1.4;
+}
+
+/* ─── Animations ─────────────────────────────────────── */
+
+@keyframes wcPanelSlideIn {
+  from { transform: translateX(-12px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ─── Mobile ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .wc-venue-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

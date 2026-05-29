@@ -1,0 +1,251 @@
+/* ======================================================
+   WC Leaderboard — KC 2026 Community Tab
+   ====================================================== */
+
+.wc-leaderboard {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+  color: var(--text-primary);
+  animation: fadeIn 300ms ease-out;
+}
+
+.wc-lb-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  border-bottom: 2px solid #c8102e;
+  padding-bottom: var(--space-md);
+}
+
+.wc-lb-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl, 1.5rem);
+  font-weight: 800;
+  color: #FFD700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wc-lb-sample-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(200, 16, 46, 0.15);
+  border: 1px solid rgba(200, 16, 46, 0.4);
+  color: #c8102e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.wc-lb-section {
+  margin-bottom: var(--space-2xl, 2rem);
+}
+
+.wc-lb-section-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #c8102e;
+  margin-bottom: var(--space-md);
+}
+
+/* ─── Table ──────────────────────────────────────────── */
+
+.wc-lb-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(200, 16, 46, 0.2);
+}
+
+.wc-lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.wc-lb-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: rgba(0, 48, 135, 0.15);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(200, 16, 46, 0.2);
+}
+
+.wc-lb-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.06));
+}
+
+.wc-lb-table tr.top-three td {
+  background: rgba(255, 215, 0, 0.04);
+}
+
+.wc-lb-table tr:hover td {
+  background: rgba(200, 16, 46, 0.06);
+}
+
+.rank-cell {
+  font-size: 1rem;
+  text-align: center;
+  width: 50px;
+}
+
+.rider-cell {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+}
+
+/* ─── Route Cards ────────────────────────────────────── */
+
+.wc-route-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.wc-route-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-md);
+  border: 1px solid rgba(200, 16, 46, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(0, 48, 135, 0.06);
+  transition: all 150ms ease;
+}
+
+.wc-route-card:hover {
+  border-color: #c8102e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(200, 16, 46, 0.15);
+}
+
+.wc-route-name {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  display: block;
+}
+
+.wc-route-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.wc-route-distance {
+  font-family: var(--font-stats, var(--font-body));
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.wc-route-surface {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wc-route-surface.paved {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.wc-route-surface.mixed {
+  background: rgba(241, 196, 15, 0.15);
+  color: #f1c40f;
+  border: 1px solid rgba(241, 196, 15, 0.3);
+}
+
+.wc-route-try-btn {
+  align-self: flex-start;
+  padding: 5px 14px;
+  border: 1px solid #c8102e;
+  border-radius: var(--radius-sm);
+  background: rgba(200, 16, 46, 0.1);
+  color: #c8102e;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.wc-route-try-btn:hover {
+  background: #c8102e;
+  color: #fff;
+}
+
+/* ─── Share Card ─────────────────────────────────────── */
+
+.wc-share-card {
+  text-align: center;
+  padding: var(--space-xl);
+  border: 1px dashed rgba(200, 16, 46, 0.3);
+  border-radius: var(--radius-md);
+  background: rgba(0, 48, 135, 0.05);
+}
+
+.wc-share-card h3 {
+  font-family: var(--font-display);
+  color: #FFD700;
+  margin-bottom: var(--space-xs);
+}
+
+.wc-share-card p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.wc-share-btn {
+  padding: 8px 24px;
+  border: 1.5px solid #FFD700;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #c8102e, #003087);
+  color: #FFD700;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.wc-share-btn:hover {
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+  transform: scale(1.05);
+}
+
+/* ─── Animation ──────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Mobile ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .wc-leaderboard {
+    padding: var(--space-md);
+  }
+  
+  .wc-route-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .wc-lb-table-wrap {
+    margin: 0 -8px;
+  }
+}
