@@ -18,7 +18,7 @@ export default function WCContextBar({ onMatchDayRoutes, onTrailsForVisitors, on
           <span>🚲</span> <span className="wc-ctx-btn-text">Trails for Visitors</span>
         </button>
         <button className="wc-context-btn exit" onClick={onExit} aria-label="Exit KC Mode">
-          ✕
+          EXIT ✕
         </button>
       </div>
     </div>

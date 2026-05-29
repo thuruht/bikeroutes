@@ -9,7 +9,7 @@
   flex-direction: column;
   gap: var(--space-lg);
   padding: var(--space-md);
-  overflow-y: hidden;
+  overflow-y: auto;
   z-index: var(--z-sidebar);
   transition: transform var(--transition-base), opacity var(--transition-base);
   border-right: 1px solid var(--border-subtle);

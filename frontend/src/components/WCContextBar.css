@@ -78,20 +78,19 @@
 }
 
 .wc-context-btn.exit {
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  font-size: 0.85rem;
-  padding: 4px 8px;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: rgba(255, 50, 50, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm, 6px);
+  letter-spacing: 0.04em;
 }
 
 .wc-context-btn.exit:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 50, 50, 1);
+  border-color: #fff;
+  box-shadow: 0 0 8px rgba(255, 50, 50, 0.5);
 }
 
 @keyframes wcBarSlideDown {
