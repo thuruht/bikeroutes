@@ -9,11 +9,13 @@ import './MapView.css'
 const DEFAULT_CENTER = [-94.5786, 39.0997]
 const DEFAULT_ZOOM = 11
 
-export default function MapView({ activeFilters, onRouteCalculated }) {
+export default function MapView({ activeFilters, onRouteCalculated, waypoints, setWaypoints }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
   const [activeBasemap, setActiveBasemap] = useState(DEFAULT_BASEMAP)
   const [activeOverlays, setActiveOverlays] = useState(['cycling_routes'])
+
+  const markersRef = useRef([])
 
   // Initialize map
   useEffect(() => {
@@ -56,6 +58,40 @@ export default function MapView({ activeFilters, onRouteCalculated }) {
       'bottom-left'
     )
 
+    map.current.on('load', () => {
+      // Add empty route source & glowing layers
+      map.current.addSource('route-source', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] }
+      })
+
+      // Outer glow
+      map.current.addLayer({
+        id: 'route-glow',
+        type: 'line',
+        source: 'route-source',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': 'var(--accent)',
+          'line-width': 12,
+          'line-opacity': 0.3,
+          'line-blur': 10
+        }
+      })
+
+      // Inner core
+      map.current.addLayer({
+        id: 'route-core',
+        type: 'line',
+        source: 'route-source',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+          'line-color': 'var(--accent-light)',
+          'line-width': 4
+        }
+      })
+    })
+
     return () => {
       if (map.current) {
         map.current.remove()
@@ -63,6 +99,93 @@ export default function MapView({ activeFilters, onRouteCalculated }) {
       }
     }
   }, [])
+
+  // Handle Map Clicks to add Waypoints
+  useEffect(() => {
+    if (!map.current) return
+
+    const handleClick = (e) => {
+      setWaypoints(prev => {
+        if (prev.length >= 2) return prev // Max 2 for now
+        return [...prev, [e.lngLat.lng, e.lngLat.lat]]
+      })
+    }
+
+    map.current.on('click', handleClick)
+    return () => map.current.off('click', handleClick)
+  }, [])
+
+  // Sync Markers to Waypoints
+  useEffect(() => {
+    if (!map.current) return
+
+    // Clear old markers
+    markersRef.current.forEach(m => m.remove())
+    markersRef.current = []
+
+    waypoints.forEach((pt, i) => {
+      const el = document.createElement('div')
+      el.className = `waypoint-marker ${i === 0 ? 'start' : 'end'}`
+      el.innerHTML = i === 0 ? 'A' : 'B'
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(pt)
+        .addTo(map.current)
+      
+      markersRef.current.push(marker)
+    })
+  }, [waypoints])
+
+  // Fetch Route when 2 waypoints are set
+  useEffect(() => {
+    if (waypoints.length !== 2) {
+      if (map.current && map.current.getSource('route-source')) {
+        map.current.getSource('route-source').setData({ type: 'FeatureCollection', features: [] })
+      }
+      return
+    }
+
+    const fetchRoute = async () => {
+      try {
+        const res = await fetch('/api/route', {
+          method: 'POST',
+          body: JSON.stringify({
+            locations: waypoints.map(pt => ({ lon: pt[0], lat: pt[1] })),
+            costing: 'bicycle'
+          })
+        })
+        const data = await res.json()
+        
+        if (data.trip && data.trip.legs) {
+          // Decode polyline6 (we'll implement this helper next)
+          import('../lib/polyline.js').then(({ decodePolyline }) => {
+            const coords = decodePolyline(data.trip.legs[0].shape)
+            
+            // Draw on map
+            map.current.getSource('route-source').setData({
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: coords
+              }
+            })
+
+            // Send stats to Sidebar
+            onRouteCalculated({
+              distance: data.trip.summary.length.toFixed(1),
+              elevation: Math.round(data.trip.summary.elevation || 0),
+              time: Math.round(data.trip.summary.time / 60) + ' min'
+            })
+          })
+        }
+      } catch (err) {
+        console.error("Routing error:", err)
+      }
+    }
+    
+    fetchRoute()
+  }, [waypoints, onRouteCalculated])
 
   // Update map style when basemap or overlays change
   const handleBasemapChange = useCallback((key) => {

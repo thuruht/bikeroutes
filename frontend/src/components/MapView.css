@@ -128,3 +128,36 @@
 .maplibregl-ctrl-attrib:hover .maplibregl-ctrl-attrib-button {
   display: none !important;
 }
+
+/* ─── Waypoint Markers ───────────────────────────────── */
+.waypoint-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  border: 2px solid var(--text-primary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.waypoint-marker.start {
+  background: var(--camo-olive-bright);
+  color: var(--surface-card);
+  border-color: var(--camo-olive-bright);
+  box-shadow: 0 0 10px rgba(138, 154, 91, 0.5);
+}
+
+.waypoint-marker.end {
+  background: var(--accent);
+  color: var(--dark-hoof);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}

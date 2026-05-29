@@ -56,7 +56,7 @@ routeRoutes.post("/", async (c) => {
 					locations: [],
 					legs: [
 						{
-							shape: "wxx|F|jhwO?A?C@E@GBA@E?E@E@O?u@@wB?M?I?I?G@EBE?C@G?K@G@C?C@G?C@C?A@A?A@C@C?C@C?G?G?G@?@mB@O@uB@e@@uB@eB?K?E?E?G?E@G?G@E@E@A@M", // random shape near KC
+							shape: "grmqiAnyrksDwQnvAowHnwHowHnwH", // random shape near KC
 							summary: { length: 2.4, time: 600 }
 						}
 					]

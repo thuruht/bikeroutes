@@ -11,6 +11,7 @@
 	},
 	"upload_source_maps": true,
 	// ─── Custom Domains ───────────────────────────────────
+	"workers_dev": true,
 	"routes": [
 		{ "pattern": "bikeroutes.org", "custom_domain": true },
 		{ "pattern": "www.bikeroutes.org", "custom_domain": true }

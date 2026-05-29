@@ -15,6 +15,7 @@ export default function Sidebar({
   routeInfo,
   searchQuery,
   onSearchChange,
+  onClearRoute,
 }) {
   const [searchFocused, setSearchFocused] = useState(false)
 
@@ -124,7 +125,7 @@ export default function Sidebar({
             </svg>
             <span>Elevation</span>
           </button>
-          <button className="action-btn destructive" id="btn-clear-route">
+          <button className="action-btn destructive" id="btn-clear-route" onClick={onClearRoute}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
               <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
             </svg>

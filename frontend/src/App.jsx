@@ -9,6 +9,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeFilters, setActiveFilters] = useState(['paved', 'gravel', 'dirt', 'mtb'])
   const [routeInfo, setRouteInfo] = useState(null)
+  const [waypoints, setWaypoints] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [showDonate, setShowDonate] = useState(false)
 
@@ -34,10 +35,16 @@ function App() {
           routeInfo={routeInfo}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onClearRoute={() => {
+            setWaypoints([])
+            setRouteInfo(null)
+          }}
         />
         <MapView
           activeFilters={activeFilters}
           onRouteCalculated={setRouteInfo}
+          waypoints={waypoints}
+          setWaypoints={setWaypoints}
         />
       </main>
       {showDonate && (
