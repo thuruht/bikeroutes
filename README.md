@@ -65,10 +65,9 @@ The central vision, architecture, roadmap, and styling guidelines for the projec
 ```
 bikeroutes/
 ├── docs/               # Planning docs, specs, brand guide
-│   ├── product_spec.md
-│   ├── design_decisions.md
+│   ├── archive/        # Archived legacy brainstorming
+│   ├── north_star/     # Current architecture and design specs
 │   ├── mascot_identity.md
-│   ├── implementation_plan.md
 │   └── assets/
 │       └── reki_concept.png
 ├── frontend/           # React + Vite + MapLibre GL JS

@@ -26,7 +26,7 @@ function App() {
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         onDonateClick={() => setShowDonate(true)}
       />
-      <main className="app-layout">
+      <main className={`app-layout ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <Sidebar
           isOpen={sidebarOpen}
           activeFilters={activeFilters}

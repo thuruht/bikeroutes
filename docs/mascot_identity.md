@@ -134,7 +134,7 @@ Each month features:
 
 ---
 
-![Reki concept art](/home/jojo/.gemini/antigravity-ide/brain/cdaf66ce-1c06-43e1-b2b0-04aed3cea2e8/deer_mascot_concept_1780026799098.png)
+![Reki concept art](./assets/reki_concept.png)
 
 ---
 

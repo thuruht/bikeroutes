@@ -4,3 +4,9 @@ dist/
 .dev.vars
 *.local
 .DS_Store
+
+# Local Cloudflare reference docs (copied from external repo)
+docs/cloudflare/
+
+# Vite build output (generated into worker dir for Workers static assets)
+worker/public/

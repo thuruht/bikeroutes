@@ -1,0 +1,231 @@
+/* ======================================================
+   MapStyleSwitcher — Basemap & Overlay Panel
+   ====================================================== */
+
+.map-style-switcher {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: var(--z-sidebar);
+}
+
+/* ─── Toggle button ─────────────────────────────────── */
+.style-switcher-toggle {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  border: 1px dotted var(--border-strong);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.style-switcher-toggle:hover {
+  color: var(--accent);
+  box-shadow: var(--shadow-glow);
+  border-color: var(--accent);
+}
+
+/* ─── Panel ─────────────────────────────────────────── */
+.style-switcher-panel {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  width: 280px;
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.style-switcher-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.style-switcher-header h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.style-switcher-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.style-switcher-close:hover {
+  color: var(--accent);
+  background: var(--surface-elevated);
+}
+
+/* ─── Basemap groups ────────────────────────────────── */
+.style-switcher-basemaps {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.basemap-group {
+  margin-bottom: var(--space-md);
+}
+
+.basemap-group-label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-xs);
+  padding-left: 2px;
+}
+
+.basemap-group-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.basemap-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-xs) 2px;
+  border-radius: var(--radius-md);
+  background: var(--surface-tertiary);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.basemap-item:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-medium);
+}
+
+.basemap-item.active {
+  background: var(--camo-olive);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.basemap-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.basemap-label {
+  font-size: 0.55rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.basemap-item.active .basemap-label {
+  color: var(--cream-white);
+}
+
+/* ─── Overlays ──────────────────────────────────────── */
+.style-switcher-overlays {
+  margin-bottom: var(--space-md);
+}
+
+.overlay-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.overlay-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 6px var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--surface-tertiary);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.overlay-item:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-medium);
+}
+
+.overlay-item.active {
+  border-color: var(--accent);
+}
+
+.overlay-icon {
+  font-size: 0.9rem;
+}
+
+.overlay-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* Toggle switch */
+.overlay-toggle {
+  width: 28px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-medium);
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.overlay-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.overlay-toggle.on {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.overlay-toggle.on::after {
+  left: 14px;
+  background: var(--dark-hoof);
+}
+
+/* ─── Scrollbar inside panel ────────────────────────── */
+.style-switcher-panel::-webkit-scrollbar { width: 4px; }
+.style-switcher-panel::-webkit-scrollbar-thumb { background: var(--camo-olive); border-radius: 2px; }

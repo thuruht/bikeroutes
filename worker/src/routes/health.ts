@@ -23,7 +23,7 @@ healthRoutes.get("/", async (c) => {
 
 	// R2
 	try {
-		await c.env.ASSETS.head("__health");
+		await c.env.R2_ASSETS.head("__health");
 		checks.r2_assets = "ok";
 	} catch { checks.r2_assets = "ok"; } // head on missing key is fine
 

@@ -86,7 +86,7 @@ export default function Sidebar({
         ) : (
           <div className="route-empty">
             <div className="route-empty-content">
-              <span className="route-empty-icon">🦌</span>
+              <img src="/reki.png" alt="Reki" className="route-empty-icon" width="40" height="40" />
               <div>
                 <p className="route-empty-text">Click the map to start a route</p>
                 <p className="route-empty-hint">Reki scouts the best path for you</p>

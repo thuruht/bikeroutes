@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { buildMapStyle, DEFAULT_BASEMAP } from '../lib/basemaps'
+import MapStyleSwitcher from './MapStyleSwitcher'
 import './MapView.css'
 
 // KC metro center
@@ -10,46 +12,20 @@ const DEFAULT_ZOOM = 11
 export default function MapView({ activeFilters, onRouteCalculated }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
+  const [activeBasemap, setActiveBasemap] = useState(DEFAULT_BASEMAP)
+  const [activeOverlays, setActiveOverlays] = useState(['cycling_routes'])
 
+  // Initialize map
   useEffect(() => {
     if (map.current) return
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: {
-        version: 8,
-        name: 'BikeRoutes Dark',
-        sources: {
-          'osm-raster': {
-            type: 'raster',
-            tiles: [
-              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            ],
-            tileSize: 256,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          },
-        },
-        layers: [
-          {
-            id: 'osm-raster-layer',
-            type: 'raster',
-            source: 'osm-raster',
-            paint: {
-              // Dark punk filter — desaturate & darken the tiles
-              'raster-brightness-max': 0.45,
-              'raster-brightness-min': 0.02,
-              'raster-saturation': -0.6,
-              'raster-contrast': 0.3,
-            },
-          },
-        ],
-      },
+      style: buildMapStyle(activeBasemap, activeOverlays),
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
-      maxZoom: 18,
-      minZoom: 4,
+      maxZoom: 22,
+      minZoom: 2,
       attributionControl: false,
     })
 
@@ -88,14 +64,44 @@ export default function MapView({ activeFilters, onRouteCalculated }) {
     }
   }, [])
 
+  // Update map style when basemap or overlays change
+  const handleBasemapChange = useCallback((key) => {
+    setActiveBasemap(key)
+    if (map.current) {
+      map.current.setStyle(buildMapStyle(key, activeOverlays))
+    }
+  }, [activeOverlays])
+
+  const handleOverlayToggle = useCallback((key) => {
+    setActiveOverlays(prev => {
+      const next = prev.includes(key)
+        ? prev.filter(k => k !== key)
+        : [...prev, key]
+      if (map.current) {
+        map.current.setStyle(buildMapStyle(activeBasemap, next))
+      }
+      return next
+    })
+  }, [activeBasemap])
+
   return (
     <div className="map-container" id="map-container">
       <div ref={mapContainer} className="map-canvas" />
+
+      {/* Basemap & overlay switcher */}
+      <MapStyleSwitcher
+        activeBasemap={activeBasemap}
+        onBasemapChange={handleBasemapChange}
+        activeOverlays={activeOverlays}
+        onOverlayToggle={handleOverlayToggle}
+      />
+
       {/* Reki watermark */}
       <div className="map-watermark">
-        <span className="watermark-icon">🦌</span>
+        <img src="/reki.png" alt="" className="watermark-icon" width="20" height="20" />
         <span className="watermark-text">REKI SCOUTED THIS</span>
       </div>
+
       {/* Trail type legend */}
       <div className="map-legend glass">
         <div className="legend-item">
