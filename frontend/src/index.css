@@ -1,0 +1,467 @@
+/* ======================================================
+   BikeRoutes.org — Design System
+   Reki 🦌⚡ Punk Rock × Missouri Camo Edition
+   ====================================================== */
+
+/* --- CSS Custom Properties --- */
+:root {
+  /* Primary — deer tones */
+  --deer-brown: #C0763C;
+  --deer-brown-light: #D4945A;
+  --deer-brown-dark: #9A5E30;
+
+  /* 🔥 Punk accent — one hot color to cut through the camo */
+  --punk-pink: #FF2D7B;
+  --punk-pink-light: #FF5C9A;
+  --punk-pink-dark: #D4175F;
+  --punk-yellow: #F5E642;
+  --punk-yellow-dim: rgba(245, 230, 66, 0.12);
+
+  /* 🌲 Missouri Camo — woodland palette */
+  --camo-olive: #4B5320;
+  --camo-olive-light: #6B7532;
+  --camo-dark: #2C2F1A;
+  --camo-bark: #5C4033;
+  --camo-bark-light: #7A5C4F;
+  --camo-khaki: #8F7E4F;
+  --camo-khaki-light: #A89968;
+  --camo-moss: #3A4A2A;
+  --camo-shadow: #1C1F12;
+  --camo-tan: #C2A87D;
+
+  /* Electric outdoors */
+  --electric-green: #39FF14;
+  --electric-green-dim: rgba(57, 255, 20, 0.08);
+  --blaze-orange: #FF6B1A;
+  --blaze-orange-dim: rgba(255, 107, 26, 0.1);
+
+  /* Neutrals */
+  --cream-white: #FFF5E6;
+  --cream-light: #FFFAF2;
+  --trail-tan: #D4A96A;
+  --trail-tan-light: #E8C99B;
+  --dark-hoof: #0D0D0A;
+  --dark-hoof-light: #1A1A16;
+
+  /* Accents */
+  --forest-green: #2D5F3A;
+  --forest-green-light: #3E7A4E;
+  --forest-green-dark: #1E4028;
+  --sky-blue: #6BAED6;
+  --sky-blue-light: #93C9E8;
+  --sky-blue-dark: #4A8AB5;
+
+  /* Semantic trail types */
+  --paved: #6BAED6;
+  --gravel: #C2A87D;
+  --dirt: #5C4033;
+  --mtb: #39FF14;
+
+  /* Surface — dark woodland */
+  --surface-primary: #0C0D08;
+  --surface-secondary: #13140E;
+  --surface-tertiary: #1C1F14;
+  --surface-card: #161812;
+  --surface-glass: rgba(12, 13, 8, 0.84);
+  --surface-overlay: rgba(12, 13, 8, 0.92);
+
+  /* Text */
+  --text-primary: #EDECE6;
+  --text-secondary: #C2A87D;
+  --text-muted: #6B6B5A;
+  --text-inverse: #0C0D08;
+  --text-punk: #FF2D7B;
+
+  /* Borders — camo-tinted with punk flare */
+  --border-subtle: rgba(75, 83, 32, 0.25);
+  --border-medium: rgba(75, 83, 32, 0.4);
+  --border-strong: rgba(255, 45, 123, 0.35);
+  --border-neon: 1px solid var(--punk-pink);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 20px rgba(255, 45, 123, 0.2);
+  --shadow-glow-green: 0 0 16px rgba(57, 255, 20, 0.15);
+  --shadow-glow-orange: 0 0 16px rgba(255, 107, 26, 0.15);
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Border radius — sharp and rugged */
+  --radius-none: 0px;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --radius-punk: 2px;
+
+  /* Transitions */
+  --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Typography — bold, condensed, loud */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.75rem;
+  --text-5xl: 3.5rem;
+
+  /* Z-index */
+  --z-base: 1;
+  --z-sidebar: 100;
+  --z-header: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+/* --- Reset & Base --- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--surface-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100dvh;
+  overflow: hidden;
+  /* Subtle grain/noise — like a worn canvas bag */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Selection — punk pink on camo */
+::selection {
+  background: var(--punk-pink);
+  color: var(--surface-primary);
+}
+
+a {
+  color: var(--punk-pink);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--punk-pink-light);
+  text-shadow: 0 0 8px rgba(255, 45, 123, 0.25);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Headings — loud & proud */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+/* --- Scrollbar — olive with punk thumb --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--camo-shadow);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--camo-olive);
+  border-radius: var(--radius-punk);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--punk-pink);
+}
+
+/* ======================================================
+   🌲 Camo Pattern Utilities
+   CSS-only woodland camo — no images needed
+   ====================================================== */
+
+.camo-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.camo-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.06;
+  background:
+    radial-gradient(ellipse 40px 30px at 20% 30%, var(--camo-olive) 0%, transparent 70%),
+    radial-gradient(ellipse 50px 40px at 60% 70%, var(--camo-bark) 0%, transparent 70%),
+    radial-gradient(ellipse 35px 45px at 80% 20%, var(--camo-moss) 0%, transparent 70%),
+    radial-gradient(ellipse 45px 35px at 40% 80%, var(--camo-dark) 0%, transparent 70%),
+    radial-gradient(ellipse 30px 50px at 10% 60%, var(--camo-olive) 0%, transparent 70%),
+    radial-gradient(ellipse 55px 30px at 70% 40%, var(--camo-bark) 0%, transparent 70%),
+    radial-gradient(ellipse 40px 40px at 90% 90%, var(--camo-moss) 0%, transparent 70%),
+    radial-gradient(ellipse 35px 25px at 50% 10%, var(--camo-shadow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Stronger camo for featured sections */
+.camo-bg-strong::before {
+  opacity: 0.12;
+}
+
+/* --- Glass with camo tint --- */
+.glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-strong {
+  background: var(--surface-overlay);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 2px solid var(--punk-pink);
+}
+
+/* --- Trail surface chips --- */
+.surface-type-paved { color: var(--paved); }
+.surface-type-gravel { color: var(--gravel); }
+.surface-type-dirt { color: var(--dirt); }
+.surface-type-mtb { color: var(--mtb); text-shadow: var(--shadow-glow-green); }
+
+/* --- Punk tag / badge --- */
+.punk-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 2px var(--space-sm);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-punk);
+}
+
+/* Neon underline */
+.neon-underline {
+  position: relative;
+}
+
+.neon-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--punk-pink);
+  box-shadow: var(--shadow-glow);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--transition-base);
+}
+
+.neon-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Sticker — DIY slap-sticker aesthetic */
+.sticker {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--punk-yellow);
+  color: var(--dark-hoof);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transform: rotate(-2deg);
+  box-shadow: 2px 2px 0 var(--dark-hoof);
+}
+
+/* Blaze orange badge — MO hunter safety vibes */
+.blaze-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 3px var(--space-sm);
+  background: var(--blaze-orange);
+  color: var(--dark-hoof);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-punk);
+}
+
+/* Camo chip — for filter buttons */
+.camo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--camo-dark);
+  border: 1px solid var(--camo-olive);
+  color: var(--camo-tan);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-punk);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.camo-chip:hover {
+  background: var(--camo-olive);
+  color: var(--cream-white);
+}
+
+.camo-chip.active {
+  background: var(--camo-olive);
+  border-color: var(--punk-pink);
+  color: var(--cream-white);
+  box-shadow: inset 0 0 0 1px var(--punk-pink);
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  41% { opacity: 1; }
+  42% { opacity: 0.8; }
+  43% { opacity: 1; }
+  45% { opacity: 0.3; }
+  46% { opacity: 1; }
+}
+
+@keyframes trailDash {
+  to { stroke-dashoffset: -20; }
+}
+
+@keyframes neonPulse {
+  0%, 100% { box-shadow: 0 0 5px var(--punk-pink), 0 0 10px rgba(255, 45, 123, 0.2); }
+  50% { box-shadow: 0 0 12px var(--punk-pink), 0 0 24px rgba(255, 45, 123, 0.35); }
+}
+
+.animate-fade-in { animation: fadeIn var(--transition-base) ease-out; }
+.animate-slide-up { animation: slideUp var(--transition-slow) var(--transition-spring); }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-flicker { animation: flicker 3s linear infinite; }
+.animate-neon { animation: neonPulse 2s ease-in-out infinite; }
+
+/* --- MapLibre GL overrides --- */
+.maplibregl-map {
+  font-family: var(--font-sans) !important;
+}
+
+.maplibregl-ctrl-group {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--camo-olive) !important;
+  border-radius: var(--radius-punk) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.maplibregl-ctrl-group button {
+  width: 36px !important;
+  height: 36px !important;
+  color: var(--text-primary) !important;
+}
+
+.maplibregl-ctrl-group button:hover {
+  background: var(--camo-dark) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--border-subtle) !important;
+}
+
+.maplibregl-popup-content {
+  background: var(--surface-card) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--punk-pink) !important;
+  border-radius: var(--radius-punk) !important;
+  box-shadow: var(--shadow-lg), var(--shadow-glow) !important;
+  padding: var(--space-md) !important;
+  font-family: var(--font-sans) !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: var(--surface-card) !important;
+}
+
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');

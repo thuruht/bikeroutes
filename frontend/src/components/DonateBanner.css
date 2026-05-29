@@ -1,0 +1,189 @@
+/* ======================================================
+   DonateBanner — Punk × Camo modal
+   ====================================================== */
+
+.donate-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.donate-banner {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-punk) var(--radius-punk);
+  border-top: 3px solid var(--punk-pink);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.donate-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-punk);
+  color: var(--text-muted);
+  font-size: var(--text-lg);
+  transition: all var(--transition-fast);
+  z-index: 1;
+}
+
+.donate-close:hover {
+  color: var(--punk-pink);
+  background: var(--surface-tertiary);
+}
+
+/* Header */
+.donate-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  z-index: 1;
+}
+
+.donate-reki {
+  font-size: 3rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.donate-title {
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.donate-subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.donate-punk {
+  color: var(--punk-pink);
+  font-weight: 600;
+}
+
+/* Tiers */
+.donate-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1;
+}
+
+.donate-tier {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-tertiary);
+  border: 1px solid var(--camo-olive);
+  border-radius: var(--radius-punk);
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.donate-tier:hover {
+  border-color: var(--punk-pink);
+  background: var(--camo-dark);
+  transform: translateX(4px);
+  box-shadow: -4px 0 0 var(--punk-pink);
+}
+
+.tier-icon {
+  font-size: var(--text-xl);
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+}
+
+.tier-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tier-label {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tier-desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.tier-amount {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--punk-pink);
+  flex-shrink: 0;
+}
+
+/* Monthly */
+.donate-monthly {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--camo-dark);
+  border: 1px solid var(--blaze-orange);
+  border-radius: var(--radius-punk);
+  z-index: 1;
+}
+
+.donate-monthly-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Footer */
+.donate-footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  z-index: 1;
+}
+
+.donate-transparency {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.donate-promise {
+  font-size: var(--text-xs);
+  color: var(--camo-tan);
+  font-style: italic;
+}
+
+/* Desktop — center the modal */
+@media (min-width: 769px) {
+  .donate-overlay {
+    align-items: center;
+  }
+
+  .donate-banner {
+    border-radius: var(--radius-lg);
+  }
+}
