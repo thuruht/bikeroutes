@@ -40,32 +40,34 @@ const TIPS = [
   '🌡️ June/July in KC: bring water, expect 85–95°F',
 ]
 
-export default function WCSidebarPanel({ onSetWaypoints, onSetRouteOptions, onSnapLocation, activeFilters, onToggleFilter }) {
+export default function WCSidebarPanel({ onSetWaypoints, onSetRouteOptions, onSnapLocation, activeFilters, onToggleFilter, onClearRoute }) {
   const [activeProfile, setActiveProfile] = useState('fast')
   const [tipsOpen, setTipsOpen] = useState(false)
+  const [selectedVenue, setSelectedVenue] = useState(null)
 
   const handleVenueClick = (venue) => {
-    // Set venue as B waypoint. If no A, snap to current location.
+    setSelectedVenue(venue.id)
+    const venueCoords = venue.coords
     onSetWaypoints(prev => {
       if (prev.length === 0) {
-        // No A waypoint — snap to GPS then set B
-        onSnapLocation()
-        return [prev[0] || [-94.5786, 39.0997], venue.coords]
+        // No A — use KC default as placeholder, then snap GPS
+        return [[-94.5786, 39.0997], venueCoords]
       } else if (prev.length === 1) {
-        return [prev[0], venue.coords]
+        return [prev[0], venueCoords]
       } else {
-        return [prev[0], venue.coords]
+        // Replace B only
+        return [prev[0], venueCoords]
       }
     })
+    // Snap GPS to replace the placeholder if they had no A point yet
+    onSnapLocation()
   }
 
   const handleProfileClick = (profile) => {
     setActiveProfile(profile.id)
     onSetRouteOptions(profile.options)
-    // Set the filters to match the profile
     const desired = profile.filters
     const current = activeFilters || []
-    // Turn off all, then turn on desired
     const all = ['paved', 'gravel', 'dirt', 'mtb']
     all.forEach(f => {
       if (desired.includes(f) && !current.includes(f)) onToggleFilter(f)
@@ -82,7 +84,7 @@ export default function WCSidebarPanel({ onSetWaypoints, onSetRouteOptions, onSn
           {VENUES.map(v => (
             <button
               key={v.id}
-              className="wc-venue-btn"
+              className={`wc-venue-btn ${selectedVenue === v.id ? 'selected' : ''}`}
               onClick={() => handleVenueClick(v)}
               title={v.name}
             >
@@ -108,6 +110,13 @@ export default function WCSidebarPanel({ onSetWaypoints, onSetRouteOptions, onSn
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Reset Route */}
+      <div className="wc-panel-section">
+        <button className="wc-reset-btn" onClick={() => { setSelectedVenue(null); onClearRoute(); }}>
+          ✕ Reset Route
+        </button>
       </div>
 
       {/* Visitor Tips */}
