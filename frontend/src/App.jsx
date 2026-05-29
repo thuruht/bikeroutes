@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Header from './components/Header'
 import MapView from './components/MapView'
 import Sidebar from './components/Sidebar'
+import CommunityView from './components/CommunityView'
 import AboutView from './components/AboutView'
 import './App.css'
 
@@ -103,13 +104,7 @@ function App() {
           />
         </main>
       ) : activeTab === 'community' ? (
-        <div style={{ padding: '40px', color: 'var(--text-primary)', textAlign: 'center', marginTop: '100px' }}>
-          <h2>Community Routes</h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '20px' }}>
-            Leaderboards and curated user routes are coming soon!
-          </p>
-          <img src="/reki_icon.png" alt="Reki" style={{ width: '100px', marginTop: '30px', opacity: 0.5 }} />
-        </div>
+        <CommunityView />
       ) : (
         <AboutView />
       )}

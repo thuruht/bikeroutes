@@ -13,6 +13,8 @@ import { tileRoutes } from "./routes/tiles";
 import { donateRoutes } from "./routes/donate";
 import { poiRoutes } from "./routes/poi";
 import { healthRoutes } from "./routes/health";
+import { authRoutes } from "./routes/auth";
+import { reportRoutes } from "./routes/reports";
 
 // Re-export Durable Objects & Containers so Wrangler can find them
 export { POIStore } from "./durable-objects/POIStore";
@@ -36,6 +38,8 @@ app.route("/api/tiles", tileRoutes);
 app.route("/api/donate", donateRoutes);
 app.route("/api/poi", poiRoutes);
 app.route("/api/health", healthRoutes);
+app.route("/api/auth", authRoutes);
+app.route("/api/reports", reportRoutes);
 
 // ─── Fallthrough to static assets ─────────────────────
 // With run_worker_first: ["/api/*"], the Worker only runs for API routes.
