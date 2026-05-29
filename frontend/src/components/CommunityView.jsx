@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
+import WCLeaderboard from './WCLeaderboard'
 import './CommunityView.css'
 
 const API_BASE = 'https://bikeroutes-api.jojo-829.workers.dev'
 
-export default function CommunityView() {
+export default function CommunityView({ wcMode, onWcRouteSelect }) {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -137,6 +138,7 @@ export default function CommunityView() {
 
   return (
     <div className="community-view glass-strong animate-fade-in">
+      {wcMode && <WCLeaderboard onRouteSelect={onWcRouteSelect} />}
       <div className="community-header">
         <h2 className="community-title">Live Field Reports</h2>
         <p className="community-subtitle">Recent hazards and trail conditions reported by scouts. Reports decay after 48 hours.</p>

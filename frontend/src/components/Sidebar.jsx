@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import WCSidebarPanel from './WCSidebarPanel'
 import './Sidebar.css'
 
 const SURFACE_TYPES = [
@@ -42,7 +43,9 @@ export default function Sidebar({
   setIsNavigating,
   activeTab,
   onTabChange,
-  onSnapLocation
+  onSnapLocation,
+  wcMode,
+  setWaypoints
 }) {
   const [searchFocused, setSearchFocused] = useState(false)
 
@@ -60,6 +63,17 @@ export default function Sidebar({
           <button className={`mobile-tab ${activeTab === 'community' ? 'active' : ''}`} onClick={() => { onTabChange('community'); if(window.innerWidth <= 768) setIsNavigating(false); }}>Community</button>
           <button className={`mobile-tab ${activeTab === 'about' ? 'active' : ''}`} onClick={() => { onTabChange('about'); if(window.innerWidth <= 768) setIsNavigating(false); }}>About</button>
         </div>
+
+        {/* WC Mode Sidebar Panel — injected above search/filters */}
+        {wcMode && !isNavigating && (
+          <WCSidebarPanel
+            onSetWaypoints={setWaypoints}
+            onSetRouteOptions={setRouteOptions}
+            onSnapLocation={onSnapLocation}
+            activeFilters={activeFilters}
+            onToggleFilter={onToggleFilter}
+          />
+        )}
 
         {/* Search & Surface Filters are hidden in Nav Mode */}
         {!isNavigating && (

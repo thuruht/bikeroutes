@@ -9,7 +9,37 @@ import './MapView.css'
 const DEFAULT_CENTER = [-94.5786, 39.0997]
 const DEFAULT_ZOOM = 11
 
-export default function MapView({ activeFilters, onRouteCalculated, waypoints, setWaypoints, routeOptions, isNavigating }) {
+// WC Venue data
+const WC_VENUES = [
+  { id: 'arrowhead', name: 'Arrowhead Stadium', icon: '⚽', coords: [-94.4839, 39.0489] },
+  { id: 'union', name: 'Union Station', icon: '🚉', coords: [-94.5838, 39.0997] },
+  { id: 'pnl', name: 'Power & Light District', icon: '🎉', coords: [-94.5786, 39.0999] },
+  { id: 'westbottoms', name: 'West Bottoms Fan Zone', icon: '🌉', coords: [-94.5950, 39.1020] },
+  { id: 'berkley', name: 'Berkley Riverfront', icon: '🏞️', coords: [-94.5784, 39.1082] },
+]
+
+// Approximate MKT Nature/Fitness Trail corridor (midtown → Union Station direction)
+const MKT_CORRIDOR_GEOJSON = {
+  type: 'Feature',
+  properties: { name: 'Recommended Visitor Corridor' },
+  geometry: {
+    type: 'LineString',
+    coordinates: [
+      [-94.5786, 39.0550],
+      [-94.5790, 39.0600],
+      [-94.5795, 39.0650],
+      [-94.5800, 39.0700],
+      [-94.5810, 39.0750],
+      [-94.5820, 39.0800],
+      [-94.5825, 39.0850],
+      [-94.5830, 39.0900],
+      [-94.5835, 39.0950],
+      [-94.5838, 39.0997],
+    ],
+  },
+}
+
+export default function MapView({ activeFilters, onRouteCalculated, waypoints, setWaypoints, routeOptions, isNavigating, wcMode }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
   const geolocateControl = useRef(null)
@@ -18,6 +48,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
 
   const markersRef = useRef([])
+  const wcMarkersRef = useRef([])
 
   // Initialize map
   useEffect(() => {
@@ -186,6 +217,105 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     }
   }, [activeBasemap, activeOverlays, routeGeoJSON])
 
+  // ─── World Cup Mode: Venue Markers & MKT Corridor ───────────
+  useEffect(() => {
+    if (!map.current) return
+
+    // Clean up previous WC markers
+    wcMarkersRef.current.forEach(m => m.remove())
+    wcMarkersRef.current = []
+
+    if (!wcMode) {
+      // Remove MKT corridor layer/source if they exist
+      const m = map.current
+      if (m.getLayer('wc-mkt-corridor-line')) m.removeLayer('wc-mkt-corridor-line')
+      if (m.getLayer('wc-mkt-corridor-label')) m.removeLayer('wc-mkt-corridor-label')
+      if (m.getSource('wc-mkt-corridor')) m.removeSource('wc-mkt-corridor')
+      return
+    }
+
+    // Add venue markers with staggered bounce-in
+    WC_VENUES.forEach((venue, i) => {
+      const el = document.createElement('div')
+      el.className = 'wc-venue-marker'
+      el.innerHTML = `<span class="wc-marker-icon">${venue.icon}</span>`
+      el.style.animationDelay = `${i * 100}ms`
+
+      const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(`
+        <div class="wc-popup">
+          <strong>${venue.icon} ${venue.name}</strong>
+          <button class="wc-popup-route-btn" data-venue-id="${venue.id}">Route here →</button>
+        </div>
+      `)
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(venue.coords)
+        .setPopup(popup)
+        .addTo(map.current)
+
+      // Listen for popup open to attach "Route here" click
+      popup.on('open', () => {
+        setTimeout(() => {
+          const btn = document.querySelector(`[data-venue-id="${venue.id}"]`)
+          if (btn) {
+            btn.addEventListener('click', () => {
+              setWaypoints(prev => {
+                if (prev.length >= 1) return [prev[0], venue.coords]
+                return [DEFAULT_CENTER, venue.coords]
+              })
+              popup.remove()
+            })
+          }
+        }, 50)
+      })
+
+      wcMarkersRef.current.push(marker)
+    })
+
+    // Add MKT corridor on style load (needed because setStyle may reset layers)
+    const addCorridorLayer = () => {
+      const m = map.current
+      if (!m || !m.isStyleLoaded()) return
+
+      if (!m.getSource('wc-mkt-corridor')) {
+        m.addSource('wc-mkt-corridor', {
+          type: 'geojson',
+          data: MKT_CORRIDOR_GEOJSON,
+        })
+      }
+
+      if (!m.getLayer('wc-mkt-corridor-line')) {
+        m.addLayer({
+          id: 'wc-mkt-corridor-line',
+          type: 'line',
+          source: 'wc-mkt-corridor',
+          paint: {
+            'line-color': '#c8102e',
+            'line-opacity': 0.6,
+            'line-width': 4,
+            'line-dasharray': [2, 2],
+          },
+        })
+      }
+    }
+
+    // Try adding immediately, or wait for style load
+    if (map.current.isStyleLoaded()) {
+      addCorridorLayer()
+    } else {
+      map.current.once('style.load', addCorridorLayer)
+    }
+
+    // Also re-add corridor after any future style changes
+    map.current.on('style.load', addCorridorLayer)
+
+    return () => {
+      if (map.current) {
+        map.current.off('style.load', addCorridorLayer)
+      }
+    }
+  }, [wcMode])
+
   // Update map style when basemap or overlays change
   const handleBasemapChange = useCallback((key) => {
     setActiveBasemap(key)
@@ -221,3 +351,4 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     </div>
   )
 }
+
