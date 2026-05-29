@@ -207,3 +207,20 @@ Printful prints & ships
 ---
 
 *All decisions above are ready to be folded into the implementation plan once you confirm.*
+
+---
+
+## 6. Design System Update: Tactical Hi-Tech (MO Camo Edition)
+
+> [!NOTE]
+> The original "Punk Pink" aesthetic was replaced with a more refined **Tactical Hi-Tech** design system.
+
+### Color Palette Evolution
+- **Primary Accent:** Shifted from Hot Pink to **Blaze Orange (`#FF6B1A`)** — leaning into the Missouri hunter safety / outdoors vibe, while still cutting through the dark UI like a neon sign.
+- **Surfaces:** Deeper, olive-tinted darks (`#0B0C08`) to feel like a tactical display in the woods.
+- **Backgrounds:** Replaced heavy noise textures with a subtle 24px tactical grid and reduced-opacity CSS camo patterns.
+
+### UI Refinements
+- **Border Radius:** Softened from a harsh 2px (punk style) to a more modern, sleek `6px` (`var(--radius-md)`).
+- **Typography:** Removed aggressive all-caps body text in favor of cleaner, more legible weights (Inter & Outfit).
+- **Interactions:** Added glow-on-hover effects (`--accent-glow`) and sleeker animations to emphasize the "Hi-Tech" aspect of the platform.

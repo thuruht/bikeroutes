@@ -41,10 +41,12 @@
 | Swatch | Hex | Usage |
 |--------|-----|-------|
 | Deer Brown | `#C0763C` | Primary body color, warm headers |
+| Blaze Orange | `#FF6B1A` | Primary accent, hunter safety aesthetic, UI highlights |
+| Camo Olive | `#4B5320` | Secondary backgrounds, tactical UI surfaces |
 | Cream White | `#FFF5E6` | Chest, tail, backgrounds |
-| Forest Green | `#2D5F3A` | Cap, bag, accent buttons, nav bar |
+| Forest Green | `#2D5F3A` | Cap, bag, accent buttons |
 | Trail Tan | `#D4A96A` | Secondary backgrounds, card surfaces |
-| Dark Hoof | `#3B2F2F` | Text, outlines, dark mode base |
+| Dark Hoof | `#0B0C08` | Text, outlines, deep tactical dark mode base |
 | Sky Blue | `#6BAED6` | Links, interactive highlights, water features on map |
 
 #### Logo Variations
