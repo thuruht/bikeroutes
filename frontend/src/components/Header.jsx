@@ -1,6 +1,6 @@
 import './Header.css'
 
-export default function Header({ onToggleSidebar, onDonateClick }) {
+export default function Header({ activeTab, onTabChange, onToggleSidebar, onDonateClick }) {
   return (
     <header className="header glass-strong camo-bg" id="main-header">
       <div className="header-left">
@@ -25,9 +25,24 @@ export default function Header({ onToggleSidebar, onDonateClick }) {
       </div>
 
       <nav className="header-nav">
-        <a href="#explore" className="header-nav-link active" id="nav-explore">Explore</a>
-        <a href="#community" className="header-nav-link" id="nav-community">Community</a>
-        <a href="#about" className="header-nav-link" id="nav-about">About</a>
+        <button 
+          className={`header-nav-link ${activeTab === 'explore' ? 'active' : ''}`} 
+          onClick={() => onTabChange('explore')}
+        >
+          Explore
+        </button>
+        <button 
+          className={`header-nav-link ${activeTab === 'community' ? 'active' : ''}`} 
+          onClick={() => onTabChange('community')}
+        >
+          Community
+        </button>
+        <button 
+          className={`header-nav-link ${activeTab === 'about' ? 'active' : ''}`} 
+          onClick={() => onTabChange('about')}
+        >
+          About
+        </button>
       </nav>
 
       <div className="header-right">

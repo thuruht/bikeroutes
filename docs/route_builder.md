@@ -31,3 +31,6 @@ If the Valhalla container is offline or currently crunching new OSM extracts, th
 
 ## Clearing the Route
 Users can reset their scouting session via the `Clear` button in the Sidebar. This triggers `onClearRoute()` in `App.jsx`, which flushes the `waypoints` array. `MapView.jsx` reacts by purging the waypoint markers and resetting the GeoJSON source to an empty `FeatureCollection`.
+
+## Active Navigation
+The Route Builder is being upgraded into an Active Navigation system. See [Active Navigation Mode](file:///home/jojo/Desktop/DEVV/bikeroutes/docs/navigation_mode.md) for architecture details on route customization, turn-by-turn maneuvers, and live GPS integration.

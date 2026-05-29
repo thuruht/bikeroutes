@@ -9,9 +9,10 @@ import './MapView.css'
 const DEFAULT_CENTER = [-94.5786, 39.0997]
 const DEFAULT_ZOOM = 11
 
-export default function MapView({ activeFilters, onRouteCalculated, waypoints, setWaypoints }) {
+export default function MapView({ activeFilters, onRouteCalculated, waypoints, setWaypoints, routeOptions, isNavigating }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
+  const geolocateControl = useRef(null)
   const [activeBasemap, setActiveBasemap] = useState(DEFAULT_BASEMAP)
   const [activeOverlays, setActiveOverlays] = useState(['cycling_routes'])
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
@@ -45,13 +46,11 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     )
 
     // Geolocation
-    map.current.addControl(
-      new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-      }),
-      'bottom-right'
-    )
+    geolocateControl.current = new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+    })
+    map.current.addControl(geolocateControl.current, 'bottom-right')
 
     // Scale
     map.current.addControl(
@@ -67,9 +66,19 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     }
   }, [])
 
+  // GPS Navigation Mode trigger
+  useEffect(() => {
+    if (isNavigating && geolocateControl.current) {
+      // Small timeout ensures the control is mounted and map is ready
+      setTimeout(() => {
+        geolocateControl.current.trigger()
+      }, 100)
+    }
+  }, [isNavigating])
+
   // Handle Map Clicks to add Waypoints
   useEffect(() => {
-    if (!map.current) return
+    if (!map.current || isNavigating) return
 
     const handleClick = (e) => {
       setWaypoints(prev => {
@@ -80,7 +89,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
     map.current.on('click', handleClick)
     return () => map.current.off('click', handleClick)
-  }, [])
+  }, [isNavigating])
 
   // Sync Markers to Waypoints
   useEffect(() => {
@@ -95,13 +104,16 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
       el.className = `waypoint-marker ${i === 0 ? 'start' : 'end'}`
       el.innerHTML = i === 0 ? 'A' : 'B'
 
+      // Hide markers during active navigation for a cleaner map
+      if (isNavigating) el.style.opacity = '0'
+
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat(pt)
         .addTo(map.current)
       
       markersRef.current.push(marker)
     })
-  }, [waypoints])
+  }, [waypoints, isNavigating])
 
   // Fetch Route when 2 waypoints are set
   useEffect(() => {
@@ -112,11 +124,25 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
     const fetchRoute = async () => {
       try {
+        // Construct custom Valhalla costing options based on user toggles
+        const costingOptions = {
+          bicycle: {
+            use_hills: routeOptions?.minimizeHills ? 0.1 : 0.5,
+            use_roads: routeOptions?.avoidRoads ? 0.1 : 0.5,
+          }
+        }
+        
+        if (routeOptions?.pavedOnly) {
+          costingOptions.bicycle.bicycle_type = "Road"
+          costingOptions.bicycle.avoid_bad_surfaces = 0.9
+        }
+
         const res = await fetch('/api/route', {
           method: 'POST',
           body: JSON.stringify({
             locations: waypoints.map(pt => ({ lon: pt[0], lat: pt[1] })),
-            costing: 'bicycle'
+            costing: 'bicycle',
+            costing_options: costingOptions
           })
         })
         const data = await res.json()
@@ -142,7 +168,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
               distance: data.trip.summary.length.toFixed(1),
               elevation: Math.round(data.trip.summary.elevation || 0),
               time: Math.round(data.trip.summary.time / 60) + ' min'
-            })
+            }, data.trip.legs[0].maneuvers)
           })
         }
       } catch (err) {
@@ -151,7 +177,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     }
     
     fetchRoute()
-  }, [waypoints, onRouteCalculated])
+  }, [waypoints, onRouteCalculated, routeOptions])
 
   // Update map style when basemap, overlays, or route changes
   useEffect(() => {
@@ -192,25 +218,6 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
         <span className="watermark-text">REKI SCOUTED THIS</span>
       </div>
 
-      {/* Trail type legend */}
-      <div className="map-legend glass">
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--paved)' }} />
-          <span>Paved</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--gravel)' }} />
-          <span>Gravel</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--dirt)' }} />
-          <span>Dirt</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--mtb)' }} />
-          <span>MTB</span>
-        </div>
-      </div>
     </div>
   )
 }
