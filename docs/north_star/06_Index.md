@@ -26,3 +26,4 @@ When building new features, agentic LLMs should search the documentation for the
 *   `#reki-mascot`: References the visual and tonal guidelines for the mascot. (Found in `01_Project_Overview.md`, `05_Style_Guide.md`)
 *   `#offline-first`: References the Path B roadmap for progressive web app and downloaded tile architecture. (Found in `04_Future_Roadmaps.md`)
 *   `#community-mod`: References the trust-based POI submission and moderation system. (Found in `03_Product_Todo.md`, `04_Future_Roadmaps.md`)
+

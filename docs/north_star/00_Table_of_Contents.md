@@ -37,3 +37,10 @@ Welcome to the central repository for the vision, architecture, and future of Bi
 6. [Index & Glossary](./06_Index.md)
    - Key Terms
    - Cross-Referencing Tags
+
+
+7. [Tech Stack & Resources](./07_Tech_Stack_Resources.md)
+   - Frontend Frameworks & Libraries
+   - Backend Frameworks & Cloudflare Services
+   - Routing, Maps & Data
+   - Tooling & APIs
