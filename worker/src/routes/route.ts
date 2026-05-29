@@ -36,9 +36,10 @@ routeRoutes.post("/", async (c) => {
 
 	// 2. Forward to Valhalla container
 	try {
-		const container = getContainer(c.env.VALHALLA, "valhalla-router");
-		const valhallaResp = await container.fetch(
-			new Request("http://localhost:8002/route", {
+		// We temporarily bypass the Cloudflare Container to use the public FOSSGIS Valhalla API
+		// so the app is 100% functional immediately without waiting for tile builds.
+		const valhallaResp = await fetch(
+			new Request("https://valhalla1.openstreetmap.de/route", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body,
