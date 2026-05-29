@@ -10,6 +10,11 @@
 		"enabled": true
 	},
 	"upload_source_maps": true,
+	// ─── Custom Domains ───────────────────────────────────
+	"routes": [
+		{ "pattern": "bikeroutes.org", "custom_domain": true },
+		{ "pattern": "www.bikeroutes.org", "custom_domain": true }
+	],
 	// ─── Triggers ─────────────────────────────────────────
 	// Daily OSM import trigger (3 AM UTC)
 	"triggers": {

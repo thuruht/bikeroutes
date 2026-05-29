@@ -15,7 +15,7 @@ export default function Header({ onToggleSidebar, onDonateClick }) {
           </svg>
         </button>
         <a href="/" className="header-logo" id="home-link">
-          <img src="/reki_icon.png" alt="Reki the Deer" className="header-reki-icon" width="36" height="36" />
+          <img src="/reki_icon.png" alt="Reki the Deer" className="header-reki-icon" />
           <span className="header-title">
             <span className="header-title-bike">Bike</span>
             <span className="header-title-routes">Routes</span>

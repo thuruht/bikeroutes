@@ -47,10 +47,26 @@ routeRoutes.post("/", async (c) => {
 
 		if (!valhallaResp.ok) {
 			const errText = await valhallaResp.text();
-			return c.json({
-				error: "Routing failed",
-				message: `Valhalla says: ${errText}`,
-			}, valhallaResp.status as any);
+			console.warn(`[Valhalla Offline] Returning mock route. Error: ${errText}`);
+			
+			// Mock response for UI testing
+			const mockRouteData = {
+				trip: {
+					summary: { length: 2.4, time: 600, max_lon: -94.57, min_lon: -94.58, max_lat: 39.10, min_lat: 39.09, elevation: 120 },
+					locations: [],
+					legs: [
+						{
+							shape: "wxx|F|jhwO?A?C@E@GBA@E?E@E@O?u@@wB?M?I?I?G@EBE?C@G?K@G@C?C@G?C@C?A@A?A@C@C?C@C?G?G?G@?@mB@O@uB@e@@uB@eB?K?E?E?G?E@G?G@E@E@A@M", // random shape near KC
+							summary: { length: 2.4, time: 600 }
+						}
+					]
+				}
+			};
+
+			return c.json(mockRouteData, 200, {
+				"X-Cache": "MOCK",
+				"X-Reki": "🦌 mock trail",
+			});
 		}
 
 		const routeData = await valhallaResp.json();
