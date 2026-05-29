@@ -21,7 +21,7 @@
 		{
 			"binding": "DB",
 			"database_name": "bikeroutes-db",
-			"database_id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+			"database_id": "a62046a7-4193-49c1-910f-9e7dbc209009"
 		}
 	],
 
@@ -30,17 +30,17 @@
 		{
 			// Route cache — SHA-256 keyed, 24h TTL
 			"binding": "ROUTE_CACHE",
-			"id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+			"id": "29b680a7df804023b1d18fc8668b4227"
 		},
 		{
 			// Rate limiting — per-IP token buckets
 			"binding": "RATE_LIMITS",
-			"id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+			"id": "567f3bba07b04259ac9092ffbc2fb4c8"
 		},
 		{
 			// Session data — magic-link tokens, donation claims
 			"binding": "SESSIONS",
-			"id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+			"id": "ac838e3d0a5e48fbb618a7fbcf2e17c0"
 		}
 	],
 
