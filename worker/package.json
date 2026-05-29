@@ -1,0 +1,23 @@
+{
+	"name": "bikeroutes-api",
+	"description": "BikeRoutes.org API — Cloudflare Workers backend",
+	"private": true,
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"cf-typegen": "wrangler types",
+		"check": "tsc && wrangler deploy --dry-run",
+		"db:migrate:local": "wrangler d1 migrations apply DB --local",
+		"db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+		"predeploy": "npm run db:migrate:remote"
+	},
+	"dependencies": {
+		"@cloudflare/containers": "^0.1.0",
+		"hono": "^4.0.0"
+	},
+	"devDependencies": {
+		"typescript": "^5.9.0",
+		"wrangler": "^4.56.0",
+		"@cloudflare/workers-types": "^4.20250501.0"
+	}
+}

@@ -1,0 +1,107 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "bikeroutes-api",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-10-08",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true
+	},
+	"upload_source_maps": true,
+
+	// ─── Triggers ─────────────────────────────────────────
+	// Daily OSM import trigger (3 AM UTC)
+	"triggers": {
+		"crons": ["0 3 * * *"]
+	},
+
+	// ─── D1 Database ──────────────────────────────────────
+	// Routes, users, POIs, donations, contribution badges
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "bikeroutes-db",
+			"database_id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+		}
+	],
+
+	// ─── KV Namespaces ────────────────────────────────────
+	"kv_namespaces": [
+		{
+			// Route cache — SHA-256 keyed, 24h TTL
+			"binding": "ROUTE_CACHE",
+			"id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+		},
+		{
+			// Rate limiting — per-IP token buckets
+			"binding": "RATE_LIMITS",
+			"id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+		},
+		{
+			// Session data — magic-link tokens, donation claims
+			"binding": "SESSIONS",
+			"id": "PLACEHOLDER_REPLACE_AFTER_CREATE"
+		}
+	],
+
+	// ─── R2 Buckets ───────────────────────────────────────
+	"r2_buckets": [
+		{
+			// Trail photos, GPX uploads, mascot assets
+			"binding": "ASSETS",
+			"bucket_name": "bikeroutes-assets"
+		},
+		{
+			// OSM tile cache (rendered PBF/PNG tiles)
+			"binding": "TILES",
+			"bucket_name": "bikeroutes-tiles"
+		}
+	],
+
+	// ─── Vectorize ────────────────────────────────────────
+	"vectorize": [
+		{
+			// Semantic trail search embeddings
+			"binding": "TRAIL_SEARCH",
+			"index_name": "bikeroutes-trails"
+		}
+	],
+
+	// ─── Durable Objects ──────────────────────────────────
+	"durable_objects": {
+		"bindings": [
+			{
+				// POI moderation queue — one per geohash cell
+				"class_name": "POIStore",
+				"name": "POI_STORE"
+			},
+			{
+				// In-progress route session — per user
+				"class_name": "RouteSession",
+				"name": "ROUTE_SESSION"
+			},
+			{
+				// Valhalla routing container
+				"class_name": "ValhallaContainer",
+				"name": "VALHALLA"
+			}
+		]
+	},
+
+	// ─── Containers ───────────────────────────────────────
+	"containers": [
+		{
+			"class_name": "ValhallaContainer",
+			"image": "./Dockerfile.valhalla",
+			"max_instances": 3
+		}
+	],
+
+	// ─── Migrations ───────────────────────────────────────
+	"migrations": [
+		{
+			"new_sqlite_classes": ["POIStore", "RouteSession", "ValhallaContainer"],
+			"tag": "v1"
+		}
+	]
+}

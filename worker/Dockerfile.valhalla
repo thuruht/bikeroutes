@@ -1,0 +1,17 @@
+# Valhalla Routing Engine — Cloudflare Container
+# Serves bike-specific routing for the US Midwest region
+
+FROM ghcr.io/valhalla/valhalla:latest
+
+# Set environment
+ENV TILE_EXTRACT=midwest-latest.osm.pbf
+ENV DEFAULT_COSTING=bicycle
+
+# Expose Valhalla's HTTP API port
+EXPOSE 8002
+
+# Valhalla config — optimized for bike routing
+COPY valhalla.json /custom_files/valhalla.json
+
+# Start Valhalla with the custom config
+CMD ["valhalla_service", "/custom_files/valhalla.json"]
