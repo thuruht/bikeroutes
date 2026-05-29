@@ -33,12 +33,12 @@
 }
 
 .watermark-text {
-  font-family: var(--font-display);
-  font-size: var(--text-xs);
-  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--punk-pink);
+  letter-spacing: 0.1em;
+  color: var(--accent);
 }
 
 /* Trail type legend */
@@ -50,7 +50,7 @@
   flex-direction: column;
   gap: 6px;
   padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-punk);
+  border-radius: var(--radius-md);
   z-index: var(--z-base);
   font-size: var(--text-xs);
   font-weight: 600;
@@ -67,7 +67,7 @@
 .legend-dot {
   width: 10px;
   height: 10px;
-  border-radius: var(--radius-punk);
+  border-radius: var(--radius-md);
   flex-shrink: 0;
 }
 

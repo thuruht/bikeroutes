@@ -1,11 +1,12 @@
 /* ======================================================
-   DonateBanner — Punk × Camo modal
+   DonateBanner — Tactical Hi-Tech
    ====================================================== */
 
 .donate-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   z-index: var(--z-modal);
   display: flex;
   align-items: flex-end;
@@ -15,12 +16,12 @@
 
 .donate-banner {
   width: 100%;
-  max-width: 520px;
+  max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
   padding: var(--space-xl);
-  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-punk) var(--radius-punk);
-  border-top: 3px solid var(--punk-pink);
+  border-radius: var(--radius-lg);
+  border-top: 2px solid var(--accent);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -31,20 +32,20 @@
   position: absolute;
   top: var(--space-md);
   right: var(--space-md);
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-punk);
+  border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   transition: all var(--transition-fast);
   z-index: 1;
 }
 
 .donate-close:hover {
-  color: var(--punk-pink);
+  color: var(--accent);
   background: var(--surface-tertiary);
 }
 
@@ -75,7 +76,7 @@
 }
 
 .donate-punk {
-  color: var(--punk-pink);
+  color: var(--accent);
   font-weight: 600;
 }
 
@@ -91,19 +92,19 @@
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
+  padding: 10px var(--space-md);
   background: var(--surface-tertiary);
-  border: 1px solid var(--camo-olive);
-  border-radius: var(--radius-punk);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
   text-align: left;
 }
 
 .donate-tier:hover {
-  border-color: var(--punk-pink);
-  background: var(--camo-dark);
-  transform: translateX(4px);
-  box-shadow: -4px 0 0 var(--punk-pink);
+  border-color: var(--accent);
+  background: var(--surface-elevated);
+  transform: translateX(3px);
+  box-shadow: -3px 0 0 var(--accent);
 }
 
 .tier-icon {
@@ -136,7 +137,7 @@
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: 800;
-  color: var(--punk-pink);
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -146,9 +147,9 @@
   align-items: center;
   gap: var(--space-md);
   padding: var(--space-md);
-  background: var(--camo-dark);
-  border: 1px solid var(--blaze-orange);
-  border-radius: var(--radius-punk);
+  background: var(--surface-tertiary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
   z-index: 1;
 }
 
