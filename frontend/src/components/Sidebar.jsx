@@ -72,7 +72,6 @@ export default function Sidebar({
             onSnapLocation={onSnapLocation}
             activeFilters={activeFilters}
             onToggleFilter={onToggleFilter}
-            onClearRoute={onClearRoute}
           />
         )}
 

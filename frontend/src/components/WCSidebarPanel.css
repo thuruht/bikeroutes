@@ -155,37 +155,6 @@
   line-height: 1.4;
 }
 
-/* ─── Selected Venue ─────────────────────────────────── */
-
-.wc-venue-btn.selected {
-  background: rgba(200, 16, 46, 0.25);
-  border-color: #c8102e;
-  color: #FFD700;
-  box-shadow: 0 0 6px rgba(200, 16, 46, 0.3);
-}
-
-/* ─── Reset Route Button ─────────────────────────────── */
-
-.wc-reset-btn {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 80, 80, 0.4);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 80, 80, 0.1);
-  color: #ff5050;
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: all 150ms ease;
-}
-
-.wc-reset-btn:hover {
-  background: rgba(255, 80, 80, 0.25);
-  border-color: #ff5050;
-}
-
 /* ─── Animations ─────────────────────────────────────── */
 
 @keyframes wcPanelSlideIn {
