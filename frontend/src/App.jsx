@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Header from './components/Header'
 import MapView from './components/MapView'
 import Sidebar from './components/Sidebar'
-import DonateBanner from './components/DonateBanner'
+import AboutView from './components/AboutView'
 import './App.css'
 
 function App() {
@@ -38,6 +38,31 @@ function App() {
     setIsNavigating(false)
   }
 
+  const handleSnapToLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser")
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { longitude, latitude } = position.coords
+      setWaypoints(prev => {
+        // If there's already an A and B, just replace A
+        if (prev.length >= 2) {
+          return [[longitude, latitude], prev[1]]
+        } else if (prev.length === 1) {
+          // If there's one waypoint, just prepend as A
+          return [[longitude, latitude], prev[0]]
+        } else {
+          // Empty waypoints
+          return [[longitude, latitude]]
+        }
+      })
+    }, (error) => {
+      alert("Unable to retrieve your location: " + error.message)
+    })
+  }
+
   return (
     <>
       <Header
@@ -61,6 +86,9 @@ function App() {
             maneuvers={maneuvers}
             isNavigating={isNavigating}
             setIsNavigating={setIsNavigating}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onSnapLocation={handleSnapToLocation}
           />
           <MapView
             activeFilters={activeFilters}
@@ -80,20 +108,10 @@ function App() {
           <p style={{ color: 'var(--text-secondary)', marginTop: '20px' }}>
             Leaderboards and curated user routes are coming soon!
           </p>
-          <img src="/reki.png" alt="Reki" style={{ width: '100px', marginTop: '30px', opacity: 0.5 }} />
+          <img src="/reki_icon.png" alt="Reki" style={{ width: '100px', marginTop: '30px', opacity: 0.5 }} />
         </div>
       ) : (
-        <div style={{ padding: '40px', color: 'var(--text-primary)', textAlign: 'center', marginTop: '100px', maxWidth: '600px', margin: '100px auto' }}>
-          <h2>About BikeRoutes.org</h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '20px', lineHeight: 1.6 }}>
-            BikeRoutes.org is an open-source tactical routing platform designed for the US Midwest. 
-            Powered by Valhalla and custom OSM extracts, we aim to provide the safest, most efficient 
-            routing for cyclists traversing urban and rural terrain.
-          </p>
-          <p style={{ color: 'var(--text-muted)', marginTop: '20px', fontSize: '12px' }}>
-            v0.1.0 (Alpha)
-          </p>
-        </div>
+        <AboutView />
       )}
       {showDonate && (
         <DonateBanner onClose={() => setShowDonate(false)} />

@@ -79,6 +79,10 @@
 			"index_name": "bikeroutes-trails"
 		}
 	],
+	// ─── AI (Workers AI) ──────────────────────────────────
+	"ai": {
+		"binding": "AI"
+	},
 	// ─── Durable Objects ──────────────────────────────────
 	"durable_objects": {
 		"bindings": [

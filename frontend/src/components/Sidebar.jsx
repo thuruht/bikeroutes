@@ -39,7 +39,10 @@ export default function Sidebar({
   setRouteOptions,
   maneuvers,
   isNavigating,
-  setIsNavigating
+  setIsNavigating,
+  activeTab,
+  onTabChange,
+  onSnapLocation
 }) {
   const [searchFocused, setSearchFocused] = useState(false)
 
@@ -51,14 +54,27 @@ export default function Sidebar({
     <aside className={`sidebar glass camo-bg ${isOpen ? 'open' : 'closed'} ${isNavigating ? 'navigating-mode' : ''}`} id="sidebar">
       
       <div className="sidebar-scrollable-content">
+        {/* Mobile Navigation Tabs */}
+        <div className="mobile-only-tabs">
+          <button className={`mobile-tab ${activeTab === 'explore' ? 'active' : ''}`} onClick={() => { onTabChange('explore'); if(window.innerWidth <= 768) setIsNavigating(false); }}>Explore</button>
+          <button className={`mobile-tab ${activeTab === 'community' ? 'active' : ''}`} onClick={() => { onTabChange('community'); if(window.innerWidth <= 768) setIsNavigating(false); }}>Community</button>
+          <button className={`mobile-tab ${activeTab === 'about' ? 'active' : ''}`} onClick={() => { onTabChange('about'); if(window.innerWidth <= 768) setIsNavigating(false); }}>About</button>
+        </div>
+
         {/* Search & Surface Filters are hidden in Nav Mode */}
         {!isNavigating && (
           <>
             <div className={`sidebar-search ${searchFocused ? 'focused' : ''}`}>
-              <svg className="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.4"/>
-                <path d="M11 11l3.5 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-              </svg>
+              <button 
+                className="snap-location-btn" 
+                onClick={onSnapLocation}
+                title="Use Current Location"
+                aria-label="Use Current Location"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 0a5 5 0 00-5 5c0 3 5 11 5 11s5-8 5-11a5 5 0 00-5-5zm0 7.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
+                </svg>
+              </button>
               <input
                 type="text"
                 className="search-input"
