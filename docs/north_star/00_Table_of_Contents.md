@@ -44,3 +44,23 @@ Welcome to the central repository for the vision, architecture, and future of Bi
    - Backend Frameworks & Cloudflare Services
    - Routing, Maps & Data
    - Tooling & APIs
+
+8. [Mascot Identity](./08_Mascot_Identity.md)
+   - Visual Attributes
+   - Voice & Copywriting
+   - Product Integration
+
+9. [Navigation Mode](./09_Navigation_Mode.md)
+   - Core Features
+   - Route Customization
+   - Turn-by-Turn Maneuvers
+
+10. [Interactive Route Builder](./10_Route_Builder.md)
+    - Architecture Overview
+    - Frontend Integration
+    - Valhalla Routing
+
+11. [FIFA World Cup 26 - KC Mode](./11_FWC26_Prompt.md)
+    - Mode Activation
+    - Venue Quick-Select
+    - Custom Map Layers
