@@ -61,6 +61,10 @@ The central vision, architecture, roadmap, and styling guidelines for the projec
 
 ---
 
+## 🌟 North Star Guide
+
+The central vision, architecture, roadmap, and styling guidelines for the project are comprehensively documented in the [North Star Guide](docs/north_star/00_Table_of_Contents.md). All contributors (human and AI) should review this guide before making major changes.
+
 ## Project Structure
 
 ```
