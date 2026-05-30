@@ -51,6 +51,19 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
   const wcMarkersRef = useRef([])
 
   // Initialize map
+
+  // Global helper for popup buttons
+  useEffect(() => {
+    window.routeTo = (coords) => {
+      setWaypoints(prev => {
+        if (prev.length >= 1) return [prev[0], coords];
+        return [[-94.5786, 39.0997], coords]; // Fallback A
+      });
+      document.querySelector('.maplibregl-popup-close-button')?.click();
+    };
+    return () => { delete window.routeTo; };
+  }, [setWaypoints]);
+
   useEffect(() => {
     if (map.current) return
 
@@ -244,7 +257,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
       const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(`
         <div class="wc-popup">
           <strong>${venue.icon} ${venue.name}</strong>
-          <button class="wc-popup-route-btn" data-venue-id="${venue.id}">Route here →</button>
+          <button type="button" class="wc-popup-route-btn" data-venue-id="${venue.id}">Route here →</button>
         </div>
       `)
 
@@ -309,6 +322,32 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     // Also re-add corridor after any future style changes
     map.current.on('style.load', addCorridorLayer)
 
+    // Add interactions for overlays (like worldcup_bbq)
+    map.current.on('mouseenter', 'overlay-worldcup_bbq-layer', (e) => {
+      map.current.getCanvas().style.cursor = 'pointer';
+    });
+    map.current.on('mouseleave', 'overlay-worldcup_bbq-layer', () => {
+      map.current.getCanvas().style.cursor = '';
+    });
+    map.current.on('click', 'overlay-worldcup_bbq-layer', (e) => {
+      if (!e.features || !e.features[0]) return;
+      const props = e.features[0].properties;
+      const name = props.Name || props.NAME || props.name || 'BBQ Joint';
+      const address = props.Address || props.ADDRESS || props.address || '';
+
+      new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div class="wc-popup">
+            <strong>🍖 ${name}</strong>
+            ${address ? `<p style="font-size:0.75rem; color:#666; margin: 4px 0;">${address}</p>` : ''}
+            <button type="button" class="wc-popup-route-btn" style="margin-top: 8px;" onclick="window.routeTo([${e.lngLat.lng}, ${e.lngLat.lat}])">Route here →</button>
+          </div>
+        `)
+        .addTo(map.current);
+    });
+
+
     return () => {
       if (map.current) {
         map.current.off('style.load', addCorridorLayer)
@@ -344,7 +383,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
       {/* Reki watermark */}
       <div className="map-watermark">
-        <img src="/reki.png" alt="" className="watermark-icon" width="20" height="20" />
+        <img src="/reki.png" alt="Reki the Deer - BikeRoutes Mascot" title="Reki has scouted this area!" className="watermark-icon" width="20" height="20" />
         <span className="watermark-text">REKI SCOUTED THIS</span>
       </div>
 
