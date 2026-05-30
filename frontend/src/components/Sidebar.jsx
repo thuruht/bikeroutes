@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import togpx from 'togpx'
 import WCSidebarPanel from './WCSidebarPanel'
 import './Sidebar.css'
 
@@ -33,6 +34,8 @@ export default function Sidebar({
   activeFilters,
   onToggleFilter,
   routeInfo,
+  routeGeoJSON,
+  waypoints,
   searchQuery,
   onSearchChange,
   onClearRoute,
@@ -48,6 +51,46 @@ export default function Sidebar({
   setWaypoints
 }) {
   const [searchFocused, setSearchFocused] = useState(false)
+
+
+  const handleExportGPX = () => {
+    if (!routeGeoJSON) return
+    const gpx = togpx(routeGeoJSON)
+    const blob = new Blob([gpx], { type: 'application/gpx+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'bikeroutes-scouted-trail.gpx'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleShareRoute = () => {
+    if (waypoints.length < 2) return
+    // Encode waypoints in a hash to make it shareable
+    const params = new URLSearchParams()
+    params.set('a', `${waypoints[0][0]},${waypoints[0][1]}`)
+    params.set('b', `${waypoints[1][0]},${waypoints[1][1]}`)
+    const shareUrl = `${window.location.origin}/?${params.toString()}`
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'BikeRoutes.org Route',
+        text: 'Check out this scouted trail on BikeRoutes.org',
+        url: shareUrl
+      }).catch(console.error)
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+      const btn = document.getElementById('btn-share-route')
+      if (btn) {
+        const originalText = btn.innerHTML
+        btn.innerHTML = '<span>Copied!</span>'
+        setTimeout(() => { btn.innerHTML = originalText }, 2000)
+      }
+    }
+  }
 
   const toggleOption = (key) => {
     setRouteOptions(prev => ({ ...prev, [key]: !prev[key] }))
@@ -190,7 +233,7 @@ export default function Sidebar({
       {/* Actions */}
       <section className="sidebar-section mt-auto">
         {routeInfo && !isNavigating && (
-          <button className="action-btn primary full-width mb-sm" onClick={() => setIsNavigating(true)}>
+          <button type="button" className="action-btn primary full-width mb-sm" onClick={() => setIsNavigating(true)}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
               <path d="M14 8L3 14V2l11 6z"/>
             </svg>
@@ -198,20 +241,20 @@ export default function Sidebar({
           </button>
         )}
         {isNavigating && (
-          <button className="action-btn destructive full-width mb-sm" onClick={() => setIsNavigating(false)}>
+          <button type="button" className="action-btn destructive full-width mb-sm" onClick={() => setIsNavigating(false)}>
             <span style={{fontWeight: 'bold'}}>END RIDE</span>
           </button>
         )}
         {!isNavigating && (
           <div className="action-grid">
-            <button className="action-btn" id="btn-gpx-export">
+            <button className="action-btn" id="btn-gpx-export" onClick={() => alert('GPX Export coming soon! 🦌')} type="button">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2M8 2v9M5 8l3 3 3-3"
                   stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span>GPX</span>
             </button>
-            <button className="action-btn" id="btn-share-route">
+            <button className="action-btn" id="btn-share-route" onClick={() => alert('Share feature coming soon! 🦌')} type="button">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <circle cx="12" cy="4" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
                 <circle cx="4" cy="8" r="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -220,7 +263,7 @@ export default function Sidebar({
               </svg>
               <span>Share</span>
             </button>
-            <button className="action-btn destructive" id="btn-clear-route" onClick={onClearRoute}>
+            <button type="button" className="action-btn destructive" id="btn-clear-route" onClick={onClearRoute}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
               </svg>

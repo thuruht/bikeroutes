@@ -17,7 +17,7 @@ The MVP focuses on delivering a superior, ad-free routing experience that clearl
 *   [ ] **Semantic Trail Search:**
     *   *Feature:* Natural language search (e.g., "flat family ride near the river") returning relevant map locations or curated routes.
     *   *Tech Ref:* Cloudflare Vectorize, token-bucket rate limiting.
-*   [ ] **Device Export:**
+*   [x] **Device Export:**
     *   *Feature:* One-click export to GPX or KML formats for seamless loading onto Garmin, Wahoo, or mobile apps.
     *   *Tech Ref:* Client-side `togpx` conversion.
 *   [ ] **Donation Engine & Merch Fulfillment:**

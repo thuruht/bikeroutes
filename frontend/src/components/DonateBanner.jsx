@@ -12,7 +12,7 @@ export default function DonateBanner({ onClose }) {
   return (
     <div className="donate-overlay" onClick={onClose}>
       <div className="donate-banner glass-strong camo-bg animate-slide-up" onClick={e => e.stopPropagation()}>
-        <button className="donate-close" onClick={onClose} id="donate-close-btn" aria-label="Close">
+        <button type="button" className="donate-close" onClick={onClose} id="donate-close-btn" aria-label="Close">
           ✕
         </button>
 
@@ -29,7 +29,7 @@ export default function DonateBanner({ onClose }) {
 
         <div className="donate-tiers">
           {TIERS.map(({ amount, label, icon, desc }) => (
-            <button key={amount} className="donate-tier" id={`donate-tier-${amount}`}>
+            <button type="button" key={amount} className="donate-tier" id={`donate-tier-${amount}`}>
               <span className="tier-icon">{icon}</span>
               <div className="tier-info">
                 <span className="tier-label">{label}</span>
