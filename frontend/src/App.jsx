@@ -14,6 +14,7 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeFilters, setActiveFilters] = useState(['paved', 'gravel', 'dirt', 'mtb'])
   const [routeInfo, setRouteInfo] = useState(null)
+  const [routeGeoJSON, setRouteGeoJSON] = useState(null)
   const [waypoints, setWaypoints] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [showDonate, setShowDonate] = useState(false)
@@ -43,6 +44,7 @@ function App() {
   const handleClearRoute = () => {
     setWaypoints([])
     setRouteInfo(null)
+    setRouteGeoJSON(null)
     setManeuvers([])
     setIsNavigating(false)
   }
@@ -137,6 +139,8 @@ function App() {
             activeFilters={activeFilters}
             onToggleFilter={toggleFilter}
             routeInfo={routeInfo}
+            routeGeoJSON={routeGeoJSON}
+            waypoints={waypoints}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onClearRoute={handleClearRoute}
@@ -153,9 +157,10 @@ function App() {
           />
           <MapView
             activeFilters={activeFilters}
-            onRouteCalculated={(info, newManeuvers) => {
+            onRouteCalculated={(info, newManeuvers, geojson) => {
               setRouteInfo(info)
               if (newManeuvers) setManeuvers(newManeuvers)
+              if (geojson) setRouteGeoJSON(geojson)
             }}
             waypoints={waypoints}
             setWaypoints={setWaypoints}

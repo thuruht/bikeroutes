@@ -114,14 +114,14 @@ export default function WCSidebarPanel({ onSetWaypoints, onSetRouteOptions, onSn
 
       {/* Reset Route */}
       <div className="wc-panel-section">
-        <button className="wc-reset-btn" onClick={() => { setSelectedVenue(null); onClearRoute(); }}>
+        <button type="button" className="wc-reset-btn" onClick={() => { setSelectedVenue(null); onClearRoute(); }}>
           ✕ Reset Route
         </button>
       </div>
 
       {/* Visitor Tips */}
       <div className="wc-panel-section">
-        <button className="wc-tips-toggle" onClick={() => setTipsOpen(!tipsOpen)}>
+        <button type="button" className="wc-tips-toggle" onClick={() => setTipsOpen(!tipsOpen)}>
           <span className="wc-tips-title">Visitor Tips</span>
           <span className={`wc-tips-chevron ${tipsOpen ? 'open' : ''}`}>▸</span>
         </button>
