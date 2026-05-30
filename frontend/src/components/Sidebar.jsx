@@ -100,6 +100,12 @@ export default function Sidebar({
     <aside className={`sidebar glass camo-bg ${isOpen ? 'open' : 'closed'} ${isNavigating ? 'navigating-mode' : ''}`} id="sidebar">
       
       <div className="sidebar-scrollable-content">
+        {isNavigating && (
+          <button type="button" className="action-btn destructive full-width mb-sm" onClick={() => setIsNavigating(false)} style={{ marginBottom: '16px', border: '1px solid #E85D4A' }}>
+            <span style={{fontWeight: 'bold'}}>← EXIT NAVIGATION</span>
+          </button>
+        )}
+
         {/* Mobile Navigation Tabs */}
         <div className="mobile-only-tabs">
           <button className={`mobile-tab ${activeTab === 'explore' ? 'active' : ''}`} onClick={() => { onTabChange('explore'); if(window.innerWidth <= 768) setIsNavigating(false); }}>Explore</button>

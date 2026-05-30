@@ -335,10 +335,12 @@
     border-right: none;
     border-top: 1px solid var(--accent);
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
   }
 
   .sidebar.navigating-mode {
     height: 70%;
+    padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom));
   }
 
   .sidebar.closed {
