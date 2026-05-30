@@ -212,7 +212,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
               distance: data.trip.summary.length.toFixed(1),
               elevation: Math.round(data.trip.summary.elevation || 0),
               time: Math.round(data.trip.summary.time / 60) + ' min'
-            }, data.trip.legs[0].maneuvers)
+            }, data.trip.legs[0].maneuvers, geojson)
           })
         }
       } catch (err) {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import togpx from 'togpx'
 import WCSidebarPanel from './WCSidebarPanel'
 import './Sidebar.css'
 
@@ -33,6 +34,8 @@ export default function Sidebar({
   activeFilters,
   onToggleFilter,
   routeInfo,
+  routeGeoJSON,
+  waypoints,
   searchQuery,
   onSearchChange,
   onClearRoute,
@@ -48,6 +51,46 @@ export default function Sidebar({
   setWaypoints
 }) {
   const [searchFocused, setSearchFocused] = useState(false)
+
+
+  const handleExportGPX = () => {
+    if (!routeGeoJSON) return
+    const gpx = togpx(routeGeoJSON)
+    const blob = new Blob([gpx], { type: 'application/gpx+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'bikeroutes-scouted-trail.gpx'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleShareRoute = () => {
+    if (waypoints.length < 2) return
+    // Encode waypoints in a hash to make it shareable
+    const params = new URLSearchParams()
+    params.set('a', `${waypoints[0][0]},${waypoints[0][1]}`)
+    params.set('b', `${waypoints[1][0]},${waypoints[1][1]}`)
+    const shareUrl = `${window.location.origin}/?${params.toString()}`
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'BikeRoutes.org Route',
+        text: 'Check out this scouted trail on BikeRoutes.org',
+        url: shareUrl
+      }).catch(console.error)
+    } else {
+      navigator.clipboard.writeText(shareUrl)
+      const btn = document.getElementById('btn-share-route')
+      if (btn) {
+        const originalText = btn.innerHTML
+        btn.innerHTML = '<span>Copied!</span>'
+        setTimeout(() => { btn.innerHTML = originalText }, 2000)
+      }
+    }
+  }
 
   const toggleOption = (key) => {
     setRouteOptions(prev => ({ ...prev, [key]: !prev[key] }))

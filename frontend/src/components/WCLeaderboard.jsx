@@ -38,7 +38,16 @@ const FEATURED_ROUTES = [
   },
 ]
 
+import { useState } from 'react'
+
 export default function WCLeaderboard({ onRouteSelect }) {
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSubmit = () => {
+    setSubmitted(true)
+    setTimeout(() => setSubmitted(false), 3000)
+  }
+
   const rankBadge = (rank) => {
     if (rank === 1) return '🥇'
     if (rank === 2) return '🥈'
