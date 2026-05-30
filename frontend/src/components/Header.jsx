@@ -26,19 +26,19 @@ export default function Header({ activeTab, onTabChange, onToggleSidebar, onDona
       </div>
 
       <nav className="header-nav">
-        <button 
+        <button type="button"
           className={`header-nav-link ${activeTab === 'explore' ? 'active' : ''}`} 
           onClick={() => onTabChange('explore')}
         >
           Explore
         </button>
-        <button 
+        <button type="button"
           className={`header-nav-link ${activeTab === 'community' ? 'active' : ''}`} 
           onClick={() => onTabChange('community')}
         >
           Community
         </button>
-        <button 
+        <button type="button"
           className={`header-nav-link ${activeTab === 'about' ? 'active' : ''}`} 
           onClick={() => onTabChange('about')}
         >

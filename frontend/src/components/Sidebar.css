@@ -9,7 +9,7 @@
   flex-direction: column;
   gap: var(--space-lg);
   padding: var(--space-md);
-  overflow-y: hidden;
+  /* Allow sidebar itself to not clip */
   z-index: var(--z-sidebar);
   transition: transform var(--transition-base), opacity var(--transition-base);
   border-right: 1px solid var(--border-subtle);
@@ -82,8 +82,9 @@
 
 .mobile-tab {
   flex: 1;
-  padding: 6px;
+  padding: 12px 6px; /* Bigger tap target */
   font-size: var(--text-sm);
+  cursor: pointer;
   font-weight: 600;
   text-align: center;
   color: var(--text-muted);
@@ -131,6 +132,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -257,16 +259,19 @@
 /* Action grid */
 .action-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 5px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
 }
 
 .action-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px;
+  gap: 4px;
+  padding: 10px 4px;
+  min-height: 48px; /* Accessible tap target */
+  cursor: pointer;
   background: var(--surface-tertiary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);

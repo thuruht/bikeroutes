@@ -54,7 +54,7 @@ export default function MapStyleSwitcher({ activeBasemap, onBasemapChange, activ
         <div className="style-switcher-panel glass-strong camo-bg animate-fade-in" id="map-style-panel">
           <div className="style-switcher-header">
             <h3>Map Style</h3>
-            <button className="style-switcher-close" onClick={() => setIsOpen(false)}>✕</button>
+            <button type="button" className="style-switcher-close" onClick={() => setIsOpen(false)}>✕</button>
           </div>
 
           {/* Overlay toggles */}

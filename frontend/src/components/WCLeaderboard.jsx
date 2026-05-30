@@ -111,7 +111,7 @@ export default function WCLeaderboard({ onRouteSelect }) {
         <div className="wc-share-card">
           <h3>Share Your Ride</h3>
           <p>Rode to a match? Submit your route to the community leaderboard!</p>
-          <button className="wc-share-btn" onClick={() => alert('Route submission coming soon! 🦌')}>
+          <button type="button" className="wc-share-btn" onClick={() => alert('Route submission coming soon! 🦌')}>
             Submit Route
           </button>
         </div>
