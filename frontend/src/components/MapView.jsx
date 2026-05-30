@@ -1,55 +1,66 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { buildMapStyle, DEFAULT_BASEMAP } from '../lib/basemaps'
+import MapStyleSwitcher from './MapStyleSwitcher'
 import './MapView.css'
 
 // KC metro center
 const DEFAULT_CENTER = [-94.5786, 39.0997]
 const DEFAULT_ZOOM = 11
 
-export default function MapView({ activeFilters, onRouteCalculated }) {
+// WC Venue data
+const WC_VENUES = [
+  { id: 'arrowhead', name: 'Arrowhead Stadium', icon: '⚽', coords: [-94.4839, 39.0489] },
+  { id: 'union', name: 'Union Station', icon: '🚉', coords: [-94.5838, 39.0997] },
+  { id: 'pnl', name: 'Power & Light District', icon: '🎉', coords: [-94.5786, 39.0999] },
+  { id: 'westbottoms', name: 'West Bottoms Fan Zone', icon: '🌉', coords: [-94.5950, 39.1020] },
+  { id: 'berkley', name: 'Berkley Riverfront', icon: '🏞️', coords: [-94.5784, 39.1082] },
+]
+
+// Approximate MKT Nature/Fitness Trail corridor (midtown → Union Station direction)
+const MKT_CORRIDOR_GEOJSON = {
+  type: 'Feature',
+  properties: { name: 'Recommended Visitor Corridor' },
+  geometry: {
+    type: 'LineString',
+    coordinates: [
+      [-94.5786, 39.0550],
+      [-94.5790, 39.0600],
+      [-94.5795, 39.0650],
+      [-94.5800, 39.0700],
+      [-94.5810, 39.0750],
+      [-94.5820, 39.0800],
+      [-94.5825, 39.0850],
+      [-94.5830, 39.0900],
+      [-94.5835, 39.0950],
+      [-94.5838, 39.0997],
+    ],
+  },
+}
+
+export default function MapView({ activeFilters, onRouteCalculated, waypoints, setWaypoints, routeOptions, isNavigating, wcMode }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
+  const geolocateControl = useRef(null)
+  const [activeBasemap, setActiveBasemap] = useState(DEFAULT_BASEMAP)
+  const [activeOverlays, setActiveOverlays] = useState(['cycling_routes'])
+  const [routeGeoJSON, setRouteGeoJSON] = useState(null)
 
+  const markersRef = useRef([])
+  const wcMarkersRef = useRef([])
+
+  // Initialize map
   useEffect(() => {
     if (map.current) return
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: {
-        version: 8,
-        name: 'BikeRoutes Dark',
-        sources: {
-          'osm-raster': {
-            type: 'raster',
-            tiles: [
-              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
-              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            ],
-            tileSize: 256,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          },
-        },
-        layers: [
-          {
-            id: 'osm-raster-layer',
-            type: 'raster',
-            source: 'osm-raster',
-            paint: {
-              // Dark punk filter — desaturate & darken the tiles
-              'raster-brightness-max': 0.45,
-              'raster-brightness-min': 0.02,
-              'raster-saturation': -0.6,
-              'raster-contrast': 0.3,
-            },
-          },
-        ],
-      },
+      style: buildMapStyle(activeBasemap, activeOverlays, routeGeoJSON),
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
-      maxZoom: 18,
-      minZoom: 4,
+      maxZoom: 22,
+      minZoom: 2,
       attributionControl: false,
     })
 
@@ -66,13 +77,11 @@ export default function MapView({ activeFilters, onRouteCalculated }) {
     )
 
     // Geolocation
-    map.current.addControl(
-      new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-      }),
-      'bottom-right'
-    )
+    geolocateControl.current = new maplibregl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+    })
+    map.current.addControl(geolocateControl.current, 'bottom-right')
 
     // Scale
     map.current.addControl(
@@ -88,33 +97,258 @@ export default function MapView({ activeFilters, onRouteCalculated }) {
     }
   }, [])
 
+  // GPS Navigation Mode trigger
+  useEffect(() => {
+    if (isNavigating && geolocateControl.current) {
+      // Small timeout ensures the control is mounted and map is ready
+      setTimeout(() => {
+        geolocateControl.current.trigger()
+      }, 100)
+    }
+  }, [isNavigating])
+
+  // Handle Map Clicks to add Waypoints
+  useEffect(() => {
+    if (!map.current || isNavigating) return
+
+    const handleClick = (e) => {
+      setWaypoints(prev => {
+        if (prev.length >= 2) return prev // Max 2 for now
+        return [...prev, [e.lngLat.lng, e.lngLat.lat]]
+      })
+    }
+
+    map.current.on('click', handleClick)
+    return () => map.current.off('click', handleClick)
+  }, [isNavigating])
+
+  // Sync Markers to Waypoints
+  useEffect(() => {
+    if (!map.current) return
+
+    // Clear old markers
+    markersRef.current.forEach(m => m.remove())
+    markersRef.current = []
+
+    waypoints.forEach((pt, i) => {
+      const el = document.createElement('div')
+      el.className = `waypoint-marker ${i === 0 ? 'start' : 'end'}`
+      el.innerHTML = i === 0 ? 'A' : 'B'
+
+      // Hide markers during active navigation for a cleaner map
+      if (isNavigating) el.style.opacity = '0'
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(pt)
+        .addTo(map.current)
+      
+      markersRef.current.push(marker)
+    })
+  }, [waypoints, isNavigating])
+
+  // Fetch Route when 2 waypoints are set
+  useEffect(() => {
+    if (waypoints.length !== 2) {
+      setRouteGeoJSON(null)
+      return
+    }
+
+    const fetchRoute = async () => {
+      try {
+        // Construct custom Valhalla costing options based on user toggles
+        const costingOptions = {
+          bicycle: {
+            use_hills: routeOptions?.minimizeHills ? 0.1 : 0.5,
+            use_roads: routeOptions?.avoidRoads ? 0.1 : 0.5,
+          }
+        }
+        
+        if (routeOptions?.pavedOnly) {
+          costingOptions.bicycle.bicycle_type = "Road"
+          costingOptions.bicycle.avoid_bad_surfaces = 0.9
+        }
+
+        const res = await fetch('/api/route', {
+          method: 'POST',
+          body: JSON.stringify({
+            locations: waypoints.map(pt => ({ lon: pt[0], lat: pt[1] })),
+            costing: 'bicycle',
+            costing_options: costingOptions
+          })
+        })
+        const data = await res.json()
+        
+        if (data.trip && data.trip.legs) {
+          import('../lib/polyline.js').then(({ decodePolyline }) => {
+            const coords = decodePolyline(data.trip.legs[0].shape)
+            
+            const geojson = {
+              type: 'FeatureCollection',
+              features: [{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'LineString',
+                  coordinates: coords
+                }
+              }]
+            }
+            setRouteGeoJSON(geojson)
+
+            onRouteCalculated({
+              distance: data.trip.summary.length.toFixed(1),
+              elevation: Math.round(data.trip.summary.elevation || 0),
+              time: Math.round(data.trip.summary.time / 60) + ' min'
+            }, data.trip.legs[0].maneuvers)
+          })
+        }
+      } catch (err) {
+        console.error("Routing error:", err)
+      }
+    }
+    
+    fetchRoute()
+  }, [waypoints, onRouteCalculated, routeOptions])
+
+  // Update map style when basemap, overlays, or route changes
+  useEffect(() => {
+    if (map.current) {
+      map.current.setStyle(buildMapStyle(activeBasemap, activeOverlays, routeGeoJSON))
+    }
+  }, [activeBasemap, activeOverlays, routeGeoJSON])
+
+  // ─── World Cup Mode: Venue Markers & MKT Corridor ───────────
+  useEffect(() => {
+    if (!map.current) return
+
+    // Clean up previous WC markers
+    wcMarkersRef.current.forEach(m => m.remove())
+    wcMarkersRef.current = []
+
+    if (!wcMode) {
+      // Remove MKT corridor layer/source if they exist
+      const m = map.current
+      if (m.getLayer('wc-mkt-corridor-line')) m.removeLayer('wc-mkt-corridor-line')
+      if (m.getLayer('wc-mkt-corridor-label')) m.removeLayer('wc-mkt-corridor-label')
+      if (m.getSource('wc-mkt-corridor')) m.removeSource('wc-mkt-corridor')
+      return
+    }
+
+    // Add venue markers with staggered bounce-in
+    WC_VENUES.forEach((venue, i) => {
+      const el = document.createElement('div')
+      el.className = 'wc-venue-marker'
+      el.innerHTML = `<span class="wc-marker-icon">${venue.icon}</span>`
+      el.style.animationDelay = `${i * 100}ms`
+
+      const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(`
+        <div class="wc-popup">
+          <strong>${venue.icon} ${venue.name}</strong>
+          <button class="wc-popup-route-btn" data-venue-id="${venue.id}">Route here →</button>
+        </div>
+      `)
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(venue.coords)
+        .setPopup(popup)
+        .addTo(map.current)
+
+      // Listen for popup open to attach "Route here" click
+      popup.on('open', () => {
+        setTimeout(() => {
+          const btn = document.querySelector(`[data-venue-id="${venue.id}"]`)
+          if (btn) {
+            btn.addEventListener('click', () => {
+              setWaypoints(prev => {
+                if (prev.length >= 1) return [prev[0], venue.coords]
+                return [DEFAULT_CENTER, venue.coords]
+              })
+              popup.remove()
+            })
+          }
+        }, 50)
+      })
+
+      wcMarkersRef.current.push(marker)
+    })
+
+    // Add MKT corridor on style load (needed because setStyle may reset layers)
+    const addCorridorLayer = () => {
+      const m = map.current
+      if (!m || !m.isStyleLoaded()) return
+
+      if (!m.getSource('wc-mkt-corridor')) {
+        m.addSource('wc-mkt-corridor', {
+          type: 'geojson',
+          data: MKT_CORRIDOR_GEOJSON,
+        })
+      }
+
+      if (!m.getLayer('wc-mkt-corridor-line')) {
+        m.addLayer({
+          id: 'wc-mkt-corridor-line',
+          type: 'line',
+          source: 'wc-mkt-corridor',
+          paint: {
+            'line-color': '#c8102e',
+            'line-opacity': 0.6,
+            'line-width': 4,
+            'line-dasharray': [2, 2],
+          },
+        })
+      }
+    }
+
+    // Try adding immediately, or wait for style load
+    if (map.current.isStyleLoaded()) {
+      addCorridorLayer()
+    } else {
+      map.current.once('style.load', addCorridorLayer)
+    }
+
+    // Also re-add corridor after any future style changes
+    map.current.on('style.load', addCorridorLayer)
+
+    return () => {
+      if (map.current) {
+        map.current.off('style.load', addCorridorLayer)
+      }
+    }
+  }, [wcMode])
+
+  // Update map style when basemap or overlays change
+  const handleBasemapChange = useCallback((key) => {
+    setActiveBasemap(key)
+  }, [])
+
+  const handleOverlayToggle = useCallback((key) => {
+    setActiveOverlays(prev => {
+      const next = prev.includes(key)
+        ? prev.filter(k => k !== key)
+        : [...prev, key]
+      return next
+    })
+  }, [])
+
   return (
     <div className="map-container" id="map-container">
       <div ref={mapContainer} className="map-canvas" />
+
+      {/* Basemap & overlay switcher */}
+      <MapStyleSwitcher
+        activeBasemap={activeBasemap}
+        onBasemapChange={handleBasemapChange}
+        activeOverlays={activeOverlays}
+        onOverlayToggle={handleOverlayToggle}
+      />
+
       {/* Reki watermark */}
       <div className="map-watermark">
-        <span className="watermark-icon">🦌</span>
+        <img src="/reki.png" alt="" className="watermark-icon" width="20" height="20" />
         <span className="watermark-text">REKI SCOUTED THIS</span>
       </div>
-      {/* Trail type legend */}
-      <div className="map-legend glass">
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--paved)' }} />
-          <span>Paved</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--gravel)' }} />
-          <span>Gravel</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--dirt)' }} />
-          <span>Dirt</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-dot" style={{ background: 'var(--mtb)' }} />
-          <span>MTB</span>
-        </div>
-      </div>
+
     </div>
   )
 }
+

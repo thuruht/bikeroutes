@@ -17,7 +17,7 @@ export default function DonateBanner({ onClose }) {
         </button>
 
         <div className="donate-header">
-          <span className="donate-reki">🦌</span>
+          <img src="/reki.png" alt="Reki the deer" className="donate-reki" width="64" height="64" />
           <div>
             <h2 className="donate-title">Support BikeRoutes.org</h2>
             <p className="donate-subtitle">

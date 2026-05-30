@@ -13,6 +13,8 @@ import { tileRoutes } from "./routes/tiles";
 import { donateRoutes } from "./routes/donate";
 import { poiRoutes } from "./routes/poi";
 import { healthRoutes } from "./routes/health";
+import { authRoutes } from "./routes/auth";
+import { reportRoutes } from "./routes/reports";
 
 // Re-export Durable Objects & Containers so Wrangler can find them
 export { POIStore } from "./durable-objects/POIStore";
@@ -36,30 +38,16 @@ app.route("/api/tiles", tileRoutes);
 app.route("/api/donate", donateRoutes);
 app.route("/api/poi", poiRoutes);
 app.route("/api/health", healthRoutes);
+app.route("/api/auth", authRoutes);
+app.route("/api/reports", reportRoutes);
 
-// ─── Root ─────────────────────────────────────────────
-app.get("/", (c) => {
-	return c.json({
-		name: "BikeRoutes.org API",
-		version: "0.1.0-alpha",
-		mascot: "🦌 Reki",
-		status: "scouting trails...",
-		endpoints: {
-			route: "POST /api/route",
-			search: "GET /api/search?q=...",
-			tiles: "GET /api/tiles/:z/:x/:y.pbf",
-			donate: "POST /api/donate/create-order",
-			poi: "GET /api/poi?geohash=...",
-			health: "GET /api/health",
-		},
-	});
-});
-
-// ─── 404 ──────────────────────────────────────────────
-app.notFound((c) => {
+// ─── Fallthrough to static assets ─────────────────────
+// With run_worker_first: ["/api/*"], the Worker only runs for API routes.
+// If a request somehow reaches here (e.g. /api/unknown), return 404.
+app.all("/*", (c) => {
 	return c.json({
 		error: "Trail not found",
-		message: "Reki couldn't find that path. Try a different route? 🦌",
+		message: "Reki couldn't find that API endpoint. Try /api/health? 🦌",
 		status: 404,
 	}, 404);
 });
@@ -75,22 +63,23 @@ app.onError((err, c) => {
 });
 
 // ─── Scheduled (cron) handler ─────────────────────────
+import { syncGisData } from "./tasks/sync-gis";
+
 const scheduled: ExportedHandlerScheduledHandler<Env> = async (event, env, ctx) => {
-	console.log(`[CRON] Daily OSM import triggered at ${new Date().toISOString()}`);
+	console.log(`[CRON] Scheduled event triggered at ${new Date().toISOString()} via ${event.cron}`);
 
 	try {
-		// 1. Signal the VPS to start OSM import
-		// TODO: Replace with actual VPS webhook URL
-		// await fetch(env.VPS_IMPORT_WEBHOOK_URL, { method: "POST" });
+		// Run the MARC GIS Sync
+		await syncGisData(env);
 
-		// 2. Record heartbeat
-		await env.ROUTE_CACHE.put("LAST_IMPORT_TRIGGER", new Date().toISOString(), {
+		// Record heartbeat
+		await env.ROUTE_CACHE.put("LAST_CRON_TRIGGER", new Date().toISOString(), {
 			expirationTtl: 86400 * 7, // keep for 7 days
 		});
 
-		console.log("[CRON] Import trigger sent successfully");
+		console.log("[CRON] All scheduled tasks completed successfully");
 	} catch (error) {
-		console.error("[CRON] Import trigger failed:", error);
+		console.error("[CRON] Scheduled tasks failed:", error);
 	}
 };
 

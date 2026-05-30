@@ -45,3 +45,4 @@ Here is a comprehensive list of all the libraries, frameworks, tools, and servic
 | **Wrangler** | CLI for Cloudflare Workers | [cloudflare/workers-sdk](https://github.com/cloudflare/workers-sdk) | [Wrangler Docs](https://developers.cloudflare.com/workers/wrangler/) |
 | **PayPal JS SDK** | Payments integration for donations | [paypal/paypal-js](https://github.com/paypal/paypal-js) | [PayPal Developer Docs](https://developer.paypal.com/docs/business/javascript-sdk/) |
 | **Printful API** | Print-on-demand fulfillment for T-shirts/Hoodies | N/A | [Printful Developers](https://developers.printful.com/docs/) |
+

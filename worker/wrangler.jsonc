@@ -3,18 +3,26 @@
 	"name": "bikeroutes-api",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"observability": {
 		"enabled": true
 	},
 	"upload_source_maps": true,
-
+	// ─── Custom Domains ───────────────────────────────────
+	"workers_dev": true,
+	"routes": [
+		{ "pattern": "bikeroutes.org", "custom_domain": true },
+		{ "pattern": "www.bikeroutes.org", "custom_domain": true }
+	],
 	// ─── Triggers ─────────────────────────────────────────
 	// Daily OSM import trigger (3 AM UTC)
 	"triggers": {
-		"crons": ["0 3 * * *"]
+		"crons": [
+			"0 3 * * *"
+		]
 	},
-
 	// ─── D1 Database ──────────────────────────────────────
 	// Routes, users, POIs, donations, contribution badges
 	"d1_databases": [
@@ -24,31 +32,37 @@
 			"database_id": "a62046a7-4193-49c1-910f-9e7dbc209009"
 		}
 	],
-
 	// ─── KV Namespaces ────────────────────────────────────
 	"kv_namespaces": [
 		{
 			// Route cache — SHA-256 keyed, 24h TTL
 			"binding": "ROUTE_CACHE",
-			"id": "29b680a7df804023b1d18fc8668b4227"
+			"id": "f5f46f5bfc1d4abfb6c878d9a1730b91"
 		},
 		{
 			// Rate limiting — per-IP token buckets
 			"binding": "RATE_LIMITS",
-			"id": "567f3bba07b04259ac9092ffbc2fb4c8"
+			"id": "b7c39ff11ddc4ad29504abf156d114ba"
 		},
 		{
 			// Session data — magic-link tokens, donation claims
 			"binding": "SESSIONS",
-			"id": "ac838e3d0a5e48fbb618a7fbcf2e17c0"
+			"id": "d21074b7bec94e32ae2bb76278a09e49"
 		}
 	],
-
+	// ─── Static Assets (Workers Sites) ────────────────────
+	// Frontend SPA — Vite builds into worker/public/
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application",
+		"run_worker_first": ["/api/*"]
+	},
 	// ─── R2 Buckets ───────────────────────────────────────
 	"r2_buckets": [
 		{
 			// Trail photos, GPX uploads, mascot assets
-			"binding": "ASSETS",
+			"binding": "R2_ASSETS",
 			"bucket_name": "bikeroutes-assets"
 		},
 		{
@@ -57,7 +71,6 @@
 			"bucket_name": "bikeroutes-tiles"
 		}
 	],
-
 	// ─── Vectorize ────────────────────────────────────────
 	"vectorize": [
 		{
@@ -66,7 +79,10 @@
 			"index_name": "bikeroutes-trails"
 		}
 	],
-
+	// ─── AI (Workers AI) ──────────────────────────────────
+	"ai": {
+		"binding": "AI"
+	},
 	// ─── Durable Objects ──────────────────────────────────
 	"durable_objects": {
 		"bindings": [
@@ -87,7 +103,6 @@
 			}
 		]
 	},
-
 	// ─── Containers ───────────────────────────────────────
 	"containers": [
 		{
@@ -96,11 +111,14 @@
 			"max_instances": 3
 		}
 	],
-
 	// ─── Migrations ───────────────────────────────────────
 	"migrations": [
 		{
-			"new_sqlite_classes": ["POIStore", "RouteSession", "ValhallaContainer"],
+			"new_sqlite_classes": [
+				"POIStore",
+				"RouteSession",
+				"ValhallaContainer"
+			],
 			"tag": "v1"
 		}
 	]

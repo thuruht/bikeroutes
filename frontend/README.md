@@ -1,16 +1,27 @@
-# React + Vite
+# BikeRoutes.org Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the React + Vite frontend for [BikeRoutes.org](https://bikeroutes.org).
 
-Currently, two official plugins are available:
+## Tech Stack
+- **Framework:** React + Vite
+- **Map Library:** MapLibre GL JS
+- **Routing Integration:** Valhalla (via Cloudflare Workers proxy)
+- **Styling:** Vanilla CSS (Tactical Hi-Tech theme)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Getting Started
 
-## React Compiler
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+3. **Build for production:**
+   ```bash
+   npm run build
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Documentation
+For comprehensive architectural and design information, please see the [North Star Guide](../docs/north_star/00_Table_of_Contents.md) in the `docs/` directory.

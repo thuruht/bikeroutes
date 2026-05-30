@@ -11,10 +11,14 @@ This document serves as a quick reference for key terms, architectural concepts,
 *   **MapLibre GL JS:** The open-source, WebGL-based library used for rendering the interactive map on the frontend.
 *   **OSM (OpenStreetMap):** The foundational, open-source geographic database that powers all routing and map tiles on the platform.
 *   **Printful:** The print-on-demand API used for fulfilling high-tier donation rewards (T-shirts, hoodies).
-*   **Reki:** The white-tailed deer mascot of BikeRoutes.org. [See Project Overview](./01_Project_Overview.md)
+*   **Reki:** The white-tailed deer mascot of BikeRoutes.org. [See Project Overview](./01_Project_Overview.md), [See Mascot Identity](./08_Mascot_Identity.md)
 *   **Tactical Hi-Tech:** The official design system and aesthetic of the platform, characterized by dark olive/hoof surfaces and blaze orange accents. [See Style Guide](./05_Style_Guide.md)
 *   **Valhalla:** The open-source routing engine (running in Docker) responsible for calculating paths, elevation, and surface types.
 *   **Vectorize:** Cloudflare's vector database, used to store text embeddings of trail data for semantic search.
+
+*   **Active Navigation Mode:** [09_Navigation_Mode](./09_Navigation_Mode.md)
+*   **FIFA World Cup 26 Mode:** [11_FWC26_Prompt](./11_FWC26_Prompt.md)
+*   **Interactive Route Builder:** [10_Route_Builder](./10_Route_Builder.md)
 
 ## Cross-Referencing Tags (For LLM / AI Agents)
 
@@ -26,3 +30,4 @@ When building new features, agentic LLMs should search the documentation for the
 *   `#reki-mascot`: References the visual and tonal guidelines for the mascot. (Found in `01_Project_Overview.md`, `05_Style_Guide.md`)
 *   `#offline-first`: References the Path B roadmap for progressive web app and downloaded tile architecture. (Found in `04_Future_Roadmaps.md`)
 *   `#community-mod`: References the trust-based POI submission and moderation system. (Found in `03_Product_Todo.md`, `04_Future_Roadmaps.md`)
+

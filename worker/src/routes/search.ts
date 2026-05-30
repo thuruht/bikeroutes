@@ -71,17 +71,49 @@ searchRoutes.get("/", async (c) => {
 	}
 
 	try {
-		// Generate embedding for the query
-		// TODO: Replace with actual embedding model (e.g., Workers AI or external)
-		// For now, we use a placeholder vector
-		const queryVector = new Array(768).fill(0).map(() => Math.random() * 0.1);
+		// Generate embedding using Cloudflare Workers AI
+		const embedResponse = await c.env.AI.run("@cf/baai/bge-base-en-v1.5", {
+			text: [query]
+		});
+		// The model returns an array of vectors (one for each input string)
+		const queryVector = embedResponse.data[0];
 
 		// Query Vectorize
 		const results = await c.env.TRAIL_SEARCH.query(queryVector, {
-			topK: 10,
+			topK: 5,
 			returnValues: false,
 			returnMetadata: "all",
 		});
+
+		let rekiResponse = "🦌 Hmm, Reki hasn't explored that area yet. Try different words?";
+
+		if (results.matches.length > 0) {
+			const contextText = results.matches.map((m, i) => {
+				const meta = m.metadata || {};
+				return `[${i+1}] ${meta.name || 'Unknown Location'} - ${meta.description || ''}`;
+			}).join("\n");
+
+			const systemPrompt = `You are Reki, a helpful scout deer mascot for BikeRoutes.org. 
+Your job is to recommend bike trails and locations based on the user's search query and the provided database results.
+RULES:
+1. Keep your response very short (1-3 sentences maximum).
+2. Be friendly and use subtle deer/nature puns (like 'hoofing it', 'scouted this path', etc.).
+3. End with a deer emoji 🦌.
+4. ONLY recommend places from the provided context. If nothing fits perfectly, pick the closest match.
+
+Context trails found:
+${contextText}`;
+
+			const chatResponse = await c.env.AI.run("@cf/meta/llama-3-8b-instruct", {
+				messages: [
+					{ role: "system", content: systemPrompt },
+					{ role: "user", content: `User query: "${query}"\nWhat do you recommend?` }
+				],
+				max_tokens: 150
+			});
+
+			rekiResponse = chatResponse.response;
+		}
 
 		// Also log the search to D1 for analytics
 		c.executionCtx.waitUntil(
@@ -103,9 +135,7 @@ searchRoutes.get("/", async (c) => {
 				metadata: m.metadata,
 			})),
 			remaining,
-			reki_says: results.matches.length > 0
-				? "🦌 Found some trails for you!"
-				: "🦌 Hmm, Reki hasn't explored that area yet. Try different words?",
+			reki_says: rekiResponse,
 		}, 200, {
 			"X-RateLimit-Remaining": String(remaining),
 		});

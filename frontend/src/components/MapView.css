@@ -87,3 +87,140 @@
     display: none;
   }
 }
+
+/* ─── Map Controls Responsive Behavior ───────────────── */
+
+/* Add transitions so they move smoothly when sidebar toggles */
+.maplibregl-ctrl-bottom-left,
+.maplibregl-ctrl-bottom-right,
+.map-legend {
+  transition: transform var(--transition-base);
+}
+
+/* Shift controls up on mobile when sidebar is open */
+@media (max-width: 768px) {
+  .sidebar-open .maplibregl-ctrl-bottom-left,
+  .sidebar-open .maplibregl-ctrl-bottom-right {
+    transform: translateY(-55vh);
+  }
+
+  .sidebar-open .map-legend {
+    transform: translate(-50%, -55vh);
+  }
+}
+
+/* ─── Force Compact Attribution ──────────────────────── */
+.maplibregl-ctrl-attrib {
+  background-color: transparent !important;
+}
+.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-inner {
+  display: none !important;
+}
+.maplibregl-ctrl-attrib-button {
+  display: block !important;
+}
+.maplibregl-ctrl-attrib:hover {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+.maplibregl-ctrl-attrib:hover .maplibregl-ctrl-attrib-inner {
+  display: block !important;
+}
+.maplibregl-ctrl-attrib:hover .maplibregl-ctrl-attrib-button {
+  display: none !important;
+}
+
+/* ─── Waypoint Markers ───────────────────────────────── */
+.waypoint-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  border: 2px solid var(--text-primary);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.waypoint-marker.start {
+  background: var(--camo-olive-bright);
+  color: var(--surface-card);
+  border-color: var(--camo-olive-bright);
+  box-shadow: 0 0 10px rgba(138, 154, 91, 0.5);
+}
+
+.waypoint-marker.end {
+  background: var(--accent);
+  color: var(--dark-hoof);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+/* ─── WC Venue Markers ───────────────────────────────── */
+.wc-venue-marker {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c8102e, #003087);
+  border: 2px solid #FFD700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(200, 16, 46, 0.5), 0 0 6px rgba(255, 215, 0, 0.3);
+  animation: wcMarkerBounce 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: transform 150ms ease;
+}
+
+.wc-venue-marker:hover {
+  transform: scale(1.2);
+}
+
+.wc-marker-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+@keyframes wcMarkerBounce {
+  0% { transform: scale(0) translateY(-20px); opacity: 0; }
+  60% { transform: scale(1.2) translateY(2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ─── WC Popup ───────────────────────────────────────── */
+.wc-popup {
+  text-align: center;
+  padding: 4px;
+}
+
+.wc-popup strong {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: #1a1a2e;
+}
+
+.wc-popup-route-btn {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid #c8102e;
+  border-radius: 4px;
+  background: rgba(200, 16, 46, 0.1);
+  color: #c8102e;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.wc-popup-route-btn:hover {
+  background: #c8102e;
+  color: #fff;
+}
+
