@@ -57,6 +57,8 @@ Extensive static analysis and build testing were performed on both the frontend 
 *   [x] **Granular Filters:** UI toggles exist.
 *   [x] **Semantic Search:** UI exists and is temporarily wired to a Nominatim API fallback while Vectorize/RAG integration stabilizes.
 *   [x] **Device Export:** Implemented via `togpx` library, converting Valhalla-decoded GeoJSON to GPX file downloads.
+*   [~] **Semantic Search:** UI exists, backend endpoint exists (but has type errors).
+*   [ ] **Device Export:** UI buttons exist, but actual GPX conversion (`togpx`) is not implemented.
 *   [x] **Donation Engine:** UI (`DonateBanner.jsx`) is built, but PayPal SDK integration is missing.
 *   [x] **Mascot Integration:** Reki is heavily integrated into the UI copy and empty states.
 
@@ -83,6 +85,8 @@ Based on the audit, the following steps must be taken, prioritized from most cri
 ### High Priority: Frontend Missing Pieces
 3.  **Install Missing Dependencies:** Run `npm install uplot @mapbox/polyline @paypal/paypal-js` in the `frontend` directory.
 4.  *(Completed)* **Implement Device Export:** GPX button is now wired up using `togpx`.
+3.  **Install Missing Dependencies:** Run `npm install uplot @mapbox/polyline @paypal/paypal-js togpx` in the `frontend` directory.
+4.  **Implement Device Export:** Wire up the "GPX" button in `Sidebar.jsx` using the `togpx` library to convert the current route GeoJSON and trigger a file download.
 
 ### Medium Priority: Architecture Realignment
 5.  **Directory Restructuring:** Move `Dockerfile.valhalla` to a new `routing/valhalla/` directory and create the `routing/docker-compose.yml` as specified in `02_Technical_Todo.md`.
