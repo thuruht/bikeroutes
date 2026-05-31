@@ -64,3 +64,7 @@ Welcome to the central repository for the vision, architecture, and future of Bi
     - Mode Activation
     - Venue Quick-Select
     - Custom Map Layers
+
+12. [Architecture Refactor Advisory](./12_Architecture_Refactor.md)
+    - Map Tiles: Shift from Raster to Vector PMTiles
+    - Routing: Valhalla Container Integration

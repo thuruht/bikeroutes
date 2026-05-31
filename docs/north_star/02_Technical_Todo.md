@@ -44,7 +44,7 @@ The repository is currently in a partially scaffolded state. These steps must be
     *   Implement Trail-Type filter chips (Paved, Gravel, Dirt, MTB) that dynamically update Valhalla costing requests.
     *   Build the Semantic Search bar with rate-limiting UI feedback.
     *   Develop the `DonateBanner.jsx` and the slide-up PayPal integration drawer.
-*   [ ] **Export Functionality:**
+*   [x] **Export Functionality:**
     *   Implement client-side GeoJSON to GPX/KML conversion (`togpx`).
 *   [ ] **State Management & Performance:**
     *   Ensure smooth state transitions between sidebar, map, and filter states.

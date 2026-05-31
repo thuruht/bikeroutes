@@ -19,6 +19,7 @@ This document serves as a quick reference for key terms, architectural concepts,
 *   **Active Navigation Mode:** [09_Navigation_Mode](./09_Navigation_Mode.md)
 *   **FIFA World Cup 26 Mode:** [11_FWC26_Prompt](./11_FWC26_Prompt.md)
 *   **Interactive Route Builder:** [10_Route_Builder](./10_Route_Builder.md)
+*   **Architecture Refactor (PMTiles/Valhalla):** [12_Architecture_Refactor](./12_Architecture_Refactor.md)
 
 ## Cross-Referencing Tags (For LLM / AI Agents)
 
