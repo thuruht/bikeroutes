@@ -55,7 +55,7 @@ Extensive static analysis and build testing were performed on both the frontend 
 *   [x] **Interactive Route Drawing:** Basic scaffolding exists using MapLibre.
 *   [ ] **Elevation Profiles:** Missing (`uplot` not installed, UI panel missing).
 *   [x] **Granular Filters:** UI toggles exist.
-*   [~] **Semantic Search:** UI exists, backend endpoint exists (but has type errors).
+*   [x] **Semantic Search:** UI exists and is temporarily wired to a Nominatim API fallback while Vectorize/RAG integration stabilizes.
 *   [x] **Device Export:** Implemented via `togpx` library, converting Valhalla-decoded GeoJSON to GPX file downloads.
 *   [x] **Donation Engine:** UI (`DonateBanner.jsx`) is built, but PayPal SDK integration is missing.
 *   [x] **Mascot Integration:** Reki is heavily integrated into the UI copy and empty states.

@@ -463,3 +463,61 @@
   background: var(--accent-light);
   border-color: var(--accent-light);
 }
+
+/* Search Results Panel */
+.search-results-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-elevated);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  margin-top: -4px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+}
+
+.search-reki-says {
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(255, 107, 26, 0.1);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.search-result-item {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover,
+.search-result-item:focus {
+  background: var(--surface-tertiary);
+}
+
+.search-result-item strong {
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+
+.search-result-item p {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}

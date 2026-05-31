@@ -38,6 +38,9 @@ export default function Sidebar({
   waypoints,
   searchQuery,
   onSearchChange,
+  onSearchSubmit,
+  searchResults,
+  isSearching,
   onClearRoute,
   routeOptions,
   setRouteOptions,
@@ -89,6 +92,13 @@ export default function Sidebar({
         btn.innerHTML = '<span>Copied!</span>'
         setTimeout(() => { btn.innerHTML = originalText }, 2000)
       }
+    }
+  }
+
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      onSearchSubmit(searchQuery)
     }
   }
 
@@ -148,9 +158,36 @@ export default function Sidebar({
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
                 id="trail-search-input"
+                onKeyDown={handleKeyDown}
               />
-              <kbd className="search-kbd">⌘K</kbd>
+              {isSearching ? <span className="search-spinner">⏳</span> : <kbd className="search-kbd">⏎</kbd>}
             </div>
+
+            {/* Search Results Dropdown */}
+            {searchResults && searchFocused && (
+              <div className="search-results-panel">
+                <div className="search-reki-says">{searchResults.reki_says}</div>
+                {searchResults.results && searchResults.results.map((res, i) => (
+                  <button
+                    key={res.id || i}
+                    type="button"
+                    className="search-result-item"
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent blur
+                      setWaypoints(prev => {
+                        if (prev.length >= 1) return [prev[0], res.coords]
+                        return [[-94.5786, 39.0997], res.coords] // Default KC A point
+                      });
+                      onSnapLocation(); // Try to snap GPS for A
+                      setSearchFocused(false);
+                    }}
+                  >
+                    <strong>{res.name}</strong>
+                    <p>{res.description}</p>
+                  </button>
+                ))}
+              </div>
+            )}
 
             <section className="sidebar-section">
               <div className="section-header">
