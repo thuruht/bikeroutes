@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { BASEMAPS, OVERLAYS, DEFAULT_BASEMAP } from '../lib/basemaps'
-import './MapStyleSwitcher.css'
+import styles from './MapStyleSwitcher.module.css'
 
 // Group basemaps by their group property
 function groupBasemaps() {
@@ -33,10 +33,10 @@ export default function MapStyleSwitcher({ activeBasemap, onBasemapChange, activ
   const current = BASEMAPS[activeBasemap] || BASEMAPS[DEFAULT_BASEMAP]
 
   return (
-    <div className="map-style-switcher" ref={panelRef}>
+    <div className={styles.mapStyleSwitcher} ref={panelRef}>
       {/* Toggle button */}
       <button
-        className="style-switcher-toggle glass"
+        className={`${styles.styleSwitcherToggle} glass`}
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Change map style"
         id="map-style-toggle"
@@ -51,47 +51,47 @@ export default function MapStyleSwitcher({ activeBasemap, onBasemapChange, activ
 
       {/* Panel */}
       {isOpen && (
-        <div className="style-switcher-panel glass-strong camo-bg animate-fade-in" id="map-style-panel">
-          <div className="style-switcher-header">
+        <div className={`${styles.styleSwitcherPanel} glass-strong camo-bg animate-fade-in`} id="map-style-panel">
+          <div className={styles.styleSwitcherHeader}>
             <h3>Map Style</h3>
-            <button type="button" className="style-switcher-close" onClick={() => setIsOpen(false)}>✕</button>
+            <button type="button" className={styles.styleSwitcherClose} onClick={() => setIsOpen(false)}>✕</button>
           </div>
 
           {/* Overlay toggles */}
-          <div className="style-switcher-overlays">
-            <span className="basemap-group-label">Overlays</span>
-            <div className="overlay-items">
+          <div className={styles.styleSwitcherOverlays}>
+            <span className={styles.basemapGroupLabel}>Overlays</span>
+            <div className={styles.overlayItems}>
               {Object.entries(OVERLAYS).map(([key, overlay]) => (
                 <button
                   key={key}
-                  className={`overlay-item ${activeOverlays.includes(key) ? 'active' : ''}`}
+                  className={`${styles.overlayItem} ${activeOverlays.includes(key) ? styles.active : ''}`}
                   onClick={() => onOverlayToggle(key)}
                   id={`overlay-${key}`}
                 >
                   <span className="overlay-icon">{overlay.icon}</span>
-                  <span className="overlay-label">{overlay.label}</span>
-                  <span className={`overlay-toggle ${activeOverlays.includes(key) ? 'on' : ''}`} />
+                  <span className={styles.overlayLabel}>{overlay.label}</span>
+                  <span className={`${styles.overlayToggle} ${activeOverlays.includes(key) ? styles.on : ''}`} />
                 </button>
               ))}
             </div>
           </div>
 
           {/* Basemap groups */}
-          <div className="style-switcher-basemaps">
+          <div className={styles.styleSwitcherBasemaps}>
             {Object.entries(GROUPED).map(([groupName, basemaps]) => (
               <div key={groupName} className="basemap-group">
-                <span className="basemap-group-label">{groupName}</span>
-                <div className="basemap-group-items">
+                <span className={styles.basemapGroupLabel}>{groupName}</span>
+                <div className={styles.basemapGroupItems}>
                   {basemaps.map(({ key, label, icon }) => (
                     <button
                       key={key}
-                      className={`basemap-item ${activeBasemap === key ? 'active' : ''}`}
+                      className={`${styles.basemapItem} ${activeBasemap === key ? styles.active : ''}`}
                       onClick={() => { onBasemapChange(key); }}
                       id={`basemap-${key}`}
                       title={label}
                     >
-                      <span className="basemap-icon">{icon}</span>
-                      <span className="basemap-label">{label}</span>
+                      <span className={styles.basemapIcon}>{icon}</span>
+                      <span className={styles.basemapLabel}>{label}</span>
                     </button>
                   ))}
                 </div>

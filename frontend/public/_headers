@@ -1,0 +1,7 @@
+/*
+  Link: <https://api.fontshare.com>; rel=preconnect
+  Link: <https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&f[]=satoshi@400,500,700&display=swap>; rel=preload; as=style
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

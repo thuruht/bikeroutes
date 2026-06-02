@@ -3,7 +3,7 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { buildMapStyle, DEFAULT_BASEMAP } from '../lib/basemaps'
 import MapStyleSwitcher from './MapStyleSwitcher'
-import './MapView.css'
+import styles from './MapView.module.css'
 
 // KC metro center
 const DEFAULT_CENTER = [-94.5786, 39.0997]
@@ -39,7 +39,7 @@ const MKT_CORRIDOR_GEOJSON = {
   },
 }
 
-export default function MapView({ activeFilters, onRouteCalculated, waypoints, setWaypoints, routeOptions, isNavigating, wcMode }) {
+export default function MapView({ onRouteCalculated, waypoints, setWaypoints, routeOptions, isNavigating, wcMode }) {
   const mapContainer = useRef(null)
   const map = useRef(null)
   const geolocateControl = useRef(null)
@@ -63,6 +63,34 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     };
     return () => { delete window.routeTo; };
   }, [setWaypoints]);
+
+  // WebGL Context Loss Recovery
+  useEffect(() => {
+    const container = mapContainer.current;
+    if (!container) return;
+
+    const handleContextLost = (e) => {
+      e.preventDefault();
+      console.error("WebGL context lost. Attempting recovery...");
+    };
+
+    const handleContextRestored = () => {
+      console.warn("WebGL context restored. Reloading map...");
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+        setActiveBasemap(prev => prev);
+      }
+    };
+
+    container.addEventListener('webglcontextlost', handleContextLost, false);
+    container.addEventListener('webglcontextrestored', handleContextRestored, false);
+
+    return () => {
+      container.removeEventListener('webglcontextlost', handleContextLost);
+      container.removeEventListener('webglcontextrestored', handleContextRestored);
+    };
+  }, []);
 
   useEffect(() => {
     if (map.current) return
@@ -108,15 +136,16 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
         map.current = null
       }
     }
-  }, [])
+  }, [activeBasemap, activeOverlays, routeGeoJSON])
 
   // GPS Navigation Mode trigger
   useEffect(() => {
     if (isNavigating && geolocateControl.current) {
       // Small timeout ensures the control is mounted and map is ready
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         geolocateControl.current.trigger()
       }, 100)
+      return () => clearTimeout(timer)
     }
   }, [isNavigating])
 
@@ -132,8 +161,10 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     }
 
     map.current.on('click', handleClick)
-    return () => map.current.off('click', handleClick)
-  }, [isNavigating])
+    return () => {
+      if (map.current) map.current.off('click', handleClick)
+    }
+  }, [isNavigating, setWaypoints])
 
   // Sync Markers to Waypoints
   useEffect(() => {
@@ -145,7 +176,7 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
     waypoints.forEach((pt, i) => {
       const el = document.createElement('div')
-      el.className = `waypoint-marker ${i === 0 ? 'start' : 'end'}`
+      el.className = `${styles.waypointMarker} ${i === 0 ? 'start' : 'end'}`
       el.innerHTML = i === 0 ? 'A' : 'B'
 
       // Hide markers during active navigation for a cleaner map
@@ -161,8 +192,19 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
   // Fetch Route when 2 waypoints are set
   useEffect(() => {
+    let active = true
+
     if (waypoints.length !== 2) {
-      setRouteGeoJSON(null)
+      if (routeGeoJSON !== null) {
+        // Defer to avoid synchronous state update warning
+        const timer = setTimeout(() => {
+          if (active) {
+            setRouteGeoJSON(null)
+            onRouteCalculated(null, [], null)
+          }
+        }, 0)
+        return () => { active = false; clearTimeout(timer) }
+      }
       return
     }
 
@@ -186,34 +228,36 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
           body: JSON.stringify({
             locations: waypoints.map(pt => ({ lon: pt[0], lat: pt[1] })),
             costing: 'bicycle',
-            costing_options: costingOptions
+            costing_options: costingOptions,
+            heights: true // Request elevation data
           })
         })
         const data = await res.json()
         
-        if (data.trip && data.trip.legs) {
-          import('../lib/polyline.js').then(({ decodePolyline }) => {
-            const coords = decodePolyline(data.trip.legs[0].shape)
-            
-            const geojson = {
-              type: 'FeatureCollection',
-              features: [{
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                  type: 'LineString',
-                  coordinates: coords
-                }
-              }]
-            }
-            setRouteGeoJSON(geojson)
+        if (!active) return
 
-            onRouteCalculated({
-              distance: data.trip.summary.length.toFixed(1),
-              elevation: Math.round(data.trip.summary.elevation || 0),
-              time: Math.round(data.trip.summary.time / 60) + ' min'
-            }, data.trip.legs[0].maneuvers, geojson)
-          })
+        if (data.trip && data.trip.legs) {
+          const { decodePolyline } = await import('../lib/polyline.js')
+          const coords = decodePolyline(data.trip.legs[0].shape, 6, 3)
+          
+          const geojson = {
+            type: 'FeatureCollection',
+            features: [{
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: coords
+              }
+            }]
+          }
+          setRouteGeoJSON(geojson)
+
+          onRouteCalculated({
+            distance: data.trip.summary.length.toFixed(1),
+            elevation: Math.round(data.trip.summary.elevation || 0),
+            time: Math.round(data.trip.summary.time / 60) + ' min'
+          }, data.trip.legs[0].maneuvers, geojson)
         }
       } catch (err) {
         console.error("Routing error:", err)
@@ -221,7 +265,8 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     }
     
     fetchRoute()
-  }, [waypoints, onRouteCalculated, routeOptions])
+    return () => { active = false }
+  }, [waypoints, onRouteCalculated, routeOptions, routeGeoJSON])
 
   // Update map style when basemap, overlays, or route changes
   useEffect(() => {
@@ -232,15 +277,15 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
   // ─── World Cup Mode: Venue Markers & MKT Corridor ───────────
   useEffect(() => {
-    if (!map.current) return
+    const m = map.current
+    if (!m) return
 
     // Clean up previous WC markers
-    wcMarkersRef.current.forEach(m => m.remove())
+    wcMarkersRef.current.forEach(marker => marker.remove())
     wcMarkersRef.current = []
 
     if (!wcMode) {
       // Remove MKT corridor layer/source if they exist
-      const m = map.current
       if (m.getLayer('wc-mkt-corridor-line')) m.removeLayer('wc-mkt-corridor-line')
       if (m.getLayer('wc-mkt-corridor-label')) m.removeLayer('wc-mkt-corridor-label')
       if (m.getSource('wc-mkt-corridor')) m.removeSource('wc-mkt-corridor')
@@ -250,21 +295,21 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     // Add venue markers with staggered bounce-in
     WC_VENUES.forEach((venue, i) => {
       const el = document.createElement('div')
-      el.className = 'wc-venue-marker'
-      el.innerHTML = `<span class="wc-marker-icon">${venue.icon}</span>`
+      el.className = styles.wcVenueMarker
+      el.innerHTML = `<span class="${styles.wcMarkerIcon}">${venue.icon}</span>`
       el.style.animationDelay = `${i * 100}ms`
 
       const popup = new maplibregl.Popup({ offset: 25, closeButton: false }).setHTML(`
-        <div class="wc-popup">
+        <div class="${styles.wcPopup}">
           <strong>${venue.icon} ${venue.name}</strong>
-          <button type="button" class="wc-popup-route-btn" data-venue-id="${venue.id}">Route here →</button>
+          <button type="button" class="${styles.wcPopupRouteBtn}" data-venue-id="${venue.id}">Route here →</button>
         </div>
       `)
 
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat(venue.coords)
         .setPopup(popup)
-        .addTo(map.current)
+        .addTo(m)
 
       // Listen for popup open to attach "Route here" click
       popup.on('open', () => {
@@ -287,7 +332,6 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
 
     // Add MKT corridor on style load (needed because setStyle may reset layers)
     const addCorridorLayer = () => {
-      const m = map.current
       if (!m || !m.isStyleLoaded()) return
 
       if (!m.getSource('wc-mkt-corridor')) {
@@ -313,23 +357,19 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
     }
 
     // Try adding immediately, or wait for style load
-    if (map.current.isStyleLoaded()) {
+    if (m.isStyleLoaded()) {
       addCorridorLayer()
     } else {
-      map.current.once('style.load', addCorridorLayer)
+      m.once('style.load', addCorridorLayer)
     }
 
     // Also re-add corridor after any future style changes
-    map.current.on('style.load', addCorridorLayer)
+    m.on('style.load', addCorridorLayer)
 
     // Add interactions for overlays (like worldcup_bbq)
-    map.current.on('mouseenter', 'overlay-worldcup_bbq-layer', (e) => {
-      map.current.getCanvas().style.cursor = 'pointer';
-    });
-    map.current.on('mouseleave', 'overlay-worldcup_bbq-layer', () => {
-      map.current.getCanvas().style.cursor = '';
-    });
-    map.current.on('click', 'overlay-worldcup_bbq-layer', (e) => {
+    const onBBQEnter = () => { m.getCanvas().style.cursor = 'pointer' }
+    const onBBQLeave = () => { m.getCanvas().style.cursor = '' }
+    const onBBQClick = (e) => {
       if (!e.features || !e.features[0]) return;
       const props = e.features[0].properties;
       const name = props.Name || props.NAME || props.name || 'BBQ Joint';
@@ -338,22 +378,28 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
       new maplibregl.Popup()
         .setLngLat(e.lngLat)
         .setHTML(`
-          <div class="wc-popup">
+          <div class="${styles.wcPopup}">
             <strong>🍖 ${name}</strong>
             ${address ? `<p style="font-size:0.75rem; color:#666; margin: 4px 0;">${address}</p>` : ''}
-            <button type="button" class="wc-popup-route-btn" style="margin-top: 8px;" onclick="window.routeTo([${e.lngLat.lng}, ${e.lngLat.lat}])">Route here →</button>
+            <button type="button" class="${styles.wcPopupRouteBtn}" style="margin-top: 8px;" onclick="window.routeTo([${e.lngLat.lng}, ${e.lngLat.lat}])">Route here →</button>
           </div>
         `)
-        .addTo(map.current);
-    });
+        .addTo(m);
+    }
 
+    m.on('mouseenter', 'overlay-worldcup_bbq-layer', onBBQEnter)
+    m.on('mouseleave', 'overlay-worldcup_bbq-layer', onBBQLeave)
+    m.on('click', 'overlay-worldcup_bbq-layer', onBBQClick)
 
     return () => {
-      if (map.current) {
-        map.current.off('style.load', addCorridorLayer)
+      if (m) {
+        m.off('style.load', addCorridorLayer)
+        m.off('mouseenter', 'overlay-worldcup_bbq-layer', onBBQEnter)
+        m.off('mouseleave', 'overlay-worldcup_bbq-layer', onBBQLeave)
+        m.off('click', 'overlay-worldcup_bbq-layer', onBBQClick)
       }
     }
-  }, [wcMode])
+  }, [wcMode, setWaypoints])
 
   // Update map style when basemap or overlays change
   const handleBasemapChange = useCallback((key) => {
@@ -370,8 +416,8 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
   }, [])
 
   return (
-    <div className="map-container" id="map-container">
-      <div ref={mapContainer} className="map-canvas" />
+    <div className={styles.mapContainer} id="map-container">
+      <div ref={mapContainer} className={styles.mapCanvas} />
 
       {/* Basemap & overlay switcher */}
       <MapStyleSwitcher
@@ -382,12 +428,11 @@ export default function MapView({ activeFilters, onRouteCalculated, waypoints, s
       />
 
       {/* Reki watermark */}
-      <div className="map-watermark">
-        <img src="/reki.png" alt="Reki the Deer - BikeRoutes Mascot" title="Reki has scouted this area!" className="watermark-icon" width="20" height="20" />
-        <span className="watermark-text">REKI SCOUTED THIS</span>
+      <div className={styles.mapWatermark}>
+        <img src="/reki.png" alt="Reki the Deer - BikeRoutes Mascot" title="Reki has scouted this area!" className={styles.watermarkIcon} width="20" height="20" />
+        <span className={styles.watermarkText}>REKI SCOUTED THIS</span>
       </div>
 
     </div>
   )
 }
-

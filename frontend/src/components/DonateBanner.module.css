@@ -1,0 +1,190 @@
+/* ======================================================
+   DonateBanner — Tactical Hi-Tech
+   ====================================================== */
+
+.donateOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.donateBanner {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  border-top: 2px solid var(--accent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.donateClose {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  transition: all var(--transition-fast);
+  z-index: 1;
+}
+
+.donateClose:hover {
+  color: var(--accent);
+  background: var(--surface-tertiary);
+}
+
+/* Header */
+.donateHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  z-index: 1;
+}
+
+.donateReki {
+  font-size: 3rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.donateTitle {
+  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.donateSubtitle {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.donatePunk {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Tiers */
+.donateTiers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 1;
+}
+
+.donateTier {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px var(--space-md);
+  background: var(--surface-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.donateTier:hover {
+  border-color: var(--accent);
+  background: var(--surface-elevated);
+  transform: translateX(3px);
+  box-shadow: -3px 0 0 var(--accent);
+}
+
+.tierIcon {
+  font-size: var(--text-xl);
+  flex-shrink: 0;
+  width: 32px;
+  text-align: center;
+}
+
+.tierInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.tierLabel {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tierDesc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.tierAmount {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* Monthly */
+.donateMonthly {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface-tertiary);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  z-index: 1;
+}
+
+.donateMonthlyText {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* Footer */
+.donateFooter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  z-index: 1;
+}
+
+.donateTransparency {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.donatePromise {
+  font-size: var(--text-xs);
+  color: var(--camo-tan);
+  font-style: italic;
+}
+
+/* Desktop — center the modal */
+@media (min-width: 769px) {
+  .donateOverlay {
+    align-items: center;
+  }
+
+  .donateBanner {
+    border-radius: var(--radius-lg);
+  }
+}

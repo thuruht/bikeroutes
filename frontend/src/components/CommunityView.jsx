@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import WCLeaderboard from './WCLeaderboard'
-import './CommunityView.css'
+import styles from './CommunityView.module.css'
 
 const API_BASE = 'https://bikeroutes-api.jojo-829.workers.dev'
 
@@ -14,22 +14,18 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [authStep, setAuthStep] = useState('email') // email, code
+  const [now, setNow] = useState(0)
 
-  useEffect(() => {
-    fetchReports()
-    checkAuth()
-  }, [])
-
-  const checkAuth = () => {
+  const checkAuth = useCallback(() => {
     const token = localStorage.getItem('bikeroutes_session')
     if (token) {
       setAuthStatus('authenticated')
     } else {
       setAuthStatus('unauthenticated')
     }
-  }
+  }, [])
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     try {
       setLoading(true)
       const res = await fetch(`${API_BASE}/api/reports`)
@@ -42,7 +38,16 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchReports()
+      checkAuth()
+      setNow(Date.now())
+    }
+    init()
+  }, [fetchReports, checkAuth])
 
   const handleRequestCode = async (e) => {
     e.preventDefault()
@@ -54,11 +59,10 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
       })
       const data = await res.json()
       if (data.dev_code) {
-        // Auto-fill code in dev
         setCode(data.dev_code)
       }
       setAuthStep('code')
-    } catch (err) {
+    } catch {
       alert("Failed to request code")
     }
   }
@@ -78,7 +82,7 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
       } else {
         alert(data.error || "Verification failed")
       }
-    } catch (err) {
+    } catch {
       alert("Verification failed")
     }
   }
@@ -118,7 +122,7 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
           const data = await res.json()
           alert(data.error || "Failed to submit report")
         }
-      } catch (err) {
+      } catch {
         alert("Failed to submit report")
       } finally {
         setSubmitting(false)
@@ -130,40 +134,41 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
   }
 
   const getTimeAgo = (dateStr) => {
-    const diff = Date.now() - new Date(dateStr).getTime()
+    const diff = now - new Date(dateStr).getTime()
     const hours = Math.floor(diff / (1000 * 60 * 60))
     if (hours < 1) return 'Just now'
     return `${hours}h ago`
   }
 
   return (
-    <div className="community-view glass-strong animate-fade-in">
+    <div className={styles.container}>
       {wcMode && <WCLeaderboard onRouteSelect={onWcRouteSelect} />}
-      <div className="community-header">
-        <h2 className="community-title">Live Field Reports</h2>
-        <p className="community-subtitle">Recent hazards and trail conditions reported by scouts. Reports decay after 48 hours.</p>
+      
+      <div className={styles.header}>
+        <h2 className={styles.title}>Live Field Reports</h2>
+        <p className={styles.subtitle}>Recent hazards and trail conditions reported by scouts.</p>
       </div>
 
-      <div className="community-layout">
-        <div className="reports-feed">
+      <div className={styles.layout}>
+        <div className={styles.feed}>
           {loading ? (
-            <div className="reports-loading">Scanning area...</div>
+            <div className={styles.loading}>Scanning area...</div>
           ) : reports.length === 0 ? (
-            <div className="reports-empty">
-              <img src="/reki_icon.png" alt="Reki" className="reports-empty-icon" />
+            <div className={styles.empty}>
+              <img src="/reki_icon.png" alt="Reki" className={styles.emptyIcon} />
               <p>No active reports in the area.</p>
-              <p className="hint">Trails look clear! Go blaze a path.</p>
+              <p className={styles.hint}>Trails look clear! Go blaze a path.</p>
             </div>
           ) : (
-            <div className="reports-list">
+            <div className={styles.list}>
               {reports.map(r => (
-                <div key={r.id} className="report-card camo-bg">
-                  <div className="report-header">
-                    <span className={`report-badge type-${r.type}`}>{r.type.toUpperCase()}</span>
-                    <span className="report-time">{getTimeAgo(r.created_at)}</span>
+                <div key={r.id} className={`box ${styles.card}`}>
+                  <div className={styles.cardHeader}>
+                    <span className={`${styles.badge} ${styles['type-' + r.type]}`}>{r.type.toUpperCase()}</span>
+                    <span className={styles.time}>{getTimeAgo(r.created_at)}</span>
                   </div>
-                  {r.description && <p className="report-desc">{r.description}</p>}
-                  <div className="report-footer">
+                  {r.description && <p className={styles.desc}>{r.description}</p>}
+                  <div className={styles.cardFooter}>
                     Reported by: {r.display_name || 'Anonymous Scout'}
                   </div>
                 </div>
@@ -172,73 +177,77 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
           )}
         </div>
 
-        <div className="report-form-container">
-          <h3 className="form-title">Report Hazard Here</h3>
+        <div className={styles.formPanel}>
+          <h3 className={styles.formTitle}>Report Hazard</h3>
           
           {authStatus === 'checking' ? (
-            <div className="auth-loading">Checking comms...</div>
+            <div className={styles.loading}>Checking comms...</div>
           ) : authStatus === 'unauthenticated' ? (
-            <div className="auth-box glass">
-              <h4>Scout Verification Required</h4>
+            <div className={`box ${styles.authBox}`}>
+              <h4>Verification Required</h4>
               <p>You must be verified to submit field reports.</p>
               
               {authStep === 'email' ? (
-                <form onSubmit={handleRequestCode} className="auth-form">
+                <form onSubmit={handleRequestCode} className={styles.form}>
                   <input 
                     type="email" 
                     value={email} 
                     onChange={e => setEmail(e.target.value)} 
-                    placeholder="Scout Email" 
+                    placeholder="Email" 
                     required 
-                    className="auth-input"
+                    className={styles.input}
                   />
-                  <button type="submit" className="action-btn primary full-width">SEND CODE</button>
+                  <button type="submit" className={styles.submitBtn}>SEND CODE</button>
                 </form>
               ) : (
-                <form onSubmit={handleVerifyCode} className="auth-form">
+                <form onSubmit={handleVerifyCode} className={styles.form}>
                   <input 
                     type="text" 
                     value={code} 
                     onChange={e => setCode(e.target.value)} 
                     placeholder="6-Digit Code" 
                     required 
-                    className="auth-input"
+                    className={styles.input}
                   />
-                  <button type="submit" className="action-btn primary full-width">VERIFY</button>
+                  <button type="submit" className={styles.submitBtn}>VERIFY</button>
                 </form>
               )}
             </div>
           ) : (
-            <form onSubmit={handleSubmitReport} className="report-form glass">
-              <label className="form-label">Hazard Type</label>
-              <select 
-                value={reportType} 
-                onChange={e => setReportType(e.target.value)}
-                className="report-select"
-              >
-                <option value="mud">Mud</option>
-                <option value="flooding">Flooding</option>
-                <option value="debris">Debris / Tree Down</option>
-                <option value="closure">Trail Closed</option>
-                <option value="cops">Police / Security</option>
-                <option value="other">Other Hazard</option>
-              </select>
+            <form onSubmit={handleSubmitReport} className={`box ${styles.reportForm}`}>
+              <div className={styles.field}>
+                <label className={styles.label}>Hazard Type</label>
+                <select 
+                  value={reportType} 
+                  onChange={e => setReportType(e.target.value)}
+                  className={styles.select}
+                >
+                  <option value="mud">Mud</option>
+                  <option value="flooding">Flooding</option>
+                  <option value="debris">Debris / Tree Down</option>
+                  <option value="closure">Trail Closed</option>
+                  <option value="cops">Police / Security</option>
+                  <option value="other">Other Hazard</option>
+                </select>
+              </div>
 
-              <label className="form-label">Details</label>
-              <textarea 
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Optional details (e.g., 'Tree blocking path completely')"
-                className="report-textarea"
-                rows={3}
-              />
+              <div className={styles.field}>
+                <label className={styles.label}>Details</label>
+                <textarea 
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="e.g., 'Tree blocking path completely'"
+                  className={styles.textarea}
+                  rows={3}
+                />
+              </div>
 
               <button 
                 type="submit" 
-                className="action-btn destructive full-width"
+                className={styles.submitBtn}
                 disabled={submitting}
               >
-                {submitting ? 'TRANSMITTING...' : '📍 SUBMIT AT CURRENT LOCATION'}
+                {submitting ? 'TRANSMITTING...' : '📍 SUBMIT REPORT'}
               </button>
             </form>
           )}

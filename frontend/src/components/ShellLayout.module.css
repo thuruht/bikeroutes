@@ -1,0 +1,42 @@
+.tentacles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.09;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.tentacle {
+  position: absolute;
+  border-radius: 999px;
+  transform-origin: top center;
+  width: 1.5px;
+  height: var(--len);
+  left: var(--x);
+  top: -8vh;
+  background: linear-gradient(120deg, rgba(27, 123, 188, 0.22), rgba(27, 73, 129, 0));
+  filter: blur(0.2px);
+  animation: drift var(--dur) ease-in-out infinite alternate;
+}
+
+.tentacle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 17px;
+  left: -4px;
+  background: linear-gradient(120deg, rgba(27, 123, 229, 0.13), rgba(27, 123, 69, 0));
+  border-radius: 999px;
+}
+
+@keyframes drift {
+  from { transform: rotate(calc(var(--rot) * -2)) translateY(0); }
+  to { transform: rotate(var(--rot)) translateY(2vh); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tentacle {
+    animation: none;
+  }
+}

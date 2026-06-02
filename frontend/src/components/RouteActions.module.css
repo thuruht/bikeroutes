@@ -1,0 +1,66 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: auto;
+  padding-top: var(--space-8);
+}
+
+.primaryBtn {
+  width: 100%;
+  background: var(--color-primary);
+  color: #fff;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 4px 12px var(--color-primary-soft);
+}
+
+.primaryBtn:hover {
+  background: #156166;
+  transform: translateY(-2px);
+}
+
+.primaryBtn.destructive {
+  background: #E85D4A;
+  box-shadow: 0 4px 12px rgba(232, 93, 74, 0.2);
+}
+
+.primaryBtn.destructive:hover {
+  background: #d44c3b;
+}
+
+.secondaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.secondaryBtn {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.secondaryBtn:hover {
+  background: #fff;
+  border-color: var(--color-primary-soft);
+  color: var(--color-text);
+}
+
+.secondaryBtn.clear:hover {
+  border-color: #E85D4A;
+  color: #E85D4A;
+}

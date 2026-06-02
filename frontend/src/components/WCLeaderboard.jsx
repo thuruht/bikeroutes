@@ -1,4 +1,4 @@
-import './WCLeaderboard.css'
+import styles from './WCLeaderboard.module.css'
 
 const MOCK_RIDERS = [
   { rank: 1, name: 'ArrowheadRider26', routes: 14, distance: 87.2, matchDays: 5 },
@@ -38,16 +38,7 @@ const FEATURED_ROUTES = [
   },
 ]
 
-import { useState } from 'react'
-
 export default function WCLeaderboard({ onRouteSelect }) {
-  const [submitted, setSubmitted] = useState(false)
-
-  const handleSubmit = () => {
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 3000)
-  }
-
   const rankBadge = (rank) => {
     if (rank === 1) return '🥇'
     if (rank === 2) return '🥈'
@@ -56,74 +47,73 @@ export default function WCLeaderboard({ onRouteSelect }) {
   }
 
   return (
-    <div className="wc-leaderboard" id="wc-leaderboard">
-      <div className="wc-lb-header">
-        <h2 className="wc-lb-title">⚽ KC 2026 Leaderboard</h2>
-        <span className="wc-lb-sample-badge">Sample Data</span>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h2 className={styles.title}>⚽ KC 2026 Leaderboard</h2>
+        <span className="eyebrow">Sample Data</span>
       </div>
 
-      {/* Match Day Riders */}
-      <section className="wc-lb-section">
-        <h3 className="wc-lb-section-title">Match Day Riders</h3>
-        <div className="wc-lb-table-wrap">
-          <table className="wc-lb-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Rider</th>
-                <th>Routes</th>
-                <th>Distance</th>
-                <th>Match Days</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MOCK_RIDERS.map(r => (
-                <tr key={r.rank} className={r.rank <= 3 ? 'top-three' : ''}>
-                  <td className="rank-cell">{rankBadge(r.rank)}</td>
-                  <td className="rider-cell">{r.name}</td>
-                  <td>{r.routes}</td>
-                  <td>{r.distance} mi</td>
-                  <td>{r.matchDays}</td>
+      <div className={styles.layout}>
+        {/* Match Day Riders */}
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Match Day Riders</h3>
+          <div className={`box ${styles.tableWrap}`}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Rider</th>
+                  <th>Routes</th>
+                  <th>Distance</th>
+                  <th>Match Days</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </thead>
+              <tbody>
+                {MOCK_RIDERS.map(r => (
+                  <tr key={r.rank} className={r.rank <= 3 ? styles.topThree : ''}>
+                    <td className={styles.rankCell}>{rankBadge(r.rank)}</td>
+                    <td className={styles.riderCell}>{r.name}</td>
+                    <td>{r.routes}</td>
+                    <td>{r.distance} mi</td>
+                    <td>{r.matchDays}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-      {/* Featured Routes */}
-      <section className="wc-lb-section">
-        <h3 className="wc-lb-section-title">Most-Ridden WC Routes</h3>
-        <div className="wc-route-cards">
-          {FEATURED_ROUTES.map((route, i) => (
-            <div key={i} className="wc-route-card">
-              <div className="wc-route-info">
-                <span className="wc-route-name">{route.name}</span>
-                <div className="wc-route-meta">
-                  <span className="wc-route-distance">{route.distance}</span>
-                  <span className={`wc-route-surface ${route.surface.toLowerCase()}`}>{route.surface}</span>
+        {/* Featured Routes */}
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Most-Ridden WC Routes</h3>
+          <div className={styles.routeGrid}>
+            {FEATURED_ROUTES.map((route, i) => (
+              <div key={i} className={`box ${styles.routeCard}`}>
+                <div className={styles.routeInfo}>
+                  <div className={styles.routeName}>{route.name}</div>
+                  <div className={styles.routeMeta}>
+                    <span className={styles.routeDist}>{route.distance}</span>
+                    <span className={styles.routeSurface}>{route.surface}</span>
+                  </div>
                 </div>
+                <button
+                  className={styles.tryBtn}
+                  onClick={() => onRouteSelect(route.waypoints)}
+                >
+                  Try this route →
+                </button>
               </div>
-              <button
-                className="wc-route-try-btn"
-                onClick={() => onRouteSelect(route.waypoints)}
-              >
-                Try this route →
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      </div>
 
-      {/* Share Your Ride CTA */}
-      <section className="wc-lb-section wc-share-section">
-        <div className="wc-share-card">
-          <h3>Share Your Ride</h3>
-          <p>Rode to a match? Submit your route to the community leaderboard!</p>
-          <button type="button" className="wc-share-btn" onClick={() => alert('Route submission coming soon! 🦌')}>
-            Submit Route
-          </button>
-        </div>
+      <section className={`box tint ${styles.shareSection}`}>
+        <h3 className={styles.shareTitle}>Share Your Ride</h3>
+        <p className={styles.shareText}>Rode to a match? Submit your route to the community leaderboard!</p>
+        <button className={styles.shareBtn} onClick={() => alert('Coming soon!')}>
+          Submit Route
+        </button>
       </section>
     </div>
   )

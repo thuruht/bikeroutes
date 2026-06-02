@@ -1,4 +1,4 @@
-import './DonateBanner.css'
+import styles from './DonateBanner.module.css'
 
 const TIERS = [
   { amount: 5, label: 'Coffee for Reki', icon: '☕', desc: 'Keep Reki caffeinated' },
@@ -10,48 +10,48 @@ const TIERS = [
 
 export default function DonateBanner({ onClose }) {
   return (
-    <div className="donate-overlay" onClick={onClose}>
-      <div className="donate-banner glass-strong camo-bg animate-slide-up" onClick={e => e.stopPropagation()}>
-        <button type="button" className="donate-close" onClick={onClose} id="donate-close-btn" aria-label="Close">
+    <div className={styles.donateOverlay} onClick={onClose}>
+      <div className={`${styles.donateBanner} glass-strong camo-bg animate-slide-up`} onClick={e => e.stopPropagation()}>
+        <button type="button" className={styles.donateClose} onClick={onClose} id="donate-close-btn" aria-label="Close">
           ✕
         </button>
 
-        <div className="donate-header">
-          <img src="/reki.png" alt="Reki the deer" className="donate-reki" width="64" height="64" />
+        <div className={styles.donateHeader}>
+          <img src="/reki.png" alt="Reki the deer" className={styles.donateReki} width="64" height="64" />
           <div>
-            <h2 className="donate-title">Support BikeRoutes.org</h2>
-            <p className="donate-subtitle">
+            <h2 className={styles.donateTitle}>Support BikeRoutes.org</h2>
+            <p className={styles.donateSubtitle}>
               Free forever. No ads. No tracking.<br/>
-              <span className="donate-punk">Donations keep Reki on the trail.</span>
+              <span className={styles.donatePunk}>Donations keep Reki on the trail.</span>
             </p>
           </div>
         </div>
 
-        <div className="donate-tiers">
+        <div className={styles.donateTiers}>
           {TIERS.map(({ amount, label, icon, desc }) => (
-            <button type="button" key={amount} className="donate-tier" id={`donate-tier-${amount}`}>
-              <span className="tier-icon">{icon}</span>
-              <div className="tier-info">
-                <span className="tier-label">{label}</span>
-                <span className="tier-desc">{desc}</span>
+            <button type="button" key={amount} className={styles.donateTier} id={`donate-tier-${amount}`}>
+              <span className={styles.tierIcon}>{icon}</span>
+              <div className={styles.tierInfo}>
+                <span className={styles.tierLabel}>{label}</span>
+                <span className={styles.tierDesc}>{desc}</span>
               </div>
-              <span className="tier-amount">${amount}</span>
+              <span className={styles.tierAmount}>${amount}</span>
             </button>
           ))}
         </div>
 
-        <div className="donate-monthly">
+        <div className={styles.donateMonthly}>
           <span className="blaze-badge">MONTHLY</span>
-          <span className="donate-monthly-text">
+          <span className={styles.donateMonthlyText}>
             Subscribe from <strong>$3/mo</strong> — get Reki's Trail Mail every month
           </span>
         </div>
 
-        <div className="donate-footer">
-          <p className="donate-transparency">
+        <div className={styles.donateFooter}>
+          <p className={styles.donateTransparency}>
             💰 Tile server: ~$30/mo · Valhalla VPS: ~$12/mo · Domain: ~$12/yr
           </p>
-          <p className="donate-promise">
+          <p className={styles.donatePromise}>
             BikeRoutes.org will <em>always</em> be free. Donations keep it independent.
           </p>
         </div>
