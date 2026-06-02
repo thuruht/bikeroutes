@@ -52,17 +52,7 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
 
   // Initialize map
 
-  // Global helper for popup buttons
-  useEffect(() => {
-    window.routeTo = (coords) => {
-      setWaypoints(prev => {
-        if (prev.length >= 1) return [prev[0], coords];
-        return [[-94.5786, 39.0997], coords]; // Fallback A
-      });
-      document.querySelector('.maplibregl-popup-close-button')?.click();
-    };
-    return () => { delete window.routeTo; };
-  }, [setWaypoints]);
+  // Removed global helper to avoid scope leaks
 
   // WebGL Context Loss Recovery
   useEffect(() => {
@@ -130,6 +120,17 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
       'bottom-left'
     )
 
+    // MapLibre Error Bounds (Bug 4 Fallback)
+    map.current.on('error', (e) => {
+      if (e && e.error && e.error.message) {
+        console.warn('MapLibre resource error:', e.error.message)
+        if (activeBasemap.includes('usgs') && e.error.message.includes('fetch')) {
+          console.warn('Falling back from USGS to OSM basemap due to persistent errors.')
+          setActiveBasemap('osm')
+        }
+      }
+    })
+
     return () => {
       if (map.current) {
         map.current.remove()
@@ -195,78 +196,104 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
     let active = true
 
     if (waypoints.length !== 2) {
-      if (routeGeoJSON !== null) {
-        // Defer to avoid synchronous state update warning
-        const timer = setTimeout(() => {
-          if (active) {
-            setRouteGeoJSON(null)
-            onRouteCalculated(null, [], null)
-          }
-        }, 0)
-        return () => { active = false; clearTimeout(timer) }
-      }
-      return
+      // Defer to avoid synchronous state update warning
+      const timer = setTimeout(() => {
+        if (active) {
+          setRouteGeoJSON(null)
+          onRouteCalculated(null, [], null)
+        }
+      }, 0)
+      return () => { active = false; clearTimeout(timer) }
     }
 
-    const fetchRoute = async () => {
-      try {
-        // Construct custom Valhalla costing options based on user toggles
-        const costingOptions = {
-          bicycle: {
-            use_hills: routeOptions?.minimizeHills ? 0.1 : 0.5,
-            use_roads: routeOptions?.avoidRoads ? 0.1 : 0.5,
+    let retryCount = 0
+    const maxRetries = 3
+
+    const fetchRoute = () => {
+      const attempt = async () => {
+        try {
+          // Construct custom Valhalla costing options based on user toggles
+          const costingOptions = {
+            bicycle: {
+              use_hills: routeOptions?.minimizeHills ? 0.1 : 0.5,
+              use_roads: routeOptions?.avoidRoads ? 0.1 : 0.5,
+            }
           }
-        }
-        
-        if (routeOptions?.pavedOnly) {
-          costingOptions.bicycle.bicycle_type = "Road"
-          costingOptions.bicycle.avoid_bad_surfaces = 0.9
-        }
-
-        const res = await fetch('/api/route', {
-          method: 'POST',
-          body: JSON.stringify({
-            locations: waypoints.map(pt => ({ lon: pt[0], lat: pt[1] })),
-            costing: 'bicycle',
-            costing_options: costingOptions,
-            heights: true // Request elevation data
-          })
-        })
-        const data = await res.json()
-        
-        if (!active) return
-
-        if (data.trip && data.trip.legs) {
-          const { decodePolyline } = await import('../lib/polyline.js')
-          const coords = decodePolyline(data.trip.legs[0].shape, 6, 3)
           
-          const geojson = {
-            type: 'FeatureCollection',
-            features: [{
-              type: 'Feature',
-              properties: {},
-              geometry: {
-                type: 'LineString',
-                coordinates: coords
-              }
-            }]
+          if (routeOptions?.pavedOnly) {
+            costingOptions.bicycle.bicycle_type = "Road"
+            costingOptions.bicycle.avoid_bad_surfaces = 0.9
           }
-          setRouteGeoJSON(geojson)
 
-          onRouteCalculated({
-            distance: data.trip.summary.length.toFixed(1),
-            elevation: Math.round(data.trip.summary.elevation || 0),
-            time: Math.round(data.trip.summary.time / 60) + ' min'
-          }, data.trip.legs[0].maneuvers, geojson)
+          const res = await fetch('/api/route', {
+            method: 'POST',
+            body: JSON.stringify({
+              locations: waypoints.map(pt => ({ lon: pt[0], lat: pt[1] })),
+              costing: 'bicycle',
+              costing_options: costingOptions,
+              heights: true // Request elevation data
+            })
+          })
+
+          if (res.status === 503) {
+            if (retryCount < maxRetries) {
+              retryCount++
+              const backoff = Math.pow(2, retryCount) * 1000 // 2s, 4s, 8s
+              console.warn(`[Routing] 503 Engine Offline. Retrying in ${backoff}ms (Attempt ${retryCount}/${maxRetries})`)
+              setTimeout(() => { if (active) attempt() }, backoff)
+              return
+            } else {
+              console.error("[Routing] Max retries reached. Routing engine is offline.")
+              return
+            }
+          }
+
+          const data = await res.json()
+          
+          if (!active) return
+
+          if (data.trip && data.trip.legs) {
+            const { decodePolyline } = await import('../lib/polyline.js')
+            const coords = decodePolyline(data.trip.legs[0].shape, 6, 3)
+            
+            const geojson = {
+              type: 'FeatureCollection',
+              features: [{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'LineString',
+                  coordinates: coords
+                }
+              }]
+            }
+            setRouteGeoJSON(geojson)
+
+            onRouteCalculatedRef.current({
+              distance: data.trip.summary.length.toFixed(1),
+              elevation: Math.round(data.trip.summary.elevation || 0),
+              time: Math.round(data.trip.summary.time / 60) + ' min'
+            }, data.trip.legs[0].maneuvers, geojson)
+          }
+        } catch (err) {
+          console.error("Routing error:", err)
         }
-      } catch (err) {
-        console.error("Routing error:", err)
       }
+
+      // Initial debounce of 1s to prevent rapid requests when markers are rapidly clicked
+      const debounceTimer = setTimeout(() => {
+        if (active) attempt()
+      }, 1000)
+
+      return () => clearTimeout(debounceTimer)
     }
     
-    fetchRoute()
-    return () => { active = false }
-  }, [waypoints, onRouteCalculated, routeOptions, routeGeoJSON])
+    const cleanup = fetchRoute()
+    return () => { 
+      active = false
+      if (cleanup) cleanup()
+    }
+  }, [waypoints, routeOptions])
 
   // Update map style when basemap, overlays, or route changes
   useEffect(() => {
@@ -375,16 +402,33 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
       const name = props.Name || props.NAME || props.name || 'BBQ Joint';
       const address = props.Address || props.ADDRESS || props.address || '';
 
-      new maplibregl.Popup()
+      const safeLng = e.lngLat.lng.toFixed(5).replace('.','_');
+      const safeLat = e.lngLat.lat.toFixed(5).replace('.','_');
+      const btnId = `btn-route-${safeLng}-${safeLat}`;
+
+      const popup = new maplibregl.Popup()
         .setLngLat(e.lngLat)
         .setHTML(`
           <div class="${styles.wcPopup}">
             <strong>🍖 ${name}</strong>
             ${address ? `<p style="font-size:0.75rem; color:#666; margin: 4px 0;">${address}</p>` : ''}
-            <button type="button" class="${styles.wcPopupRouteBtn}" style="margin-top: 8px;" onclick="window.routeTo([${e.lngLat.lng}, ${e.lngLat.lat}])">Route here →</button>
+            <button type="button" class="${styles.wcPopupRouteBtn}" style="margin-top: 8px;" id="${btnId}">Route here →</button>
           </div>
         `)
         .addTo(m);
+        
+      setTimeout(() => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          btn.addEventListener('click', () => {
+            setWaypoints(prev => {
+              if (prev.length >= 1) return [prev[0], [e.lngLat.lng, e.lngLat.lat]];
+              return [DEFAULT_CENTER, [e.lngLat.lng, e.lngLat.lat]];
+            });
+            popup.remove();
+          });
+        }
+      }, 50);
     }
 
     m.on('mouseenter', 'overlay-worldcup_bbq-layer', onBBQEnter)

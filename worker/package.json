@@ -5,6 +5,7 @@
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy",
+		"build": "tsc",
 		"cf-typegen": "wrangler types",
 		"check": "tsc && wrangler deploy --dry-run",
 		"db:migrate:local": "wrangler d1 migrations apply DB --local",
@@ -17,7 +18,6 @@
 	},
 	"devDependencies": {
 		"typescript": "^5.9.0",
-		"wrangler": "^4.56.0",
-		"@cloudflare/workers-types": "^4.20250501.0"
+		"wrangler": "^4.56.0"
 	}
 }

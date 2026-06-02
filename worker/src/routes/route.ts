@@ -21,8 +21,32 @@ async function sha256(data: string): Promise<string> {
  * Body: Valhalla-compatible JSON (locations, costing, etc.)
  * Returns: Valhalla route response (GeoJSON-like)
  */
+// Request validation helper
+function validateCoordinates(locations: any[]): boolean {
+	if (!locations || locations.length < 2) return false;
+	return locations.every(loc => 
+		typeof loc.lat === "number" && typeof loc.lon === "number" &&
+		(loc.lat !== 0 || loc.lon !== 0) // Basic 0,0 boundary rejection
+	);
+}
+
 routeRoutes.post("/", async (c) => {
 	const body = await c.req.text();
+	
+	let parsed;
+	try {
+		parsed = JSON.parse(body);
+	} catch {
+		return c.json({ error: "Invalid JSON payload" }, 400);
+	}
+
+	if (!validateCoordinates(parsed.locations)) {
+		return c.json({ 
+			error: "Invalid coordinates", 
+			message: "Locations must contain valid lat/lon (0,0 is not permitted)." 
+		}, 400);
+	}
+
 	const cacheKey = `route:${await sha256(body)}`;
 
 	// 1. Check KV cache
@@ -30,7 +54,7 @@ routeRoutes.post("/", async (c) => {
 	if (cached) {
 		return c.json(cached, 200, {
 			"X-Cache": "HIT",
-			"X-Reki": "🦌 cached trail",
+			"X-Reki": encodeURIComponent("🦌 cached trail"),
 		});
 	}
 
@@ -50,24 +74,12 @@ routeRoutes.post("/", async (c) => {
 			const errText = await valhallaResp.text();
 			console.warn(`[Valhalla Offline] Returning mock route. Error: ${errText}`);
 			
-			// Mock response for UI testing
-			const mockRouteData = {
-				trip: {
-					summary: { length: 2.4, time: 600, max_lon: -94.57, min_lon: -94.58, max_lat: 39.10, min_lat: 39.09, elevation: 120 },
-					locations: [],
-					legs: [
-						{
-							shape: "grmqiAnyrksDwQnvAowHnwHowHnwH", // random shape near KC
-							summary: { length: 2.4, time: 600 }
-						}
-					]
-				}
-			};
-
-			return c.json(mockRouteData, 200, {
-				"X-Cache": "MOCK",
-				"X-Reki": "🦌 mock trail",
-			});
+			// Return a clean 503 instead of 200 mock response to signal frontend backoff
+			return c.json({
+				error: "Routing Engine Offline",
+				message: "The Valhalla container failed to return a valid route.",
+				details: errText
+			}, 503);
 		}
 
 		const routeData = await valhallaResp.json();
@@ -88,7 +100,7 @@ routeRoutes.post("/", async (c) => {
 
 		return c.json(routeData, 200, {
 			"X-Cache": "MISS",
-			"X-Reki": "🦌 fresh scouted trail",
+			"X-Reki": encodeURIComponent("🦌 fresh scouted trail"),
 		});
 	} catch (error) {
 		console.error("Route error:", error);
@@ -100,22 +112,23 @@ routeRoutes.post("/", async (c) => {
 });
 
 /**
- * GET /api/route/status
- * Check if the Valhalla container is alive
+ * GET /api/health
+ * Verify DO health natively using RPC `getState()`
  */
-routeRoutes.get("/status", async (c) => {
+routeRoutes.get("/health", async (c) => {
 	try {
 		const container = getContainer(c.env.VALHALLA, "valhalla-router");
-		const resp = await container.fetch(
-			new Request("http://localhost:8002/status")
-		);
+		const state = await container.getState();
+		
 		return c.json({
-			valhalla: resp.ok ? "running" : "error",
+			valhalla: state.status, // e.g., 'running', 'healthy', 'stopped'
+			lastChange: state.lastChange,
 			timestamp: new Date().toISOString(),
 		});
-	} catch {
+	} catch (error) {
 		return c.json({
 			valhalla: "offline",
+			error: String(error),
 			timestamp: new Date().toISOString(),
 		}, 503);
 	}

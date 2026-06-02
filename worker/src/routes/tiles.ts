@@ -78,6 +78,65 @@ tileRoutes.get("/:z/:x/:y{.+}", async (c) => {
 });
 
 /**
+ * GET /api/tiles/usgs/:type/:z/:y/:x
+ * Proxy USGS Topo and Imagery tiles through Worker, cache in ROUTE_CACHE KV with 7-day TTL
+ */
+tileRoutes.get("/usgs/:type/:z/:y/:x", async (c) => {
+	const type = c.req.param("type");
+	const z = c.req.param("z");
+	const y = c.req.param("y");
+	const x = c.req.param("x");
+
+	const service = type === "imagery" ? "USGSImageryOnly" : "USGSTopo";
+	const tileKey = `usgs:${service}:${z}:${y}:${x}`;
+
+	// 1. Try KV cache first
+	const cached = await c.env.ROUTE_CACHE.get(tileKey, "arrayBuffer");
+	if (cached) {
+		const headers = new Headers();
+		headers.set("Content-Type", "image/jpeg");
+		headers.set("Cache-Control", "public, max-age=604800");
+		headers.set("Access-Control-Allow-Origin", "*");
+		headers.set("X-Cache", "HIT");
+		return new Response(cached, { headers });
+	}
+
+	// 2. Fetch upstream
+	const tileUrl = `https://basemap.nationalmap.gov/arcgis/rest/services/${service}/MapServer/tile/${z}/${y}/${x}`;
+	try {
+		const resp = await fetch(tileUrl, {
+			headers: { "User-Agent": "BikeRoutes.org/0.1" },
+		});
+
+		if (!resp.ok) {
+			return c.json({ error: "USGS tile fetch failed" }, resp.status as any);
+		}
+
+		const tileData = await resp.arrayBuffer();
+		const contentType = resp.headers.get("Content-Type") || "image/jpeg";
+
+		// 3. Cache in KV
+		c.executionCtx.waitUntil(
+			c.env.ROUTE_CACHE.put(tileKey, tileData, {
+				expirationTtl: 604800, // 7 days
+			})
+		);
+
+		return new Response(tileData, {
+			headers: {
+				"Content-Type": contentType,
+				"Cache-Control": "public, max-age=604800",
+				"Access-Control-Allow-Origin": "*",
+				"X-Cache": "MISS",
+			},
+		});
+	} catch (err) {
+		console.error("USGS fetch error:", err);
+		return c.json({ error: "USGS Proxy Failed" }, 502);
+	}
+});
+
+/**
  * DELETE /api/tiles/purge
  * Purge all cached tiles (called after OSM import)
  */

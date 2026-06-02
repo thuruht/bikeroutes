@@ -74,7 +74,7 @@ searchRoutes.get("/", async (c) => {
 		// Generate embedding using Cloudflare Workers AI
 		const embedResponse = await c.env.AI.run("@cf/baai/bge-base-en-v1.5", {
 			text: [query]
-		});
+		}) as any;
 		// The model returns an array of vectors (one for each input string)
 		const queryVector = embedResponse.data[0];
 
@@ -110,7 +110,7 @@ ${contextText}`;
 					{ role: "user", content: `User query: "${query}"\nWhat do you recommend?` }
 				],
 				max_tokens: 150
-			});
+			}) as any;
 
 			rekiResponse = chatResponse.response;
 		}

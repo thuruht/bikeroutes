@@ -22,8 +22,17 @@ export class ValhallaContainer extends Container<Env> {
 		TILE_EXTRACT: "midwest-latest.osm.pbf",
 	};
 
-	override onStart(): void {
+	override async onStart(): Promise<void> {
 		console.log("🦌 Valhalla container started — ready to scout routes!");
+		// Implement keepalive ping every 4 minutes (240s) because sleepAfter is 5m
+		await this.schedule(240, "keepalivePing");
+	}
+
+	async keepalivePing() {
+		// Reset the activity timeout so it doesn't sleep
+		this.renewActivityTimeout();
+		// Reschedule
+		await this.schedule(240, "keepalivePing");
 	}
 
 	override onStop(): void {

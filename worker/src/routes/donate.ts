@@ -13,7 +13,8 @@ const PAYPAL_API = "https://api-m.paypal.com"; // Use sandbox for dev
  * Get PayPal access token using client credentials
  */
 async function getPayPalToken(env: Env): Promise<string> {
-	const auth = btoa(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`);
+	const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = env as any;
+	const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`);
 	const resp = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
 		method: "POST",
 		headers: {

@@ -121,7 +121,7 @@ export class POIStore extends DurableObject<Env> {
 		if (action === "approve") {
 			const poi = this.ctx.storage.sql.exec(
 				`SELECT * FROM submissions WHERE id = ?`, id
-			).one() as POISubmission | null;
+			).one() as unknown as POISubmission | null;
 
 			if (poi) {
 				await this.env.DB.prepare(

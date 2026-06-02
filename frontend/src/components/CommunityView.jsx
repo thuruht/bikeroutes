@@ -133,8 +133,8 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
     })
   }
 
-  const getTimeAgo = (dateStr) => {
-    const diff = now - new Date(dateStr).getTime()
+  const getTimeAgo = (dateStr, nowTime) => {
+    const diff = nowTime - new Date(dateStr).getTime()
     const hours = Math.floor(diff / (1000 * 60 * 60))
     if (hours < 1) return 'Just now'
     return `${hours}h ago`
@@ -165,7 +165,7 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
                 <div key={r.id} className={`box ${styles.card}`}>
                   <div className={styles.cardHeader}>
                     <span className={`${styles.badge} ${styles['type-' + r.type]}`}>{r.type.toUpperCase()}</span>
-                    <span className={styles.time}>{getTimeAgo(r.created_at)}</span>
+                    <span className={styles.time}>{getTimeAgo(r.created_at, now)}</span>
                   </div>
                   {r.description && <p className={styles.desc}>{r.description}</p>}
                   <div className={styles.cardFooter}>

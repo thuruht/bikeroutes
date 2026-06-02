@@ -88,7 +88,7 @@ export const BASEMAPS = {
     group: 'Satellite',
     icon: '🇺🇸',
     tiles: [
-      'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
+      '/api/tiles/usgs/imagery/{z}/{y}/{x}',
     ],
     attribution: '&copy; USGS',
     maxZoom: 16,
@@ -191,7 +191,7 @@ export const BASEMAPS = {
     group: 'Topo',
     icon: '🇺🇸',
     tiles: [
-      'https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
+      '/api/tiles/usgs/topo/{z}/{y}/{x}',
     ],
     attribution: '&copy; USGS &copy; OpenStreetMap',
     maxZoom: 16,
