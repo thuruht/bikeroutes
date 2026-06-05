@@ -14,10 +14,10 @@ The MVP focuses on delivering a superior, ad-free routing experience that clearl
 *   [ ] **Granular Trail-Type Filters:**
     *   *Feature:* UI toggles allowing users to force the router to prefer or avoid specific surfaces (Paved, Gravel, Dirt, MTB trails).
     *   *Tech Ref:* Custom Valhalla bike profiles and costing adjustments.
-*   [ ] **Semantic Trail Search:**
+*   [x] **Semantic Trail Search:**
     *   *Feature:* Natural language search (e.g., "flat family ride near the river") returning relevant map locations or curated routes.
     *   *Tech Ref:* Cloudflare Vectorize, token-bucket rate limiting.
-*   [ ] **Device Export:**
+*   [x] **Device Export:**
     *   *Feature:* One-click export to GPX or KML formats for seamless loading onto Garmin, Wahoo, or mobile apps.
     *   *Tech Ref:* Client-side `togpx` conversion.
 *   [ ] **Donation Engine & Merch Fulfillment:**

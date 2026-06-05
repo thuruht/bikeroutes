@@ -249,3 +249,10 @@
     margin: 0 -8px;
   }
 }
+
+.wc-share-btn.success {
+  background: #33FF57;
+  color: #000;
+  border-color: #33FF57;
+  pointer-events: none;
+}

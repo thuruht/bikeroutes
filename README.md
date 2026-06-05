@@ -14,17 +14,18 @@
 
 BikeRoutes.org is a **free, donation‑supported** web platform for urban and off‑road bicycle navigation across the US Midwest. It's built entirely on open‑source technology and powered by OpenStreetMap data.
 
-### ✨ Features (MVP)
+### ✨ Features (MVP & Active)
 - 🗺️ **Interactive route drawing** with drag‑to‑add waypoints
-- ⛰️ **Elevation profiles** for every route
+- 🧭 **Active Navigation Mode** — Live GPS tracking and turn-by-turn maneuvers
+- ⚽ **FIFA World Cup 26™ — Kansas City Mode** — Special routing and UI for matchday visitors
 - 🛤️ **Trail‑type filters** — Paved, Gravel, Dirt, MTB
 - 🔍 **Semantic trail search** — *"quiet riverside path near downtown"*
-- 📥 **GPX/KML export** for Garmin, Wahoo, and other devices
 - 📱 **Mobile‑first responsive UI**
 - 💛 **Donation‑supported** — no ads, no tracking, free forever
 
-### 🚧 Coming Soon (Phase 2)
-- 🗣️ Turn‑by‑turn voice guidance
+### 🚧 In Progress / Temporarily Delayed (Phase 1.5 - 2)
+- ⛰️ **Elevation profiles** *(UI pending `uplot` integration)*
+- 📥 **GPX/KML export** *(UI complete, export logic pending `togpx`)*
 - 📍 User‑submitted POIs (water stations, bike shops, scenic lookouts)
 - 🔥 Community heatmap of popular routes
 
@@ -46,7 +47,7 @@ BikeRoutes.org is a **free, donation‑supported** web platform for urban and of
 
 ## Mascot
 
-Meet **Reki** 🦌 — a young white‑tailed deer who scouts every trail in the Midwest. He wears a cycling cap and carries a messenger bag full of trail maps. [Read the full brand guide →](docs/mascot_identity.md)
+Meet **Reki** 🦌 — a young white‑tailed deer who scouts every trail in the Midwest. He wears a cycling cap and carries a messenger bag full of trail maps. [Read the full brand guide →](docs/north_star/08_Mascot_Identity.md)
 
 ---
 
@@ -66,14 +67,13 @@ The central vision, architecture, roadmap, and styling guidelines for the projec
 bikeroutes/
 ├── docs/               # Planning docs, specs, brand guide
 │   ├── archive/        # Archived legacy brainstorming
-│   ├── north_star/     # Current architecture and design specs
-│   ├── mascot_identity.md
+│   ├── north_star/     # Current architecture and design specs (Source of Truth)
 │   └── assets/
 │       └── reki_concept.png
 ├── frontend/           # React + Vite + MapLibre GL JS
 ├── worker/             # Cloudflare Workers (API, tiles proxy, search)
-├── routing/            # Valhalla Docker config
-├── tiles/              # OSM tile server Docker config
+├── routing/            # [Pending setup] Valhalla Docker config
+├── tiles/              # [Pending setup] OSM tile server Docker config
 └── README.md
 ```
 

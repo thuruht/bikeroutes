@@ -14,8 +14,11 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeFilters, setActiveFilters] = useState(['paved', 'gravel', 'dirt', 'mtb'])
   const [routeInfo, setRouteInfo] = useState(null)
+  const [routeGeoJSON, setRouteGeoJSON] = useState(null)
   const [waypoints, setWaypoints] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState(null)
+  const [isSearching, setIsSearching] = useState(false)
   const [showDonate, setShowDonate] = useState(false)
 
   // Navigation Mode State
@@ -43,6 +46,7 @@ function App() {
   const handleClearRoute = () => {
     setWaypoints([])
     setRouteInfo(null)
+    setRouteGeoJSON(null)
     setManeuvers([])
     setIsNavigating(false)
   }
@@ -112,6 +116,39 @@ function App() {
     setActiveTab('explore')
   }
 
+
+  // Execute Search (Nominatim Fallback for now)
+  const handleSearch = async (query) => {
+    if (!query) {
+      setSearchResults(null)
+      return
+    }
+    setIsSearching(true)
+    try {
+      // Temporary Nominatim fallback because Vectorize index is still being built
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&bounded=1&viewbox=-102.0,40.6,-89.0,36.0`)
+      const data = await res.json()
+
+      setSearchResults({
+        query,
+        reki_says: data.length > 0
+          ? `🦌 Reki scouted ${data.length} spots for you!`
+          : "🦌 Hmm, Reki hasn't explored that area yet. Try different words?",
+        results: data.map(item => ({
+          id: item.place_id,
+          name: item.display_name.split(',')[0],
+          description: item.display_name,
+          coords: [parseFloat(item.lon), parseFloat(item.lat)]
+        }))
+      })
+    } catch (err) {
+      console.error(err)
+      setSearchResults({ error: true, reki_says: "Reki got distracted by a butterfly. Try again. 🦋🦌" })
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
   return (
     <>
       <Header
@@ -137,8 +174,13 @@ function App() {
             activeFilters={activeFilters}
             onToggleFilter={toggleFilter}
             routeInfo={routeInfo}
+            routeGeoJSON={routeGeoJSON}
+            waypoints={waypoints}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onSearchSubmit={handleSearch}
+            searchResults={searchResults}
+            isSearching={isSearching}
             onClearRoute={handleClearRoute}
             routeOptions={routeOptions}
             setRouteOptions={setRouteOptions}
@@ -153,9 +195,10 @@ function App() {
           />
           <MapView
             activeFilters={activeFilters}
-            onRouteCalculated={(info, newManeuvers) => {
+            onRouteCalculated={(info, newManeuvers, geojson) => {
               setRouteInfo(info)
               if (newManeuvers) setManeuvers(newManeuvers)
+              if (geojson) setRouteGeoJSON(geojson)
             }}
             waypoints={waypoints}
             setWaypoints={setWaypoints}
