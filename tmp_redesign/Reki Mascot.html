@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reki — flat-vector mascot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0B0C08; --brown:#C0763C; --brown-d:#9E5E2C; --tan:#D4A96A;
+    --cream:#FFF5E6; --olive:#4B5320; --olive-d:#39401A; --orange:#FF6B1A;
+    --nose:#241A12; --bg:#0B0C08; --camo:#1a1d10;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--cream);
+    font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(rgba(255,245,230,.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,245,230,.025) 1px,transparent 1px);
+    background-size:24px 24px;}
+  .mono{font-family:"IBM Plex Mono",monospace;}
+  .wrap{max-width:1100px;margin:0 auto;padding:56px 40px 90px;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);font-weight:600;}
+  h1{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:10px 0 8px;}
+  .sub{margin:0;max-width:600px;color:#c9c3b3;font-size:14.5px;line-height:1.6;}
+
+  .stage{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;margin-top:40px;}
+  .hero{background:radial-gradient(120% 120% at 50% 18%,#15170d 0%,#0B0C08 70%);
+    border:1px solid #23271a;border-radius:14px;padding:30px;display:grid;place-items:center;position:relative;overflow:hidden;}
+  .hero::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(60% 50% at 50% 40%,rgba(255,107,26,.10),transparent 70%);pointer-events:none;}
+  .hero svg{filter:drop-shadow(0 18px 30px rgba(0,0,0,.5));position:relative;z-index:1;}
+
+  .side{display:flex;flex-direction:column;gap:16px;}
+  .panel{background:#101208;border:1px solid #23271a;border-radius:14px;padding:20px;}
+  .panel h3{margin:0 0 14px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8b8470;font-weight:600;}
+  .chips{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;}
+  .chip{display:flex;flex-direction:column;align-items:center;gap:8px;}
+  .chip .cap{font-size:10.5px;color:#8b8470;}
+  .av{border-radius:50%;background:var(--olive);display:grid;place-items:center;overflow:hidden;border:2px solid #23271a;}
+  .appicon{border-radius:22%;background:linear-gradient(160deg,#3a4019,#23271a);display:grid;place-items:center;overflow:hidden;}
+
+  .swatches{display:flex;gap:10px;flex-wrap:wrap;}
+  .sw{display:flex;flex-direction:column;gap:6px;align-items:center;}
+  .sw i{width:42px;height:42px;border-radius:8px;border:1px solid rgba(255,255,255,.1);display:block;}
+  .sw span{font-size:10px;color:#8b8470;}
+  .light-test{background:var(--cream);border-radius:14px;padding:18px;display:grid;place-items:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">bikeroutes.org · mascot</div>
+  <h1>Reki, redrawn</h1>
+  <p class="sub">A clean flat-vector rebuild of Reki for the avatar / icon slot — same character (forest cap, scout bag, white-flag tail energy) in crisp geometry that holds up from 512&nbsp;px down to a 24&nbsp;px favicon, on the Tactical Hi-Tech palette.</p>
+
+  <!-- ============ THE MASCOT SYMBOL ============ -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="reki" viewBox="0 0 240 240">
+      <g stroke="#0B0C08" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+
+        <!-- ANTLERS (behind everything) -->
+        <g fill="none" stroke="#0B0C08" stroke-width="13">
+          <path d="M101,82 Q86,54 82,32"/>
+          <path d="M90,58 Q77,51 68,45"/>
+          <path d="M84,40 Q73,37 64,36"/>
+          <path d="M139,82 Q154,54 158,32"/>
+          <path d="M150,58 Q163,51 172,45"/>
+          <path d="M156,40 Q167,37 176,36"/>
+        </g>
+        <g fill="none" stroke="#D4A96A" stroke-width="7">
+          <path d="M101,82 Q86,54 82,32"/>
+          <path d="M90,58 Q77,51 68,45"/>
+          <path d="M84,40 Q73,37 64,36"/>
+          <path d="M139,82 Q154,54 158,32"/>
+          <path d="M150,58 Q163,51 172,45"/>
+          <path d="M156,40 Q167,37 176,36"/>
+        </g>
+
+        <!-- EARS -->
+        <path d="M90,96 C72,84 54,86 45,99 C55,110 73,113 86,108 Z" fill="#C0763C"/>
+        <path d="M150,96 C168,84 186,86 195,99 C185,110 167,113 154,108 Z" fill="#C0763C"/>
+        <path d="M85,98 C72,90 60,92 53,100 C61,107 73,108 82,104 Z" fill="#F0D7B0" stroke-width="0"/>
+        <path d="M155,98 C168,90 180,92 187,100 C179,107 167,108 158,104 Z" fill="#F0D7B0" stroke-width="0"/>
+
+        <!-- NECK + CHEST (behind head) -->
+        <path d="M98,150 C92,176 88,198 88,240 L152,240 C152,198 148,176 142,150 C130,162 110,162 98,150 Z" fill="#C0763C"/>
+        <path d="M120,162 C112,184 110,210 112,240 L128,240 C130,210 128,184 120,162 Z" fill="#FFF5E6"/>
+        <!-- scout bag strap -->
+        <path d="M101,168 L156,196 L151,208 L96,180 Z" fill="#4B5320"/>
+        <rect x="120" y="184" width="13" height="13" rx="2.5" fill="#FF6B1A" transform="rotate(27 126 190)"/>
+
+        <!-- HEAD -->
+        <path d="M120,68 C95,68 80,89 80,114 C80,133 90,147 100,157 C107,164 112,170 120,173 C128,170 133,164 140,157 C150,147 160,133 160,114 C160,89 145,68 120,68 Z" fill="#C0763C"/>
+
+        <!-- muzzle patch -->
+        <path d="M120,131 C135,131 145,142 145,153 C145,165 133,173 120,174 C107,173 95,165 95,153 C95,142 105,131 120,131 Z" fill="#FFF5E6"/>
+        <!-- cheek blush -->
+        <ellipse cx="96" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
+        <ellipse cx="144" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
+        <!-- nose -->
+        <path d="M120,144 C129,144 134,150 131,155 C129,159 123,161 120,161 C117,161 111,159 109,155 C106,150 111,144 120,144 Z" fill="#241A12" stroke-width="3.5"/>
+        <!-- nostrils highlight -->
+        <ellipse cx="120" cy="149" rx="5" ry="3" fill="#3a2c1f" stroke-width="0"/>
+
+        <!-- eyes -->
+        <ellipse cx="101" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
+        <ellipse cx="139" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
+        <circle cx="103" cy="115" r="6.5" fill="#241A12" stroke-width="0"/>
+        <circle cx="137" cy="115" r="6.5" fill="#241A12" stroke-width="0"/>
+        <circle cx="105.5" cy="112" r="2.1" fill="#FFF5E6" stroke-width="0"/>
+        <circle cx="139.5" cy="112" r="2.1" fill="#FFF5E6" stroke-width="0"/>
+        <!-- brows -->
+        <path d="M90,99 Q101,93 112,98" fill="none" stroke="#9E5E2C" stroke-width="4"/>
+        <path d="M128,98 Q139,93 150,99" fill="none" stroke="#9E5E2C" stroke-width="4"/>
+
+        <!-- CAP -->
+        <path d="M86,84 C84,60 101,48 120,48 C139,48 156,60 154,84 C130,77 110,77 86,84 Z" fill="#4B5320"/>
+        <!-- brim -->
+        <path d="M88,82 C70,82 57,88 54,97 C61,99 73,97 84,91 C88,88 90,84 90,82 Z" fill="#39401A"/>
+        <!-- cap seam + button -->
+        <path d="M120,48 L120,77" fill="none" stroke="#39401A" stroke-width="3"/>
+        <circle cx="120" cy="50" r="3.4" fill="#FF6B1A" stroke-width="2.5"/>
+        <!-- cap emblem: route arrow -->
+        <path d="M112,68 L120,60 L128,68 L123,68 L123,75 L117,75 L117,68 Z" fill="#FF6B1A" stroke-width="2.5"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <div class="stage">
+    <div class="hero">
+      <svg width="320" height="320" viewBox="0 0 240 240"><use href="#reki"/></svg>
+    </div>
+
+    <div class="side">
+      <div class="panel">
+        <h3>Scales to a favicon</h3>
+        <div class="chips">
+          <div class="chip"><div class="av" style="width:72px;height:72px"><svg width="64" height="64" viewBox="0 0 240 240"><use href="#reki"/></svg></div><span class="cap mono">avatar 72</span></div>
+          <div class="chip"><div class="appicon" style="width:64px;height:64px"><svg width="58" height="58" viewBox="0 0 240 240"><use href="#reki"/></svg></div><span class="cap mono">app 64</span></div>
+          <div class="chip"><svg width="40" height="40" viewBox="0 0 240 240"><use href="#reki"/></svg><span class="cap mono">40</span></div>
+          <div class="chip"><svg width="28" height="28" viewBox="0 0 240 240"><use href="#reki"/></svg><span class="cap mono">28</span></div>
+          <div class="chip"><svg width="20" height="20" viewBox="0 0 240 240"><use href="#reki"/></svg><span class="cap mono">20</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>On light surfaces</h3>
+        <div class="light-test"><svg width="120" height="120" viewBox="0 0 240 240"><use href="#reki"/></svg></div>
+      </div>
+
+      <div class="panel">
+        <h3>Palette</h3>
+        <div class="swatches">
+          <div class="sw"><i style="background:#C0763C"></i><span class="mono">Deer</span></div>
+          <div class="sw"><i style="background:#D4A96A"></i><span class="mono">Tan</span></div>
+          <div class="sw"><i style="background:#FFF5E6"></i><span class="mono">Cream</span></div>
+          <div class="sw"><i style="background:#4B5320"></i><span class="mono">Olive</span></div>
+          <div class="sw"><i style="background:#FF6B1A"></i><span class="mono">Blaze</span></div>
+          <div class="sw"><i style="background:#0B0C08"></i><span class="mono">Hoof</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

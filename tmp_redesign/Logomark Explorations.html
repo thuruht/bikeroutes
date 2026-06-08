@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>bikeroutes.org — logomark explorations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#f5f3ec; --ink:#1f1d1a; --ink2:#46423a; --muted:#7c766a;
+    --line:#e0dacb; --line2:#d3ccb9; --green:#2f6b4f; --green-deep:#275a43;
+    --orange:#c66a3a; --bg:#e7e4db; --card:#fbfaf6;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:"IBM Plex Mono",monospace;}
+  .wrap{max-width:1180px;margin:0 auto;padding:54px 40px 90px;}
+
+  header.head{margin-bottom:40px;}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  h1{font-size:32px;font-weight:600;letter-spacing:-.02em;margin:10px 0 8px;}
+  .head p{margin:0;max-width:620px;color:var(--ink2);font-size:14.5px;line-height:1.6;}
+
+  .section-label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    font-weight:600;margin:46px 0 18px;display:flex;align-items:center;gap:12px;}
+  .section-label::after{content:"";flex:1;height:1px;background:var(--line2);}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;
+    box-shadow:0 1px 2px rgba(40,36,28,.05),0 10px 30px rgba(40,36,28,.05);position:relative;}
+  .card.rec{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 14px 34px rgba(47,107,79,.12);}
+  .rec-tag{position:absolute;top:16px;right:16px;font-size:10.5px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;color:#fff;background:var(--green);padding:4px 9px;border-radius:20px;}
+  .num{font-size:11px;color:var(--muted);font-weight:600;}
+  .specimens{display:flex;align-items:center;gap:16px;margin:16px 0 18px;}
+  .tile{width:76px;height:76px;border-radius:18px;background:var(--green);display:grid;place-items:center;flex:none;}
+  .tile.dark{background:var(--ink);}
+  .tile svg,.bare svg{display:block;}
+  .bare{width:60px;height:60px;display:grid;place-items:center;}
+  .name{font-size:17px;font-weight:600;letter-spacing:-.01em;}
+  .rationale{font-size:13px;color:var(--ink2);line-height:1.55;margin-top:5px;min-height:54px;}
+  .sizes{display:flex;align-items:center;gap:16px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
+  .sizes .s{display:grid;place-items:center;}
+  .sizes .cap{font-size:10px;color:var(--muted);margin-top:6px;text-align:center;}
+
+  /* lockup section */
+  .lockups{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .lock{border-radius:18px;padding:34px;display:flex;align-items:center;gap:16px;border:1px solid var(--line);}
+  .lock.light{background:var(--paper);}
+  .lock.dark{background:#16140f;border-color:#2c2820;}
+  .lock .word{line-height:1;}
+  .lock .word .w1{font-size:24px;font-weight:600;letter-spacing:-.02em;}
+  .lock .word .w1 .dot{color:var(--muted);font-weight:400;}
+  .lock.dark .word .w1{color:#ece7da;}
+  .lock.dark .word .w1 .dot{color:#8f8877;}
+  .lock .word .w2{font-size:11.5px;letter-spacing:.04em;margin-top:5px;}
+  .lock.light .word .w2{color:var(--muted);}
+  .lock.dark .word .w2{color:#8f8877;}
+
+  .favrow{display:flex;align-items:flex-end;gap:24px;margin-top:8px;flex-wrap:wrap;}
+  .favitem{display:grid;place-items:center;}
+  .favitem .cap{font-size:10px;color:var(--muted);margin-top:8px;}
+  .note{font-size:13px;color:var(--ink2);line-height:1.6;background:var(--card);border:1px solid var(--line);
+    border-radius:14px;padding:16px 18px;margin-top:22px;}
+  .note b{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <div class="eyebrow">bikeroutes.org · brand</div>
+    <h1>Logomark explorations</h1>
+    <p>Six geometric directions, each built from the product's own vocabulary — route lines, waypoints, wheels and contour terrain. All drawn in the brand green &amp; orange, tested small, and shown on light and dark tiles.</p>
+  </header>
+
+  <div class="section-label">Concepts</div>
+  <div class="grid" id="grid"></div>
+
+  <div class="section-label">Recommended direction · the Roundabout wheel</div>
+  <div class="lockups">
+    <div class="lock light">
+      <div id="lk-light"></div>
+      <div class="word">
+        <div class="w1">bikeroutes<span class="dot">.org</span></div>
+        <div class="w2 mono">open cycling maps</div>
+      </div>
+    </div>
+    <div class="lock dark">
+      <div id="lk-dark"></div>
+      <div class="word">
+        <div class="w1">bikeroutes<span class="dot">.org</span></div>
+        <div class="w2 mono">open cycling maps</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-label">App icon &amp; favicon scaling</div>
+  <div class="favrow" id="favrow"></div>
+
+  <div class="note">
+    <b>Why the roundabout wheel.</b> It reads instantly as a bike wheel (hub + rim) while the route thread entering and exiting makes it a <i>navigation</i> mark, not just a cycle — a roundabout every cyclist knows. It holds up at 16&nbsp;px, works as a single-color glyph, and the orange exit-node ties straight to the destination pin on the map. Tell me which direction to refine and I'll build out the full wordmark, favicon set, and monochrome variants.
+  </div>
+
+</div>
+
+<script>
+/* ---- mark library: each returns SVG inner markup for a 40x40 viewBox ---- */
+/* stroke color via currentColor; accent (orange) passed explicitly so it can stay
+   on tiles. On colored tiles we render white + a warm accent. */
+function marks(stroke, accent){
+  return {
+    route: `
+      <path d="M12 30 C 12 22 28 24 28 16 C 28 12.5 25.5 11 22.5 11" fill="none"
+        stroke="${stroke}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="12" cy="30" r="3.4" fill="none" stroke="${stroke}" stroke-width="2.8"/>
+      <circle cx="22.5" cy="11" r="3.2" fill="${accent}"/>`,
+    roundabout: `
+      <circle cx="20" cy="18.5" r="7.6" fill="none" stroke="${stroke}" stroke-width="2.8"/>
+      <circle cx="20" cy="18.5" r="1.9" fill="${stroke}"/>
+      <path d="M20 34 L20 28.6" stroke="${stroke}" stroke-width="2.8" stroke-linecap="round"/>
+      <path d="M27.6 18.5 L33 18.5" stroke="${stroke}" stroke-width="2.8" stroke-linecap="round"/>
+      <circle cx="33" cy="18.5" r="2.7" fill="${accent}"/>`,
+    contour: `
+      <path d="M20 34.5 C 13.5 25.5 12 20.5 12 16.5 A 8 8 0 1 1 28 16.5 C 28 20.5 26.5 25.5 20 34.5 Z"
+        fill="${stroke}"/>
+      <path d="M15.4 15.8 A 4.6 4.6 0 0 1 24.6 15.8" fill="none" stroke="${accent}" stroke-width="1.8" stroke-linecap="round"/>
+      <circle cx="20" cy="16.4" r="1.7" fill="${accent}"/>`,
+    spoke: `
+      <circle cx="20" cy="20" r="8" fill="none" stroke="${stroke}" stroke-width="2.8"/>
+      <circle cx="20" cy="20" r="2" fill="${stroke}"/>
+      <path d="M20 12.4 V17.4 M20 22.6 V27.6 M12.4 20 H17.4 M22.6 20 H27.6"
+        stroke="${stroke}" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="20" cy="20" r="8" fill="none" stroke="${accent}" stroke-width="0"/>`,
+    monogram: `
+      <path d="M14.5 8 L14.5 31" stroke="${stroke}" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="21" cy="24.5" r="6.4" fill="none" stroke="${stroke}" stroke-width="2.8"/>
+      <circle cx="21" cy="24.5" r="1.7" fill="${accent}"/>`,
+    fork: `
+      <circle cx="20" cy="30" r="3.3" fill="none" stroke="${stroke}" stroke-width="2.8"/>
+      <path d="M20 27 C 19 21 13.5 19.5 12 14" fill="none" stroke="${stroke}" stroke-width="2.8" stroke-linecap="round"/>
+      <path d="M20 27 C 21 21 26.5 19.5 28 14" fill="none" stroke="${stroke}" stroke-width="2.8" stroke-linecap="round"/>
+      <circle cx="12" cy="12.5" r="3" fill="${accent}"/>
+      <circle cx="28" cy="12.5" r="3" fill="${stroke}"/>`,
+  };
+}
+function svg(inner, size){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+}
+
+const CONCEPTS = [
+  {key:"roundabout", name:"Roundabout wheel", rec:true,
+   why:"A bike wheel that's also a navigation roundabout — route threads in the bottom, out the side to a destination node. The clearest fusion of \u201Cbike\u201D + \u201Croutes.\u201D"},
+  {key:"route", name:"Waypoint route", rec:false,
+   why:"The map's own language: a start ring, a flowing path, and an orange destination pin. Friendly, immediately about going somewhere."},
+  {key:"contour", name:"Contour pin", rec:false,
+   why:"A location pin built from topographic contour lines. Leans into the outdoor / terrain side; great for a trail-discovery feel."},
+  {key:"spoke", name:"Spoke wheel", rec:false,
+   why:"The most literal, utilitarian bike mark — hub, spokes, rim. Calm and transit-like, but says less about routes."},
+  {key:"monogram", name:"\u201Cb\u201D wheel", rec:false,
+   why:"A lowercase \u201Cb\u201D whose bowl is a wheel. A compact monogram for avatars and favicons; pairs tightly with the wordmark."},
+  {key:"fork", name:"Explore fork", rec:false,
+   why:"One start, two diverging routes to two pins — the \u201Cexplore &amp; compare\u201D idea. Best as a secondary / Explore-mode mark."},
+];
+
+const grid = document.getElementById("grid");
+CONCEPTS.forEach((c,i)=>{
+  const white = marks("#ffffff", "#e9a06f");      // on tiles
+  const inkM  = marks("#1f1d1a", "#c66a3a");       // bare on paper
+  const card = document.createElement("div");
+  card.className = "card" + (c.rec ? " rec" : "");
+  card.innerHTML = `
+    ${c.rec ? '<div class="rec-tag">Recommended</div>' : ''}
+    <div class="num mono">0${i+1}</div>
+    <div class="specimens">
+      <div class="tile">${svg(white[c.key],44)}</div>
+      <div class="bare">${svg(inkM[c.key],46)}</div>
+      <div class="tile dark">${svg(white[c.key],44)}</div>
+    </div>
+    <div class="name">${c.name}</div>
+    <div class="rationale">${c.why}</div>
+    <div class="sizes">
+      <div class="s">${svg(inkM[c.key],32)}<div class="cap mono">32</div></div>
+      <div class="s">${svg(inkM[c.key],24)}<div class="cap mono">24</div></div>
+      <div class="s">${svg(inkM[c.key],18)}<div class="cap mono">18</div></div>
+      <div class="s">${svg(inkM[c.key],14)}<div class="cap mono">14</div></div>
+    </div>`;
+  grid.appendChild(card);
+});
+
+/* lockups use the recommended mark */
+const tileMark = marks("#ffffff","#e9a06f").roundabout;
+document.getElementById("lk-light").innerHTML =
+  `<div style="width:54px;height:54px;border-radius:14px;background:var(--green);display:grid;place-items:center;">${svg(tileMark,32)}</div>`;
+document.getElementById("lk-dark").innerHTML =
+  `<div style="width:54px;height:54px;border-radius:14px;background:#2f6b4f;display:grid;place-items:center;">${svg(tileMark,32)}</div>`;
+
+/* favicon scaling row */
+const favrow = document.getElementById("favrow");
+[64,48,32,16].forEach(sz=>{
+  const r = Math.max(6, sz*0.26);
+  const item = document.createElement("div");
+  item.className="favitem";
+  item.innerHTML = `<div style="width:${sz}px;height:${sz}px;border-radius:${r}px;background:var(--green);display:grid;place-items:center;">${svg(marks("#fff","#e9a06f").roundabout, Math.round(sz*0.62))}</div><div class="cap mono">${sz}px</div>`;
+  favrow.appendChild(item);
+});
+</script>
+</body>
+</html>

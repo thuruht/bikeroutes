@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>roundabout → b · fusion mark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0B0C08; --cream:#FFF5E6; --olive:#4B5320; --olive-d:#39401A;
+    --orange:#FF6B1A; --tan:#D4A96A; --muted:#8b8470; --bg:#0e1009;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--cream);
+    font-family:"Outfit",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(rgba(255,245,230,.022) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,245,230,.022) 1px,transparent 1px);background-size:24px 24px;}
+  .mono{font-family:"IBM Plex Mono",monospace;}
+  .wrap{max-width:1100px;margin:0 auto;padding:54px 40px 90px;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--orange);font-weight:600;}
+  h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:10px 0 8px;}
+  .sub{margin:0;max-width:600px;color:#c9c3b3;font-size:14.5px;line-height:1.6;}
+  .seclabel{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;
+    margin:46px 0 18px;display:flex;align-items:center;gap:12px;}
+  .seclabel::after{content:"";flex:1;height:1px;background:#23271a;}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .card{background:#101208;border:1px solid #23271a;border-radius:10px;padding:22px;position:relative;}
+  .card.rec{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange),0 14px 34px rgba(255,107,26,.10);}
+  .rec-tag{position:absolute;top:14px;right:14px;font-size:10px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--ink);background:var(--orange);padding:4px 9px;border-radius:6px;}
+  .num{font-size:11px;color:var(--muted);font-weight:600;}
+  .specimens{display:flex;align-items:center;gap:14px;margin:16px 0 16px;}
+  .tile{width:74px;height:74px;border-radius:14px;display:grid;place-items:center;flex:none;}
+  .tile.olive{background:var(--olive);} .tile.hoof{background:var(--ink);border:1px solid #23271a;}
+  .bare{width:60px;height:60px;display:grid;place-items:center;}
+  .name{font-size:16px;font-weight:600;}
+  .rationale{font-size:13px;color:#c0bbab;line-height:1.55;margin-top:5px;min-height:56px;}
+  .sizes{display:flex;align-items:center;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid #23271a;}
+  .sizes .s{display:grid;place-items:center;} .sizes .cap{font-size:10px;color:var(--muted);margin-top:6px;}
+
+  .lockups{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .lock{border-radius:10px;padding:32px;display:flex;align-items:center;gap:4px;border:1px solid #23271a;}
+  .lock.dark{background:var(--ink);} .lock.light{background:var(--cream);}
+  .wordmark{display:flex;align-items:baseline;font-weight:700;font-size:30px;letter-spacing:-.02em;line-height:1;}
+  .lock.dark .wordmark{color:var(--cream);} .lock.light .wordmark{color:var(--ink);}
+  .wordmark .dot{color:var(--muted);font-weight:500;}
+  .compare{display:flex;gap:30px;align-items:center;flex-wrap:wrap;}
+  .compare .step{display:flex;flex-direction:column;align-items:center;gap:10px;}
+  .compare .arrow{color:var(--muted);font-size:24px;}
+  .compare .cap{font-size:11px;color:var(--muted);}
+  .note{font-size:13px;color:#c0bbab;line-height:1.6;background:#101208;border:1px solid #23271a;
+    border-radius:8px;padding:16px 18px;margin-top:24px;}
+  .note b{color:var(--cream);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">bikeroutes.org · brand</div>
+  <h1>Roundabout → <span style="font-family:'Outfit'">b</span></h1>
+  <p class="sub">Your hunch was right: flip the roundabout wheel and the tail-plus-ring reads as a lowercase <b>b</b>. That fuses the two favorites — the route stem becomes the ascender, the wheel becomes the bowl, the hub stays the roundabout island, and blaze orange marks start &amp; destination.</p>
+
+  <!-- symbol defs: each mark drawn for 40x40, currentColor + var(--ac) accent -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <!-- 0. reference: original roundabout -->
+    <symbol id="ref" viewBox="0 0 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round">
+        <circle cx="20" cy="18.5" r="7.6"/><path d="M20 34 L20 28.6"/><path d="M27.6 18.5 L33 18.5"/>
+      </g>
+      <circle cx="20" cy="18.5" r="1.9" fill="currentColor"/>
+      <circle cx="33" cy="18.5" r="2.7" fill="var(--ac)"/>
+    </symbol>
+
+    <!-- A: clean b-wheel -->
+    <symbol id="markA" viewBox="0 0 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 7 L13 33"/>
+        <circle cx="22" cy="25" r="8"/>
+      </g>
+      <circle cx="22" cy="25" r="2" fill="currentColor"/>
+      <circle cx="13" cy="7" r="2.7" fill="var(--ac)"/>
+    </symbol>
+
+    <!-- B: b-roundabout with off-ramp to destination (recommended) -->
+    <symbol id="markB" viewBox="0 0 40 40">
+      <g fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.5 7 L12.5 32"/>
+        <circle cx="21.5" cy="24.5" r="8"/>
+        <path d="M28 19 L33 13.5"/>
+      </g>
+      <circle cx="21.5" cy="24.5" r="1.9" fill="currentColor"/>
+      <circle cx="12.5" cy="7" r="2.6" fill="currentColor"/>
+      <circle cx="34" cy="12" r="2.7" fill="var(--ac)"/>
+    </symbol>
+
+    <!-- C: solid / filled treatment -->
+    <symbol id="markC" viewBox="0 0 40 40">
+      <rect x="9.6" y="6" width="5.6" height="28" rx="2.8" fill="currentColor"/>
+      <path fill="currentColor" fill-rule="evenodd"
+        d="M21 15.4 a9.3 9.3 0 1 1 0 18.6 a9.3 9.3 0 1 1 0-18.6 Z
+           M21 20.2 a4.5 4.5 0 1 0 0 9 a4.5 4.5 0 1 0 0-9 Z"/>
+      <circle cx="21" cy="24.7" r="2.4" fill="var(--ac)"/>
+    </symbol>
+  </svg>
+
+  <div class="seclabel">The flip</div>
+  <div class="card" style="border-color:#23271a">
+    <div class="compare">
+      <div class="step"><svg width="64" height="64" viewBox="0 0 40 40" style="color:var(--cream);--ac:var(--orange)"><use href="#ref"/></svg><span class="cap mono">roundabout</span></div>
+      <div class="arrow">↻</div>
+      <div class="step"><svg width="64" height="64" viewBox="0 0 40 40" style="color:var(--cream);--ac:var(--orange);transform:scaleY(-1)"><use href="#ref"/></svg><span class="cap mono">flipped — reads "b"</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><svg width="64" height="64" viewBox="0 0 40 40" style="color:var(--orange);--ac:var(--cream)"><use href="#markB"/></svg><span class="cap mono">redrawn as a "b"</span></div>
+    </div>
+  </div>
+
+  <div class="seclabel">Three takes</div>
+  <div class="grid" id="grid"></div>
+
+  <div class="seclabel">In the wordmark — the mark replaces the leading "b"</div>
+  <div class="lockups">
+    <div class="lock dark">
+      <svg width="38" height="38" viewBox="0 0 40 40" style="color:var(--orange);--ac:var(--cream);transform:translateY(2px)"><use href="#markB"/></svg>
+      <span class="wordmark">ikeroutes<span class="dot">.org</span></span>
+    </div>
+    <div class="lock light">
+      <svg width="38" height="38" viewBox="0 0 40 40" style="color:var(--ink);--ac:var(--orange);transform:translateY(2px)"><use href="#markB"/></svg>
+      <span class="wordmark">ikeroutes<span class="dot">.org</span></span>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Why take B.</b> The little off-ramp to the orange node keeps it unmistakably a <i>route</i> mark — start node at the top of the stem, roundabout in the middle, destination off the exit — while the silhouette still snaps to a "b". It doubles as the leading letter of the wordmark, so the logo and the monogram are the same object. Tell me which take to lock and I'll cut the favicon set + monochrome variants.
+  </div>
+</div>
+
+<script>
+  const TAKES = [
+    ["A","markA","b-wheel, clean","Stem + wheel + hub, nothing else. The calmest, most legible read of the \u201Cb\u201D \u2014 start node up top, roundabout island in the bowl.",false],
+    ["B","markB","b-roundabout + off-ramp","Adds the exit thread to an orange destination node. Most clearly a navigation mark, and the silhouette still resolves to a \u201Cb\u201D.",true],
+    ["C","markC","solid b","A filled treatment \u2014 chunky stem + ring bowl with a blaze hub. Best for tiny favicons and embroidered patches where strokes get fragile.",false],
+  ];
+  const grid = document.getElementById("grid");
+  TAKES.forEach(([letter,id,name,why,rec],i)=>{
+    const card=document.createElement("div");
+    card.className="card"+(rec?" rec":"");
+    card.innerHTML=`
+      ${rec?'<div class="rec-tag">Recommended</div>':''}
+      <div class="num mono">take ${letter}</div>
+      <div class="specimens">
+        <div class="tile olive"><svg width="42" height="42" viewBox="0 0 40 40" style="color:var(--cream);--ac:var(--orange)"><use href="#${id}"/></svg></div>
+        <div class="bare"><svg width="46" height="46" viewBox="0 0 40 40" style="color:var(--cream);--ac:var(--orange)"><use href="#${id}"/></svg></div>
+        <div class="tile hoof"><svg width="42" height="42" viewBox="0 0 40 40" style="color:var(--orange);--ac:var(--cream)"><use href="#${id}"/></svg></div>
+      </div>
+      <div class="name">${name}</div>
+      <div class="rationale">${why}</div>
+      <div class="sizes">
+        ${[32,24,18,14].map(sz=>`<div class="s"><svg width="${sz}" height="${sz}" viewBox="0 0 40 40" style="color:var(--cream);--ac:var(--orange)"><use href="#${id}"/></svg><div class="cap mono">${sz}</div></div>`).join("")}
+      </div>`;
+    grid.appendChild(card);
+  });
+</script>
+</body>
+</html>

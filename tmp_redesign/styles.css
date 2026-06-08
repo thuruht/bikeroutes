@@ -387,23 +387,3 @@ body {
   .pillbtn.solid .btn-label { display: none; }
   .pillbtn.solid svg { width: 18px; height: 18px; }
 }
-
-/* Custom Refinements (from live-app needs) */
-.marker { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-sm); cursor: pointer; z-index: 10; }
-.marker.start { background: var(--green); }
-.marker.dest { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-soft), var(--shadow); }
-
-.io-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 0 0 12px 12px; z-index: 100; box-shadow: var(--shadow); max-height: 240px; overflow-y: auto; }
-.io-item { padding: 10px 13px; cursor: pointer; }
-.io-item:hover { background: var(--paper-2); }
-.io-item .n { font-weight: 600; font-size: 14px; }
-.io-item .d { font-size: 12px; color: var(--muted-txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.turns { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; }
-.turns-head { font-size: 11px; font-weight: 700; color: var(--muted-txt); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.1em; }
-.turn { display: flex; gap: 12px; padding: 10px 0; align-items: flex-start; border-radius: 8px; }
-.turn:hover { background: var(--paper-2); padding-left: 8px; margin-left: -8px; padding-right: 8px; margin-right: -8px; }
-.turn .ic { width: 18px; height: 18px; flex: none; color: var(--muted-txt); margin-top: 2px; }
-.turn .body { flex: 1; }
-.turn .road { font-size: 14px; font-weight: 500; color: var(--ink); line-height: 1.3; }
-.turn .meta { font-size: 12px; color: var(--muted-txt); margin-top: 2px; }
