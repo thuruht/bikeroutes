@@ -22,7 +22,6 @@ export function haversine(a, b) {
 }
 
 export async function getRoute(a, b, pref = "balanced") {
-  // 1. Try Worker (Valhalla)
   try {
     const res = await fetch(API_CONFIG.WORKER_ROUTE, {
       method: "POST",
@@ -51,7 +50,6 @@ export async function getRoute(a, b, pref = "balanced") {
     }
   } catch (e) { console.warn("Worker route failed."); }
 
-  // 2. Try BRouter (Fallback)
   try {
     const profile = pref === "fast" ? "fastbike" : pref === "quiet" ? "safety" : "trekking";
     const url = `${API_CONFIG.BROUTER}?lonlats=${a.lng},${a.lat}|${b.lng},${b.lat}&profile=${profile}&alternativeidx=0&format=geojson`;

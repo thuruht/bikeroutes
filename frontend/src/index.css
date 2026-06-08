@@ -111,6 +111,11 @@ body {
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+.pillbtn:hover { border-color: var(--line-2); }
+.pillbtn svg { width: 16px; height: 16px; opacity: .8; }
+.pillbtn.solid { background: var(--orange); color: #fff; border-color: transparent; }
+.pillbtn.solid:hover { background: var(--orange); box-shadow: var(--accent-glow); }
+.pillbtn.solid svg { opacity: 1; }
 
 /* ---------- Top bar ---------- */
 .topbar {
@@ -412,3 +417,14 @@ body {
 .turn .body { flex: 1; }
 .turn .road { font-size: 14px; font-weight: 500; color: var(--ink); }
 .turn .meta { font-size: 12px; color: var(--muted-txt); }
+
+/* Tentacles (Redesign Shell) */
+#tentacles { position: fixed; inset: 0; pointer-events: none; opacity: 0.15; overflow: hidden; z-index: -1; }
+.tentacle, .tentacle::before { position: absolute; border-radius: 999px; transform-origin: top center; animation: drift var(--dur) ease-in-out infinite alternate; }
+.tentacle { width: 1.5px; height: var(--len); left: var(--x); top: -8vh; background: linear-gradient(120deg, var(--green), transparent); filter: blur(0.2px); }
+.tentacle::before { content: ""; inset: 0; width: 17px; left: -4px; background: linear-gradient(120deg, var(--green), transparent); opacity: 0.5; }
+@keyframes drift {
+  from { transform: rotate(calc(var(--rot) * -2)) translateY(0); }
+  to { transform: rotate(var(--rot)) translateY(2vh); }
+}
+@media (prefers-reduced-motion: reduce) { .tentacle { animation: none; } }

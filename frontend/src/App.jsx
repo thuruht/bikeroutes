@@ -111,52 +111,44 @@ function App() {
   }, [hoverPt]);
 
   return (
-    <div className="app">
-      <div className="panel">
-        <header>
-          <div className="logo">
-            <span className="icon">🦌</span>
-            <span className="name">bikeroutes.org</span>
-          </div>
-          <button className="theme-toggle" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}>
-            {theme === "dark" ? Ic.sun : Ic.moon}
-          </button>
-        </header>
-
-        <main>
-          <div className="io">
-            <GeoInput dotClass="start" value={start?.short} placeholder="Start location..." onPick={setStart} />
-            <button className="swap" onClick={() => { const t = start; setStart(dest); setDest(t); }}>{Ic.swap}</button>
-            <GeoInput dotClass="dest" value={dest?.short} placeholder="Destination..." onPick={setDest} />
-          </div>
-
-          <div className="prefs">
-            {["balanced", "quiet", "fast"].map(p => (
-              <button key={p} className={pref === p ? "active" : ""} onClick={() => setPref(p)}>
-                {p.charAt(0).toUpperCase() + p.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {!result && !loading && <div style={{ marginTop: 16 }}><Reki mood="empty" /></div>}
-          {loading && <div style={{ marginTop: 16 }}><Reki mood="scout" /></div>}
-          {result && (
-            <div className="result-area">
-              <Summary route={result} />
-              <Elevation route={result} onScrub={setHoverPt} />
-              <Turns turns={result.turns} onHover={setHoverPt} />
-              {result.source === "estimated" && <div style={{ marginTop: 14 }}><Reki mood="estimate" /></div>}
+    <>
+      <div id="tentacles" ref={(el) => { if (el && !el.children.length) { for (let i = 0; i < 20; i++) { const s = document.createElement("span"); s.className = "tentacle"; s.style.setProperty("--x", Math.random() * 100 + "%"); s.style.setProperty("--len", 30 + Math.random() * 45 + "vh"); s.style.setProperty("--rot", 3 + Math.random() * 10 + "deg"); s.style.setProperty("--dur", 4 + Math.random() * 5 + "s"); s.style.opacity = 0.3 + Math.random() * 0.5; el.appendChild(s); } } }} />
+      <div className="app">
+        <div className="panel">
+          <header>
+            <div className="logo"><span className="icon">🦌</span><span className="name">bikeroutes.org</span></div>
+            <button className="theme-toggle" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}>{theme === "dark" ? Ic.sun : Ic.moon}</button>
+          </header>
+          <main>
+            <div className="io">
+              <GeoInput dotClass="start" value={start?.short} placeholder="Start location..." onPick={setStart} />
+              <button className="swap" onClick={() => { const t = start; setStart(dest); setDest(t); }}>{Ic.swap}</button>
+              <GeoInput dotClass="dest" value={dest?.short} placeholder="Destination..." onPick={setDest} />
             </div>
-          )}
-        </main>
-
-        <footer>
-          <div className="links"><a href="#">About</a> · <a href="#">Community</a> · <a href="#">Donate</a></div>
-          <div className="creds">Open source routing for the Midwest.</div>
-        </footer>
+            <div className="prefs">
+              {["balanced", "quiet", "fast"].map(p => (
+                <button key={p} className={pref === p ? "active" : ""} onClick={() => setPref(p)}>{p.charAt(0).toUpperCase() + p.slice(1)}</button>
+              ))}
+            </div>
+            {!result && !loading && <div style={{ marginTop: 16 }}><Reki mood="empty" /></div>}
+            {loading && <div style={{ marginTop: 16 }}><Reki mood="scout" /></div>}
+            {result && (
+              <div className="result-area">
+                <Summary route={result} />
+                <Elevation route={result} onScrub={setHoverPt} />
+                <Turns turns={result.turns} onHover={setHoverPt} />
+                {result.source === "estimated" && <div style={{ marginTop: 14 }}><Reki mood="estimate" /></div>}
+              </div>
+            )}
+          </main>
+          <footer>
+            <div className="links"><a href="#">About</a> · <a href="#">Community</a> · <a href="#">Donate</a></div>
+            <div className="creds">Open source routing for the Midwest.</div>
+          </footer>
+        </div>
+        <div className="map-wrap" ref={mapContainer} />
       </div>
-      <div className="map-wrap" ref={mapContainer} />
-    </div>
+    </>
   );
 }
 
