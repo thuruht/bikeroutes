@@ -1,0 +1,8 @@
+{
+  "name": "bikeroutes.org",
+  "private": true,
+  "scripts": {
+    "build": "npm run build --prefix frontend && npm run build --prefix worker",
+    "deploy": "npm run build && npm run deploy --prefix worker"
+  }
+}
