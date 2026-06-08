@@ -111,6 +111,11 @@ body {
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+.pillbtn:hover { border-color: var(--line-2); }
+.pillbtn svg { width: 16px; height: 16px; opacity: .8; }
+.pillbtn.solid { background: var(--orange); color: #fff; border-color: transparent; }
+.pillbtn.solid:hover { background: var(--orange); box-shadow: var(--accent-glow); }
+.pillbtn.solid svg { opacity: 1; }
 
 /* ---------- Top bar ---------- */
 .topbar {
