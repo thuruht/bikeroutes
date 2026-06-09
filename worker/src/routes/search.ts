@@ -113,7 +113,7 @@ RULES:
 Context trails found:
 ${contextText}`;
 
-			const chatResponse = await c.env.AI.run("@cf/meta/llama-3-8b-instruct", {
+			const chatResponse = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
 				messages: [
 					{ role: "system", content: systemPrompt },
 					{ role: "user", content: `User query: "${query}"\nWhat do you recommend?` }
