@@ -11,7 +11,7 @@
   border-radius: var(--radius-full, 9999px);
   background: linear-gradient(135deg, rgba(200, 16, 46, 0.15), rgba(0, 48, 135, 0.15));
   color: #fff;
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;

@@ -78,52 +78,54 @@ export default function Sidebar({
   }
 
   return (
-    <div className="panel">
-      <RouteInput 
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-        onSearchSubmit={handleSearchSubmit}
-        searchResults={searchResults}
-        isSearching={isSearching}
-        onSnapLocation={onSnapLocation}
-        setWaypoints={setWaypoints}
-        waypoints={waypoints}
-      />
+    <div className={`panel${wcMode ? ' with-banner' : ''}`}>
+      <div className="panel-scroll">
+        <RouteInput
+          searchQuery={searchQuery}
+          onSearchChange={onSearchChange}
+          onSearchSubmit={handleSearchSubmit}
+          searchResults={searchResults}
+          isSearching={isSearching}
+          onSnapLocation={onSnapLocation}
+          setWaypoints={setWaypoints}
+          waypoints={waypoints}
+        />
 
-      <RideTypeSelector 
-        activeType={routeOptions.pavedOnly ? 'commute' : 'gravel'} // Simplified mapping
-        onChange={(type) => {
-          setRouteOptions(prev => ({ 
-            ...prev, 
-            pavedOnly: type === 'commute' || type === 'family',
-            avoidRoads: type !== 'commute'
-          }))
-        }}
-      />
+        <RideTypeSelector
+          activeType={routeOptions.pavedOnly ? 'commute' : 'gravel'}
+          onChange={(type) => {
+            setRouteOptions(prev => ({
+              ...prev,
+              pavedOnly: type === 'commute' || type === 'family',
+              avoidRoads: type !== 'commute'
+            }))
+          }}
+        />
 
-      {!routeInfo && (
-        <Reki mood={waypoints.length > 0 ? "scout" : "empty"} size={64} />
-      )}
+        {!routeInfo && (
+          <Reki mood={waypoints.length > 0 ? "scout" : "empty"} size={64} />
+        )}
 
-      {routeInfo && (
-        <>
-          <RouteStats info={routeInfo} />
-          <ElevationProfile data={routeInfo?.elevationData || []} />
-          <RouteActions 
-            isNavigating={isNavigating}
-            onToggleNavigation={() => setIsNavigating(!isNavigating)}
-            onExport={handleExportGPX}
-            onExportKML={handleExportKML}
-            onShare={handleShareRoute}
-            onClear={onClearRoute}
-          />
-        </>
-      )}
+        {routeInfo && (
+          <>
+            <RouteStats info={routeInfo} />
+            <ElevationProfile data={routeInfo?.elevationData || []} />
+            <RouteActions
+              isNavigating={isNavigating}
+              onToggleNavigation={() => setIsNavigating(!isNavigating)}
+              onExport={handleExportGPX}
+              onExportKML={handleExportKML}
+              onShare={handleShareRoute}
+              onClear={onClearRoute}
+            />
+          </>
+        )}
 
-      <RouteFilters 
-        activeFilters={activeFilters} 
-        onToggleFilter={onToggleFilter} 
-      />
+        <RouteFilters
+          activeFilters={activeFilters}
+          onToggleFilter={onToggleFilter}
+        />
+      </div>
     </div>
   )
 

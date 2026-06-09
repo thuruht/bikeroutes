@@ -10,13 +10,13 @@
 }
 
 .title {
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: var(--text-2xl);
   margin-bottom: var(--space-2);
 }
 
 .subtitle {
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   font-size: var(--text-sm);
 }
 
@@ -35,17 +35,17 @@
 .loading {
   text-align: center;
   padding: var(--space-12);
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   font-style: italic;
 }
 
 .empty {
   text-align: center;
   padding: var(--space-12);
-  background: var(--color-surface-2);
+  background: var(--panel-solid);
   backdrop-filter: blur(8px);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
 }
 
@@ -57,7 +57,7 @@
 
 .hint {
   font-size: var(--text-xs);
-  color: var(--color-primary);
+  color: var(--orange);
   margin-top: var(--space-2);
   font-weight: 700;
   text-transform: uppercase;
@@ -72,19 +72,19 @@
 
 .card {
   text-align: left;
-  background: var(--color-surface-2);
+  background: var(--panel-solid);
   backdrop-filter: blur(16px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition);
+  transition: all var(--dur) var(--ease-in-out);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-primary-soft);
+  box-shadow: var(--shadow);
+  border-color: var(--green-soft);
 }
 
 .cardHeader {
@@ -98,7 +98,7 @@
   font-size: 9px;
   font-weight: 900;
   padding: 4px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -108,12 +108,12 @@
 .type-debris { background: #8B7D6B; color: #fff; }
 .type-closure { background: #C8102E; color: #fff; }
 .type-cops { background: #171614; color: #fff; }
-.type-other { background: var(--color-text-muted); color: #fff; }
+.type-other { background: var(--muted-txt); color: #fff; }
 
 .time {
   font-size: 9px;
   font-weight: 700;
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -121,7 +121,7 @@
 .desc {
   font-family: var(--font-body);
   font-size: var(--text-base);
-  color: var(--color-text);
+  color: var(--ink);
   line-height: 1.6;
   margin-bottom: var(--space-6);
 }
@@ -129,7 +129,7 @@
 .cardFooter {
   font-size: 10px;
   font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0.7;
@@ -141,19 +141,19 @@
 }
 
 .formTitle {
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: var(--text-lg);
   font-weight: 800;
   margin-bottom: var(--space-8);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text);
+  color: var(--ink);
 }
 
 .authBox, .reportForm {
-  background: var(--color-surface-2);
+  background: var(--panel-solid);
   backdrop-filter: blur(16px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   text-align: left;
@@ -169,32 +169,32 @@
   font-weight: 800;
   text-transform: uppercase;
   margin-bottom: var(--space-2);
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   letter-spacing: 0.05em;
 }
 
 .select, .input, .textarea {
   width: 100%;
   padding: var(--space-4);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   background: rgba(255, 255, 255, 0.4);
   outline: none;
-  transition: all var(--transition);
+  transition: all var(--dur) var(--ease-in-out);
 }
 
 .select:focus, .input:focus, .textarea:focus {
-  border-color: var(--color-primary);
+  border-color: var(--orange);
   background: #fff;
-  box-shadow: 0 0 0 4px var(--color-primary-soft);
+  box-shadow: 0 0 0 4px var(--green-soft);
 }
 
 .submitBtn {
   width: 100%;
   padding: var(--space-4);
-  background: var(--color-primary);
+  background: var(--orange);
   color: white;
   border: none;
   border-radius: var(--radius-md);
@@ -203,13 +203,13 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: 0 4px 12px var(--color-primary-soft);
+  transition: all var(--dur-fast) var(--ease-out);
+  box-shadow: 0 4px 12px var(--green-soft);
 }
 
 .submitBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px var(--color-primary-soft);
+  box-shadow: 0 6px 16px var(--green-soft);
   filter: brightness(1.1);
 }
 

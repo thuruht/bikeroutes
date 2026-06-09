@@ -1,39 +1,26 @@
 /* ======================================================
    MapView — Tactical Hi-Tech
+   The map fills its .map-layer container (position:absolute; inset:0).
+   All children here are absolutely positioned overlays on the map.
    ====================================================== */
-
-.mapContainer {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-}
-
-.mapCanvas {
-  width: 100%;
-  height: 100%;
-}
 
 /* Watermark */
 .mapWatermark {
   position: absolute;
   bottom: var(--space-4);
   right: var(--space-4);
-  background: var(--color-surface-2);
+  background: var(--panel-solid);
   backdrop-filter: blur(8px);
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--color-text-muted);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
+  color: var(--muted-txt);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--line);
   pointer-events: none;
   z-index: 10;
 }
@@ -46,60 +33,27 @@
 }
 
 .watermarkText {
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.15em;
-  color: var(--color-text-muted);
-}
-
-/* Waypoint Markers */
-.waypointMarker {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-xl);
-  background: var(--color-surface-2);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 800;
-  box-shadow: var(--shadow-lg);
-  cursor: grab;
-  transition: all var(--transition-fast);
-}
-
-.waypointMarker.start {
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-
-.waypointMarker.end {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
+  color: var(--muted-txt);
 }
 
 /* WC Venue Markers */
 .wcVenueMarker {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-full);
-  background: var(--color-surface-2);
+  border-radius: var(--radius-pill);
+  background: var(--panel-solid);
   backdrop-filter: blur(8px);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--line);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: var(--shadow-lg);
-  transition: all var(--transition);
+  box-shadow: var(--shadow);
 }
 
 .wcMarkerIcon {
@@ -108,13 +62,13 @@
 
 /* Popups */
 :global(.maplibregl-popup-content) {
-  background: var(--color-surface-2) !important;
+  background: var(--panel-solid) !important;
   backdrop-filter: blur(16px);
-  border: 1px solid var(--color-border) !important;
+  border: 1px solid var(--line) !important;
   border-radius: var(--radius-lg) !important;
-  box-shadow: var(--shadow-lg) !important;
+  box-shadow: var(--shadow) !important;
   padding: var(--space-4) !important;
-  color: var(--color-text) !important;
+  color: var(--ink) !important;
   font-family: var(--font-body) !important;
 }
 
@@ -125,7 +79,7 @@
 .wcPopup strong {
   display: block;
   margin-bottom: var(--space-2);
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: var(--text-base);
 }
 
@@ -133,20 +87,16 @@
   display: block;
   width: 100%;
   padding: var(--space-2) var(--space-4);
-  background: var(--color-primary);
-  color: white;
+  background: var(--orange);
+  color: #fff;
   border: none;
   border-radius: var(--radius-md);
   font-size: var(--text-xs);
   font-weight: 700;
   cursor: pointer;
   margin-top: var(--space-2);
-  transition: all var(--transition-fast);
-  box-shadow: 0 4px 12px var(--color-primary-soft);
 }
 
 .wcPopupRouteBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px var(--color-primary-soft);
-  filter: brightness(1.1);
+  box-shadow: var(--accent-glow);
 }

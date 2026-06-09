@@ -20,40 +20,40 @@
 }
 
 .title {
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: var(--text-2xl);
   margin-bottom: var(--space-2);
-  color: var(--color-text);
+  color: var(--ink);
 }
 
 .intro {
   font-size: var(--text-lg);
   line-height: 1.6;
-  color: var(--color-text);
+  color: var(--ink);
   margin-bottom: var(--space-12);
   text-align: center;
   text-wrap: balance;
 }
 
 .faqHeading {
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: var(--text-lg);
   margin-bottom: var(--space-6);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
 }
 
 .faqQuestion {
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: var(--text-base);
   margin-bottom: var(--space-2);
-  color: var(--color-primary);
+  color: var(--orange);
 }
 
 .faqAnswer {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   line-height: 1.6;
 }
 
@@ -66,7 +66,7 @@
 .merchBtn {
   margin-top: var(--space-4);
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-primary);
+  background: var(--orange);
   color: white;
   border: none;
   border-radius: var(--radius-md);
@@ -74,11 +74,11 @@
   font-size: var(--text-xs);
   cursor: pointer;
   align-self: flex-start;
-  transition: all var(--transition-fast);
+  transition: all var(--dur-fast) var(--ease-out);
 }
 
 .merchBtn:hover {
-  background: var(--color-text);
+  background: var(--ink);
   transform: translateX(4px);
 }
 
@@ -88,20 +88,20 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-6);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--line);
   padding-top: var(--space-8);
 }
 
 .link {
   font-size: var(--text-base);
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--orange);
   text-decoration: none;
-  transition: all var(--transition);
+  transition: all var(--dur) var(--ease-in-out);
 }
 
 .link:hover {
-  color: var(--color-text);
+  color: var(--ink);
   transform: translateY(-1px);
 }
 
@@ -110,7 +110,7 @@
   align-items: center;
   gap: var(--space-4);
   font-size: 10px;
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   opacity: 0.6;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -120,9 +120,9 @@
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 2px;
-  transition: all var(--transition);
+  transition: all var(--dur) var(--ease-in-out);
 }
 
 .githubLink:hover {
-  color: var(--color-text);
+  color: var(--ink);
 }

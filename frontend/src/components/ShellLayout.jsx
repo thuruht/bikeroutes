@@ -24,9 +24,9 @@ export default function ShellLayout({ children }) {
   return (
     <>
       <div id="tentacles" aria-hidden="true" />
-      <main className="shell">
-         {children}
-      </main>
+      <div className="app">
+        {children}
+      </div>
     </>
   );
 }
