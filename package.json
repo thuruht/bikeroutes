@@ -2,6 +2,7 @@
   "name": "bikeroutes",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build"
+    "build": "cd frontend && npm ci && npm run build",
+    "deploy": "cd worker && npm ci && npm run deploy"
   }
 }
