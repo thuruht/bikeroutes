@@ -10,3 +10,8 @@ docs/cloudflare/
 
 # Vite build output (generated into worker dir for Workers static assets)
 worker/public/
+
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
