@@ -1,49 +1,40 @@
+@import url('https://fonts.bunny.net/css?family=outfit:400,500,600,700|ibm-plex-sans:400,500,600|ibm-plex-mono:400,500,600');
+
 /* ============================================================
    bikeroutes.org — DESIGN TOKENS  (single source of truth)
    ------------------------------------------------------------
    Tactical Hi-Tech · MO Camo Edition.
-   This file is the canonical token layer. styles.css and every
-   page @import it. Three layers:
-     1. BRAND PALETTE  — the 8 named brand colors, fixed hexes.
-     2. SEMANTIC TOKENS — functional, theme-aware (light / dark).
-                          UI code references THESE, never raw hex.
-     3. SCALES         — type, space, radius, shadow, motion, z.
-   ------------------------------------------------------------
-   Brand → semantic mapping is documented inline. Some semantic
-   tints are intentionally deepened/lightened from the brand hex
-   to hold WCAG AA contrast on a given surface; those deltas are
-   noted with "AA-tuned".
    ============================================================ */
 
 :root {
   /* ---------- 1. BRAND PALETTE (immutable) ---------- */
-  --brand-deer-brown:   #C0763C;  /* Reki body, warm headers          */
-  --brand-blaze-orange: #FF6B1A;  /* primary accent / CTA / safety     */
-  --brand-camo-olive:   #4B5320;  /* tactical surfaces, secondary bg   */
-  --brand-cream-white:  #FFF5E6;  /* primary text on dark, chest/tail  */
-  --brand-forest-green: #2D5F3A;  /* cap, bag, accent buttons          */
-  --brand-trail-tan:    #D4A96A;  /* card surfaces, secondary bg       */
-  --brand-dark-hoof:    #0B0C08;  /* deep dark base, ink, outlines     */
-  --brand-sky-blue:     #6BAED6;  /* links, interactive, map water     */
+  --brand-deer-brown:   #C0763C;
+  --brand-blaze-orange: #FF6B1A;
+  --brand-camo-olive:   #4B5320;
+  --brand-cream-white:  #FFF5E6;
+  --brand-forest-green: #2D5F3A;
+  --brand-trail-tan:    #D4A96A;
+  --brand-dark-hoof:    #0B0C08;
+  --brand-sky-blue:     #6BAED6;
 
   /* ---------- 3. SCALES (theme-independent) ---------- */
 
   /* type families */
-  --font-head: "Outfit", system-ui, -apple-system, sans-serif;     /* headers, wordmark, brand */
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif; /* UI + trail data */
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;   /* coords, data, captions */
+  --font-head: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
 
-  /* type scale — mobile-first, rem on 16px root. label / px / use */
-  --text-2xs:  0.6875rem;  /* 11  — micro caps, map labels        */
-  --text-xs:   0.75rem;    /* 12  — captions, meta, hints         */
-  --text-sm:   0.8125rem;  /* 13  — secondary UI, nav, turn rows  */
-  --text-base: 0.875rem;   /* 14  — body / input default          */
-  --text-md:   1rem;       /* 16  — emphasised body               */
-  --text-lg:   1.0625rem;  /* 17  — card titles, section heads    */
-  --text-xl:   1.3125rem;  /* 21  — sub-display                   */
-  --text-2xl:  1.625rem;   /* 26  — display                       */
-  --text-3xl:  1.875rem;   /* 30  — hero stat (route distance)    */
-  --text-4xl:  2.25rem;    /* 36  — marketing hero                */
+  /* type scale */
+  --text-2xs:  0.6875rem;
+  --text-xs:   0.75rem;
+  --text-sm:   0.8125rem;
+  --text-base: 0.875rem;
+  --text-md:   1rem;
+  --text-lg:   1.0625rem;
+  --text-xl:   1.3125rem;
+  --text-2xl:  1.625rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
 
   /* line-height */
   --lh-tight: 1.1;
@@ -62,9 +53,9 @@
   --track-snug: -0.01em;
   --track-normal: 0;
   --track-wide: 0.02em;
-  --track-caps: 0.07em;   /* uppercase eyebrow / section labels */
+  --track-caps: 0.07em;
 
-  /* spacing — 4px base grid (matches the 24px tactical texture = 6 units) */
+  /* spacing — 4px base grid */
   --space-0: 0;
   --space-1: 4px;
   --space-2: 8px;
@@ -77,9 +68,7 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* radius — the documented system. (Supersedes the legacy single 6px.)
-     6 → controls nested in a group · 11 → buttons/inputs/pills
-     14 → cards · 18 → floating panels · pill → chips/toggles */
+  /* radius */
   --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 11px;
@@ -87,7 +76,7 @@
   --radius-xl: 18px;
   --radius-pill: 999px;
 
-  /* minimum touch target (outdoor, gloved, one-handed) */
+  /* minimum touch target */
   --touch-min: 44px;
 
   /* motion */
@@ -104,10 +93,8 @@
   --z-topbar: 40;
   --z-modal: 80;
 
-  /* ---------- 2. SEMANTIC TOKENS · LIGHT ----------
-     "Daylight Trail Tan" — warm camo daytime. Designed to stay
-     legible on a glaring phone screen outdoors. */
-  --paper:      #f4efe3;  /* ← trail-tan, lightened to a paper tint */
+  /* ---------- 2. SEMANTIC TOKENS · LIGHT ---------- */
+  --paper:      #f4efe3;
   --paper-2:    #ebe4d3;
   --ink:        #1b1c12;  /* ← dark-hoof, raised for soft contrast  */
   --ink-2:      #46473a;
@@ -117,12 +104,12 @@
   --line-2:     #d2c8ae;
   --panel:      rgba(248, 244, 235, 0.94);
   --panel-solid:#f8f4eb;
-  --green:      #5e7a2e;   /* ← camo-olive, AA-tuned brighter "moss" */
+  --green:      #5e7a2e;
   --green-deep: #4c6724;
   --green-soft: #e5ead2;
-  --orange:     #e2590f;   /* ← blaze-orange, AA-tuned darker on light (4.5:1 on paper) */
+  --orange:     #e2590f;
   --orange-soft:#f6e0ce;
-  --link:       #1f6e93;   /* ← sky-blue, AA-tuned darker on light   */
+  --link:       #1f6e93;
   --accent-glow: 0 0 0 1px rgba(226,89,15,.35), 0 6px 18px rgba(226,89,15,.22);
   --shadow:     0 1px 2px rgba(40,36,28,.06), 0 8px 28px rgba(40,36,28,.10);
   --shadow-sm:  0 1px 2px rgba(40,36,28,.08), 0 2px 8px rgba(40,36,28,.06);
@@ -134,7 +121,7 @@
   --warn:        #b9722a;
   --success:     #4c6724;
 
-  /* focus ring — 2px offset in the surface color, 2px blaze ring */
+  /* focus ring */
   --focus-ring-color: var(--orange);
   --focus-ring: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--orange);
 
@@ -173,12 +160,12 @@
   --line-2:     #333524;
   --panel:      rgba(13, 14, 9, 0.90);
   --panel-solid:#0f100a;
-  --green:      #9fb84a;   /* ← camo-olive, AA-tuned brighter on dark */
+  --green:      #9fb84a;
   --green-deep: #88a23b;
   --green-soft: #1e2410;
-  --orange:     #ff6b1a;   /* ← blaze-orange, verbatim              */
+  --orange:     #ff6b1a;
   --orange-soft:#2a1b0e;
-  --link:       #6BAED6;   /* ← sky-blue, verbatim                  */
+  --link:       #6BAED6;
   --accent-glow: 0 0 0 1px rgba(255,107,26,.55), 0 0 22px rgba(255,107,26,.40);
   --shadow:     0 1px 2px rgba(0,0,0,.5), 0 12px 36px rgba(0,0,0,.55);
   --shadow-sm:  0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.45);
@@ -212,16 +199,8 @@
   color-scheme: dark;
 }
 
-
-
 /* ============================================================
    bikeroutes.org — COMPONENT STYLES
-   ------------------------------------------------------------
-   All design tokens (palette, type, space, radius, shadow,
-   motion, z-index) live in tokens.css — the single source of
-   truth. This file styles components by referencing tokens.
-   Accessibility states (focus / disabled / error / loading)
-   and the reduced-motion + mobile passes are at the bottom.
    ============================================================ */
 
 * { box-sizing: border-box; }
@@ -259,15 +238,6 @@ h1, h2, h3, h4,
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
-}
-
-/* Content views (community, about, fulfillment, landing) need vertical scroll */
-.content-view {
-  position: absolute;
-  inset: 0;
-  padding-top: 78px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ---------- Top bar ---------- */
@@ -545,9 +515,6 @@ h1, h2, h3, h4,
    ACCESSIBILITY — focus, states, links
    ============================================================ */
 
-/* Visible keyboard focus everywhere. Pointer users never see it
-   (:focus-visible), keyboard users always do. Replaces the old
-   blanket outline:none on inputs. */
 :where(a, button, input, [role="button"], [role="tab"], .opt, .chip, .seg button, .modetabs button):focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
@@ -561,12 +528,10 @@ h1, h2, h3, h4,
   position: relative;
   z-index: 1;
 }
-.io-row input:focus-visible { outline: none; box-shadow: none; } /* ring sits on the row */
+.io-row input:focus-visible { outline: none; box-shadow: none; }
 
-/* links use the sky-blue brand token, AA-tuned per theme */
 a { color: var(--link); }
 
-/* Disabled — uniform, communicates "not now" without vanishing */
 button:disabled,
 button[aria-disabled="true"],
 .is-disabled,
@@ -578,7 +543,6 @@ input:disabled {
   filter: saturate(.6);
 }
 
-/* Error — inputs and rows. Pair with aria-invalid="true". */
 .io-row.is-error,
 input.is-error,
 [aria-invalid="true"] {
@@ -591,7 +555,6 @@ input.is-error,
   margin: 6px 2px 0; font-weight: var(--fw-medium);
 }
 
-/* Loading — skeleton shimmer + busy buttons */
 .is-loading { position: relative; color: transparent !important; pointer-events: none; }
 .is-loading::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit;
@@ -609,7 +572,6 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 @keyframes br-shimmer { to { background-position: -200% 0; } }
 @keyframes br-spin { to { transform: rotate(360deg); } }
 
-/* respect users who reduce motion — kill non-essential animation */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important;
@@ -621,12 +583,9 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 }
 
 /* ============================================================
-   RESPONSIVE — mobile-first refinements
-   The app is laid out for desktop; these adapt it down. Touch
-   targets are floored at --touch-min (44px) on coarse pointers.
+   RESPONSIVE
    ============================================================ */
 
-/* gloved / touch use — never let a control fall below 44px */
 @media (pointer: coarse) {
   .zoomstack button,
   .theme-toggle button,
@@ -637,7 +596,6 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .modetabs button { min-height: var(--touch-min); }
 }
 
-/* Tablet / large phone — panel becomes a bottom sheet */
 @media (max-width: 720px) {
   .topbar { padding: 12px 12px; gap: 10px; }
   .privacy, .nav, .readout { display: none; }
@@ -645,7 +603,6 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .pillbtn.solid .btn-label { display: none; }
   .pillbtn.solid svg { width: 18px; height: 18px; }
 
-  /* bottom sheet: anchored to the bottom, swipe/scroll its body */
   .panel {
     top: auto; bottom: 0; left: 0; right: 0; width: auto;
     max-height: 62vh;
@@ -660,10 +617,8 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .panel-scroll { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
   .mapctl { bottom: calc(62vh + 14px); }
   .summary .dist { font-size: var(--text-2xl); }
-  .panel.with-banner { max-height: 55vh; }
 }
 
-/* Small phone */
 @media (max-width: 420px) {
   .brand .tag { display: none; }
   .topbar { padding: 10px 8px; }
@@ -672,4 +627,28 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
 }
 
+/* ---------- Legacy UI classes (kept for compatibility) ---------- */
+.marker { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-sm); cursor: pointer; }
+.marker.start { background: var(--green); }
+.marker.dest { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-soft), var(--shadow); }
 
+.io-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 0 0 12px 12px; z-index: 100; box-shadow: var(--shadow); max-height: 240px; overflow-y: auto; }
+.io-item { padding: 10px 13px; cursor: pointer; }
+.io-item:hover { background: var(--paper-2); }
+.io-item .n { font-weight: 600; font-size: 14px; }
+.io-item .d { font-size: 12px; color: var(--muted-txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.prefs { display: flex; gap: 8px; margin-top: 16px; }
+.prefs button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink-2); font-size: 13px; font-weight: 500; cursor: pointer; }
+.prefs button.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+
+/* Tentacles (Redesign Shell) */
+#tentacles { position: fixed; inset: 0; pointer-events: none; opacity: 0.15; overflow: hidden; z-index: -1; }
+.tentacle, .tentacle::before { position: absolute; border-radius: 999px; transform-origin: top center; animation: drift var(--dur) ease-in-out infinite alternate; }
+.tentacle { width: 1.5px; height: var(--len); left: var(--x); top: -8vh; background: linear-gradient(120deg, var(--green), transparent); filter: blur(0.2px); }
+.tentacle::before { content: ""; inset: 0; width: 17px; left: -4px; background: linear-gradient(120deg, var(--green), transparent); opacity: 0.5; }
+@keyframes drift {
+  from { transform: rotate(calc(var(--rot) * -2)) translateY(0); }
+  to { transform: rotate(var(--rot)) translateY(2vh); }
+}
+@media (prefers-reduced-motion: reduce) { .tentacle { animation: none; } }

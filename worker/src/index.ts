@@ -9,6 +9,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "./lib/logger";
 import { routeRoutes } from "./routes/route";
+import { geocodeRoutes } from "./routes/geocode";
 import { searchRoutes } from "./routes/search";
 import { geocodeRoutes, reverseRoutes } from "./routes/geocode";
 import { tileRoutes } from "./routes/tiles";
@@ -35,6 +36,7 @@ app.use("*", cors({
 
 // ─── Routes ───────────────────────────────────────────
 app.route("/api/route", routeRoutes);
+app.route("/api", geocodeRoutes);      // mounts /api/geocode + /api/reverse
 app.route("/api/search", searchRoutes);
 app.route("/api/geocode", geocodeRoutes);
 app.route("/api/reverse", reverseRoutes);
