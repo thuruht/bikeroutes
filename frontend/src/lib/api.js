@@ -1,7 +1,7 @@
 const API_CONFIG = {
   WORKER_SEARCH: "/api/search",
   WORKER_ROUTE: "/api/route",
-  NOMINATIM: "https://nominatim.openstreetmap.org/search",
+  GEOCODE: "/api/geocode",
   BROUTER: "https://brouter.de/brouter",
   TILES: {
     dark: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
@@ -78,14 +78,16 @@ export async function getRoute(a, b, pref = "balanced") {
 export async function searchLocations(q) {
   if (!q || !q.trim()) return [];
   try {
-    const url = `${API_CONFIG.NOMINATIM}?format=jsonv2&limit=6&addressdetails=1&q=${encodeURIComponent(q)}`;
+    const url = `${API_CONFIG.GEOCODE}?q=${encodeURIComponent(q)}`;
     const r = await fetch(url, { headers: { "Accept": "application/json" } });
-    const j = await r.json();
-    return j.map((d) => ({
-      label: d.display_name,
-      short: d.name || d.display_name.split(",")[0],
-      kind: d.type || d.category,
-      lng: parseFloat(d.lon), lat: parseFloat(d.lat),
+    const data = await r.json();
+    if (!data.results) return [];
+    return data.results.map((d) => ({
+      label: d.description,
+      short: d.name,
+      kind: "place",
+      lng: d.coords[0],
+      lat: d.coords[1],
     }));
   } catch (e) { return []; }
 }
