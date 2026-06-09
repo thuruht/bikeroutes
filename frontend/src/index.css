@@ -1,9 +1,99 @@
+@import url('https://fonts.bunny.net/css?family=outfit:400,500,600,700|ibm-plex-sans:400,500,600|ibm-plex-mono:400,500,600');
+
 /* ============================================================
-   bikeroutes.org — calm, map-first, open cycling maps
+   bikeroutes.org — DESIGN TOKENS  (single source of truth)
+   ------------------------------------------------------------
+   Tactical Hi-Tech · MO Camo Edition.
    ============================================================ */
 
 :root {
-  /* light theme — "daylight trail tan" (warm camo daytime) */
+  /* ---------- 1. BRAND PALETTE (immutable) ---------- */
+  --brand-deer-brown:   #C0763C;
+  --brand-blaze-orange: #FF6B1A;
+  --brand-camo-olive:   #4B5320;
+  --brand-cream-white:  #FFF5E6;
+  --brand-forest-green: #2D5F3A;
+  --brand-trail-tan:    #D4A96A;
+  --brand-dark-hoof:    #0B0C08;
+  --brand-sky-blue:     #6BAED6;
+
+  /* ---------- 3. SCALES (theme-independent) ---------- */
+
+  /* type families */
+  --font-head: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+
+  /* type scale */
+  --text-2xs:  0.6875rem;
+  --text-xs:   0.75rem;
+  --text-sm:   0.8125rem;
+  --text-base: 0.875rem;
+  --text-md:   1rem;
+  --text-lg:   1.0625rem;
+  --text-xl:   1.3125rem;
+  --text-2xl:  1.625rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+
+  /* line-height */
+  --lh-tight: 1.1;
+  --lh-snug: 1.25;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.6;
+
+  /* weight */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* letter-spacing */
+  --track-tight: -0.02em;
+  --track-snug: -0.01em;
+  --track-normal: 0;
+  --track-wide: 0.02em;
+  --track-caps: 0.07em;
+
+  /* spacing — 4px base grid */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* radius */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-pill: 999px;
+
+  /* minimum touch target */
+  --touch-min: 44px;
+
+  /* motion */
+  --ease-out: cubic-bezier(.22,.61,.36,1);
+  --ease-in-out: cubic-bezier(.4,0,.2,1);
+  --dur-fast: .12s;
+  --dur: .18s;
+  --dur-slow: .9s;
+
+  /* z-index scale */
+  --z-map: 1;
+  --z-readout: 25;
+  --z-panel: 30;
+  --z-topbar: 40;
+  --z-modal: 80;
+
+  /* ---------- 2. SEMANTIC TOKENS · LIGHT ---------- */
   --paper:      #f4efe3;
   --paper-2:    #ebe4d3;
   --ink:        #1b1c12;
@@ -14,15 +104,26 @@
   --line-2:     #d2c8ae;
   --panel:      rgba(248, 244, 235, 0.94);
   --panel-solid:#f8f4eb;
-  --green:      #5e7a2e;   /* camo moss */
+  --green:      #5e7a2e;
   --green-deep: #4c6724;
   --green-soft: #e5ead2;
-  --orange:     #e2590f;   /* blaze orange (deepened for light contrast) */
+  --orange:     #e2590f;
   --orange-soft:#f6e0ce;
+  --link:       #1f6e93;
   --accent-glow: 0 0 0 1px rgba(226,89,15,.35), 0 6px 18px rgba(226,89,15,.22);
   --shadow:     0 1px 2px rgba(40,36,28,.06), 0 8px 28px rgba(40,36,28,.10);
   --shadow-sm:  0 1px 2px rgba(40,36,28,.08), 0 2px 8px rgba(40,36,28,.06);
   --grid-line:  rgba(75,83,32,.05);
+
+  /* feedback */
+  --danger:      #c0392b;
+  --danger-soft: #f7ddd8;
+  --warn:        #b9722a;
+  --success:     #4c6724;
+
+  /* focus ring */
+  --focus-ring-color: var(--orange);
+  --focus-ring: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--orange);
 
   /* map (light) */
   --m-paper:    #efe8d8;
@@ -41,28 +142,40 @@
   --route:      #e2590f;
   --route-edge: #fffdf7;
   --route-alt:  #5e7a2e;
+
+  color-scheme: light;
 }
 
 [data-theme="dark"] {
-  /* Tactical Hi-Tech — MO Camo Edition (primary brand expression) */
-  --paper:      #0b0c08;   /* Dark Olive / Hoof */
+  /* ---------- 2. SEMANTIC TOKENS · DARK ---------- */
+  --paper:      #0b0c08;
   --paper-2:    #15160e;
-  --ink:        #fff5e6;    /* Cream White */
+  --ink:        #fff5e6;
   --ink-2:      #c5c1ad;
+  --muted:      #8c8970;
   --muted-txt:  #8c8970;
   --line:       #23241a;
   --line-2:     #333524;
   --panel:      rgba(13, 14, 9, 0.90);
   --panel-solid:#0f100a;
-  --green:      #9fb84a;    /* Camo moss (legible on dark) */
+  --green:      #9fb84a;
   --green-deep: #88a23b;
   --green-soft: #1e2410;
-  --orange:     #ff6b1a;    /* Blaze Orange */
+  --orange:     #ff6b1a;
   --orange-soft:#2a1b0e;
+  --link:       #6BAED6;
   --accent-glow: 0 0 0 1px rgba(255,107,26,.55), 0 0 22px rgba(255,107,26,.40);
   --shadow:     0 1px 2px rgba(0,0,0,.5), 0 12px 36px rgba(0,0,0,.55);
   --shadow-sm:  0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.45);
   --grid-line:  rgba(159,184,74,.06);
+
+  --danger:      #e9624f;
+  --danger-soft: #2a1310;
+  --warn:        #d98a3c;
+  --success:     #9fb84a;
+
+  --focus-ring-color: var(--orange);
+  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--orange);
 
   --m-paper:    #0e0f09;
   --m-paper-2:  #0a0b06;
@@ -80,18 +193,31 @@
   --route:      #ff6b1a;
   --route-edge: #0b0c08;
   --route-alt:  #9fb84a;
+
+  color-scheme: dark;
 }
+
+/* ============================================================
+   bikeroutes.org — COMPONENT STYLES
+   ============================================================ */
 
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 body {
-  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
   background: var(--paper);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
-.mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+.mono { font-family: var(--font-mono); }
+
+/* headers use Outfit (the brand display face) */
+h1, h2, h3, h4,
+.brand .name,
+.summary .dist,
+.explore-head h3 { font-family: var(--font-head); }
 
 #root { height: 100%; }
 
@@ -111,11 +237,6 @@ body {
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
 }
-.pillbtn:hover { border-color: var(--line-2); }
-.pillbtn svg { width: 16px; height: 16px; opacity: .8; }
-.pillbtn.solid { background: var(--orange); color: #fff; border-color: transparent; }
-.pillbtn.solid:hover { background: var(--orange); box-shadow: var(--accent-glow); }
-.pillbtn.solid svg { opacity: 1; }
 
 /* ---------- Top bar ---------- */
 .topbar {
@@ -221,6 +342,9 @@ body {
 .io-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .io-dot.a { background: #fff; border: 3px solid var(--green); }
 .io-dot.b { background: var(--orange); box-shadow: 0 0 0 3px var(--orange-soft); }
+.io-dot.via { background: #d4a96a; box-shadow: 0 0 0 3px var(--paper-2); }
+.io-dot.add { background: transparent; border: 1.5px dashed var(--line-2); }
+.io-clear:hover { background: var(--paper-2); color: var(--ink) !important; }
 .io-row input {
   border: 0; background: transparent; font-family: inherit; font-size: 14px;
   color: var(--ink); width: 100%; outline: none; font-weight: 500;
@@ -385,20 +509,127 @@ body {
 /* moving map dot for elevation scrub */
 .scrub-dot { pointer-events: none; }
 
+/* ============================================================
+   ACCESSIBILITY — focus, states, links
+   ============================================================ */
+
+:where(a, button, input, [role="button"], [role="tab"], .opt, .chip, .seg button, .modetabs button):focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+}
+.io-row:focus-within {
+  box-shadow: var(--focus-ring);
+  border-color: transparent;
+  position: relative;
+  z-index: 1;
+}
+.io-row input:focus-visible { outline: none; box-shadow: none; }
+
+a { color: var(--link); }
+
+button:disabled,
+button[aria-disabled="true"],
+.is-disabled,
+.opt.is-disabled,
+input:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: saturate(.6);
+}
+
+.io-row.is-error,
+input.is-error,
+[aria-invalid="true"] {
+  border-color: var(--danger) !important;
+  background: var(--danger-soft);
+}
+.field-error {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--text-xs); color: var(--danger);
+  margin: 6px 2px 0; font-weight: var(--fw-medium);
+}
+
+.is-loading { position: relative; color: transparent !important; pointer-events: none; }
+.is-loading::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(90deg, var(--paper-2) 0%, var(--line) 50%, var(--paper-2) 100%);
+  background-size: 200% 100%; animation: br-shimmer 1.1s var(--ease-in-out) infinite;
+}
+button.is-busy { position: relative; color: transparent !important; }
+button.is-busy::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 15px; height: 15px; margin: -8px 0 0 -8px; border-radius: 50%;
+  border: 2px solid currentColor; border-top-color: transparent;
+  color: var(--ink); animation: br-spin .7s linear infinite;
+}
+button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
+@keyframes br-shimmer { to { background-position: -200% 0; } }
+@keyframes br-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .route-line { transition: none !important; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (pointer: coarse) {
+  .zoomstack button,
+  .theme-toggle button,
+  .io-swap { min-width: var(--touch-min); min-height: var(--touch-min); }
+  .nav a,
+  .actions button,
+  .seg button,
+  .modetabs button { min-height: var(--touch-min); }
+}
+
 @media (max-width: 720px) {
-  .panel { left: 12px; right: 12px; width: auto; }
+  .topbar { padding: 12px 12px; gap: 10px; }
   .privacy, .nav, .readout { display: none; }
   .pillbtn.solid { padding: 9px; }
   .pillbtn.solid .btn-label { display: none; }
   .pillbtn.solid svg { width: 18px; height: 18px; }
+
+  .panel {
+    top: auto; bottom: 0; left: 0; right: 0; width: auto;
+    max-height: 62vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: 0;
+  }
+  .panel::before {
+    content: ""; display: block; width: 36px; height: 4px; flex: none;
+    border-radius: var(--radius-pill); background: var(--line-2);
+    margin: 8px auto 2px;
+  }
+  .panel-scroll { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .mapctl { bottom: calc(62vh + 14px); }
+  .summary .dist { font-size: var(--text-2xl); }
 }
 
-/* Markers */
+@media (max-width: 420px) {
+  .brand .tag { display: none; }
+  .topbar { padding: 10px 8px; }
+  .panel { max-height: 70vh; }
+  .mapctl { bottom: calc(70vh + 12px); }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---------- Legacy UI classes (kept for compatibility) ---------- */
 .marker { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-sm); cursor: pointer; }
 .marker.start { background: var(--green); }
 .marker.dest { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-soft), var(--shadow); }
 
-/* UI Additions */
 .io-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 0 0 12px 12px; z-index: 100; box-shadow: var(--shadow); max-height: 240px; overflow-y: auto; }
 .io-item { padding: 10px 13px; cursor: pointer; }
 .io-item:hover { background: var(--paper-2); }
@@ -408,15 +639,6 @@ body {
 .prefs { display: flex; gap: 8px; margin-top: 16px; }
 .prefs button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink-2); font-size: 13px; font-weight: 500; cursor: pointer; }
 .prefs button.active { background: var(--orange); color: #fff; border-color: var(--orange); }
-
-.turns { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; }
-.turns-head { font-size: 13px; font-weight: 600; color: var(--muted-txt); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
-.turn { display: flex; gap: 12px; padding: 8px 0; align-items: center; }
-.turn:hover { background: var(--paper-2); margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
-.turn .ic { width: 20px; height: 20px; flex: none; color: var(--muted-txt); }
-.turn .body { flex: 1; }
-.turn .road { font-size: 14px; font-weight: 500; color: var(--ink); }
-.turn .meta { font-size: 12px; color: var(--muted-txt); }
 
 /* Tentacles (Redesign Shell) */
 #tentacles { position: fixed; inset: 0; pointer-events: none; opacity: 0.15; overflow: hidden; z-index: -1; }

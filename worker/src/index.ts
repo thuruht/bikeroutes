@@ -8,6 +8,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { routeRoutes } from "./routes/route";
+import { geocodeRoutes } from "./routes/geocode";
 import { searchRoutes } from "./routes/search";
 import { tileRoutes } from "./routes/tiles";
 import { donateRoutes } from "./routes/donate";
@@ -33,6 +34,7 @@ app.use("*", cors({
 
 // ─── Routes ───────────────────────────────────────────
 app.route("/api/route", routeRoutes);
+app.route("/api", geocodeRoutes);      // mounts /api/geocode + /api/reverse
 app.route("/api/search", searchRoutes);
 app.route("/api/tiles", tileRoutes);
 app.route("/api/donate", donateRoutes);

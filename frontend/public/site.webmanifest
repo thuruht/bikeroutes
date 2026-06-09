@@ -1,0 +1,16 @@
+{
+  "name": "BikeRoutes.org — open cycling maps",
+  "short_name": "BikeRoutes",
+  "description": "Free, ad-free, open-source bike route planner for the US Midwest. Powered by OpenStreetMap.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B0C08",
+  "theme_color": "#0B0C08",
+  "categories": ["navigation", "sports", "travel", "maps"],
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/reki_icon.png", "sizes": "256x256", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
