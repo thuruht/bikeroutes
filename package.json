@@ -2,8 +2,12 @@
   "name": "bikeroutes",
   "private": true,
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build && cd ../worker && npm ci",
-    "deploy": "cd worker && npm ci && npm run deploy",
-    "upload-version": "cd worker && npm ci && npx wrangler versions upload"
+    "build": "cd frontend && npm ci && npm run build",
+    "deploy": "wrangler deploy",
+    "upload-version": "cd worker && npm ci && npx wrangler versions upload",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.99.0"
   }
 }
