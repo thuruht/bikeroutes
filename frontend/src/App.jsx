@@ -12,8 +12,13 @@ import WCContextBar from './components/WCContextBar'
 import DonateBanner from './components/DonateBanner'
 import './App.css'
 
-// Module-level flags (not localStorage — sandbox-safe)
-let _wcAcknowledged = false
+/* ---- icons ---- */
+const Ic = {
+  bike: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="6" cy="17" r="3.2"/><circle cx="18" cy="17" r="3.2"/><path d="M6 17l4-8h6l-3 8M10 9l-1.5-3H6"/><circle cx="14.5" cy="6" r="1"/></svg>,
+  swap: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 4v13M7 4L4 7M7 4l3 3M17 20V7M17 20l3-3M17 20l-3-3"/></svg>,
+  sun: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>,
+  moon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z"/></svg>,
+};
 
 function App() {
   const [view, setView] = useState('landing') // 'landing' | 'planner' | 'community' | 'about' | 'fulfillment'
@@ -26,126 +31,88 @@ function App() {
   const [isSearching, setIsSearching] = useState(false)
   const [showDonate, setShowDonate] = useState(false)
 
-  // Navigation Mode State
-  const [routeOptions, setRouteOptions] = useState({
-    minimizeHills: false,
-    avoidRoads: false,
-    pavedOnly: false
-  })
-  const [isNavigating, setIsNavigating] = useState(false)
+  const mapContainer = useRef(null);
+  const mapObj = useRef(null);
+  const markers = useRef({});
 
   // World Cup Mode State
   const [wcMode, setWcMode] = useState(false)
   const [wcAcknowledged, setWcAcknowledged] = useState(_wcAcknowledged)
   const [activeOverlays, setActiveOverlays] = useState(['cycling_routes', 'marc_bikeways', 'marc_restrooms', 'marc_bikehubs'])
 
-  const toggleFilter = useCallback((filter) => {
-    setActiveFilters(prev =>
-      prev.includes(filter)
-        ? prev.filter(f => f !== filter)
-        : [...prev, filter]
-    )
-  }, [])
+  useEffect(() => {
+    if (mapObj.current) return;
+    const map = new maplibregl.Map({
+      container: mapContainer.current,
+      style: {
+        version: 8,
+        sources: {
+          "base": {
+            type: "raster",
+            tiles: [theme === "dark" ? API.TILES.dark : API.TILES.light],
+            tileSize: 256,
+            attribution: API.TILES.attribution
+          }
+        },
+        layers: [
+          { id: "base", type: "raster", source: "base", paint: theme === "dark" ? { "raster-opacity": 0.85 } : {} }
+        ]
+      },
+      center: [API.HOME.lng, API.HOME.lat],
+      zoom: API.HOME.zoom,
+      attributionControl: false
+    });
 
-  const handleClearRoute = useCallback(() => {
-    setWaypoints([])
-    setRouteInfo(null)
-    setRouteGeoJSON(null)
-    setIsNavigating(false)
-  }, [])
+    map.on("load", () => {
+      map.addSource("route", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "route-glow", type: "line", source: "route", paint: { "line-color": "#ff6b1a", "line-width": 8, "line-opacity": 0.25, "line-blur": 4 } });
+      map.addLayer({ id: "route-line", type: "line", source: "route", layout: { "line-join": "round", "line-cap": "round" }, paint: { "line-color": "#ff6b1a", "line-width": 3.5 } });
+      map.addSource("hover", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addLayer({ id: "hover-pt", type: "circle", source: "hover", paint: { "circle-radius": 6, "circle-color": "#fff", "circle-stroke-color": "#ff6b1a", "circle-stroke-width": 2 } });
+    });
 
-  const handleRouteCalculated = useCallback((info, _maneuvers, geojson) => {
-    setRouteInfo(info)
-    if (geojson) setRouteGeoJSON(geojson)
-  }, [])
+    map.on("click", (e) => {
+      const pt = { lng: e.lngLat.lng, lat: e.lngLat.lat, short: "Dropped Pin" };
+      if (setNext === "start") setStart(pt); else setDest(pt);
+      setSetNext(prev => prev === "start" ? "dest" : "start");
+    });
 
-  const handleSnapToLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser")
-      return
+    mapObj.current = map;
+  }, []);
+
+  useEffect(() => {
+    const map = mapObj.current;
+    if (!map) return;
+    ["start", "dest"].forEach(key => {
+      const pt = key === "start" ? start : dest;
+      if (markers.current[key]) markers.current[key].remove();
+      if (pt) {
+        const el = document.createElement("div");
+        el.className = "marker " + key;
+        markers.current[key] = new maplibregl.Marker({ element: el }).setLngLat([pt.lng, pt.lat]).addTo(map);
+      }
+    });
+  }, [start, dest]);
+
+  useEffect(() => {
+    if (!start || !dest) { setResult(null); return; }
+    setLoading(true);
+    getRoute(start, dest, pref).then(res => {
+      setResult(res);
+      setLoading(false);
+      if (mapObj.current && res.coords.length) {
+        mapObj.current.getSource("route").setData({ type: "Feature", geometry: { type: "LineString", coordinates: res.coords } });
+        const bounds = res.coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(res.coords[0], res.coords[0]));
+        mapObj.current.fitBounds(bounds, { padding: 60, duration: 1000 });
+      }
+    });
+  }, [start, dest, pref]);
+
+  useEffect(() => {
+    if (mapObj.current && mapObj.current.getSource("hover")) {
+      mapObj.current.getSource("hover").setData(hoverPt ? { type: "Feature", geometry: { type: "Point", coordinates: [hoverPt.lng || hoverPt[0], hoverPt.lat || hoverPt[1]] } } : { type: "FeatureCollection", features: [] });
     }
-
-    navigator.geolocation.getCurrentPosition((position) => {
-      const { longitude, latitude } = position.coords
-      setWaypoints(prev => {
-        if (prev.length >= 2) {
-          return [[longitude, latitude], prev[1]]
-        } else if (prev.length === 1) {
-          return [[longitude, latitude], prev[0]]
-        } else {
-          return [[longitude, latitude]]
-        }
-      })
-    }, (error) => {
-      alert("Unable to retrieve your location: " + error.message)
-    })
-  }, [])
-
-  const handleToggleWcMode = () => {
-    const next = !wcMode
-    setWcMode(next)
-    if (!wcAcknowledged) {
-      _wcAcknowledged = true
-      setWcAcknowledged(true)
-    }
-    if (next) {
-      setRouteOptions({ avoidRoads: false, pavedOnly: true, minimizeHills: false })
-      setActiveFilters(['paved'])
-    }
-  }
-
-  const handleMatchDayRoutes = () => {
-    setView('planner')
-    handleSnapToLocation()
-    setTimeout(() => {
-      setWaypoints(prev => {
-        if (prev.length >= 1) return [prev[0], [-94.4839, 39.0489]]
-        return [[-94.5786, 39.0997], [-94.4839, 39.0489]]
-      })
-    }, 500)
-  }
-
-  const handleTrailsForVisitors = () => {
-    setView('planner')
-    setRouteOptions({ avoidRoads: true, pavedOnly: false, minimizeHills: true })
-    setActiveFilters(['paved', 'gravel'])
-  }
-
-  const handleWcRouteSelect = (routeWaypoints) => {
-    setWaypoints(routeWaypoints)
-    if (!wcMode) handleToggleWcMode()
-    setView('planner')
-  }
-
-  const handleSearch = async (query) => {
-    if (!query) {
-      setSearchResults(null)
-      return
-    }
-    setIsSearching(true)
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&bounded=1&viewbox=-102.0,40.6,-89.0,36.0`)
-      const data = await res.json()
-
-      setSearchResults({
-        query,
-        reki_says: data.length > 0
-          ? `🦌 Reki scouted ${data.length} spots for you!`
-          : "🦌 Hmm, Reki hasn't explored that area yet. Try different words?",
-        results: data.map(item => ({
-          id: item.place_id,
-          name: item.display_name.split(',')[0],
-          description: item.display_name,
-          coords: [parseFloat(item.lon), parseFloat(item.lat)]
-        }))
-      })
-    } catch (err) {
-      console.error(err)
-      setSearchResults({ error: true, reki_says: "Reki got distracted by a butterfly. Try again. 🦋🦌" })
-    } finally {
-      setIsSearching(false)
-    }
-  }
+  }, [hoverPt]);
 
   return (
     <ShellLayout>
@@ -231,4 +198,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
