@@ -10,6 +10,7 @@ import { cors } from "hono/cors";
 import { logger } from "./lib/logger";
 import { routeRoutes } from "./routes/route";
 import { searchRoutes } from "./routes/search";
+import { geocodeRoutes, reverseRoutes } from "./routes/geocode";
 import { tileRoutes } from "./routes/tiles";
 import { donateRoutes } from "./routes/donate";
 import { poiRoutes } from "./routes/poi";
@@ -35,6 +36,8 @@ app.use("*", cors({
 // ─── Routes ───────────────────────────────────────────
 app.route("/api/route", routeRoutes);
 app.route("/api/search", searchRoutes);
+app.route("/api/geocode", geocodeRoutes);
+app.route("/api/reverse", reverseRoutes);
 app.route("/api/tiles", tileRoutes);
 app.route("/api/donate", donateRoutes);
 app.route("/api/poi", poiRoutes);
