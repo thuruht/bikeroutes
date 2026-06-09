@@ -4,6 +4,7 @@
  */
 
 import { Hono } from "hono";
+import { logger } from "../lib/logger";
 
 export const searchRoutes = new Hono<{ Bindings: Env }>();
 
@@ -44,6 +45,14 @@ async function checkRateLimit(
 	return { allowed: true, remaining: tokens };
 }
 
+interface EmbedResponse {
+	data: number[][];
+}
+
+interface ChatResponse {
+	response: string;
+}
+
 /**
  * GET /api/search?q=quiet+riverside+trail
  * Returns semantically similar trails from Vectorize
@@ -74,7 +83,7 @@ searchRoutes.get("/", async (c) => {
 		// Generate embedding using Cloudflare Workers AI
 		const embedResponse = await c.env.AI.run("@cf/baai/bge-base-en-v1.5", {
 			text: [query]
-		}) as any;
+		}) as EmbedResponse;
 		// The model returns an array of vectors (one for each input string)
 		const queryVector = embedResponse.data[0];
 
@@ -104,13 +113,13 @@ RULES:
 Context trails found:
 ${contextText}`;
 
-			const chatResponse = await c.env.AI.run("@cf/meta/llama-3-8b-instruct", {
+			const chatResponse = await c.env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8", {
 				messages: [
 					{ role: "system", content: systemPrompt },
 					{ role: "user", content: `User query: "${query}"\nWhat do you recommend?` }
 				],
 				max_tokens: 150
-			}) as any;
+			}) as ChatResponse;
 
 			rekiResponse = chatResponse.response;
 		}
@@ -140,7 +149,7 @@ ${contextText}`;
 			"X-RateLimit-Remaining": String(remaining),
 		});
 	} catch (error) {
-		console.error("Search error:", error);
+		logger.error("Semantic search failed", error, "SEARCH");
 		return c.json({
 			error: "Search failed",
 			message: "Reki got distracted by a butterfly. Try again. 🦋🦌",

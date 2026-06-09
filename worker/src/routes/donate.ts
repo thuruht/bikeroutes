@@ -4,6 +4,7 @@
  */
 
 import { Hono } from "hono";
+import { logger } from "../lib/logger";
 
 export const donateRoutes = new Hono<{ Bindings: Env }>();
 
@@ -13,8 +14,7 @@ const PAYPAL_API = "https://api-m.paypal.com"; // Use sandbox for dev
  * Get PayPal access token using client credentials
  */
 async function getPayPalToken(env: Env): Promise<string> {
-	const { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET } = env as any;
-	const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`);
+	const auth = btoa(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`);
 	const resp = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
 		method: "POST",
 		headers: {
@@ -123,9 +123,24 @@ donateRoutes.post("/capture-order", async (c) => {
 
 		return c.json({ status: capture.status, error: "Capture not completed" }, 400);
 	} catch (error) {
-		console.error("PayPal capture error:", error);
+		logger.error("PayPal capture-order failure", error, "PAYPAL");
 		return c.json({ error: "Failed to capture order" }, 500);
 	}
+});
+
+/**
+ * GET /api/donate/merch-status/:token
+ * Check merch claim status
+ */
+donateRoutes.get("/merch-status/:token", async (c) => {
+	const token = c.req.param("token");
+	const data = await c.env.SESSIONS.get(`merch:${token}`);
+
+	if (!data) {
+		return c.json({ error: "Token not found" }, 404);
+	}
+
+	return c.json(JSON.parse(data));
 });
 
 /**

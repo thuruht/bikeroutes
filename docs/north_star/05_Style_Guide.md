@@ -2,30 +2,31 @@
 
 This document enforces consistency across the BikeRoutes.org codebase and user interface. All contributors and agentic LLMs must adhere to these guidelines.
 
-## 1. Design System: Tactical Hi-Tech (MO Camo Edition)
+## 1. Design System: Light Tactical (Teal & Camo Edition)
 
-The UI must feel like a specialized, rugged tool—not a generic web app. It blends a "hacker/tactical" aesthetic with outdoor utility.
+The UI blends a soft, "premium" consumer aesthetic with tactical utility. It uses glassy surfaces, strong display typography, and a subtle animated background.
 
 ### Color Palette
-*   **Primary Accent:** Blaze Orange (`#FF6B1A`) – High visibility, hunter safety aesthetic. Used sparingly for critical CTAs (e.g., "Calculate Route", "Donate").
-*   **Surfaces:** Dark Olive/Hoof (`#0B0C08`) – The foundational background color. Pure black (`#000000`) should be avoided in favor of this deep, organic dark tone.
-*   **Secondary Backgrounds:** Camo Olive (`#4B5320`) and Trail Tan (`#D4A96A`).
-*   **Text/Icons:** Cream White (`#FFF5E6`) for primary text, ensuring high contrast against the dark surfaces.
+*   **Primary Accent:** Teal (`#1B7B81`) – Used for primary CTAs, active states, and focus indicators.
+*   **Background:** Off-White/Bone (`#F6F4EE`) – The foundational background color.
+*   **Tactical Accents:** Camo Green (`#4A5D4E`) and Camo Tan (`#8B7D6B`). Used for subtle background elements and badges.
+*   **Text:** Charcoal (`#171614`) for primary text, with a Muted variant (`#5E5B56`) for secondary information.
 
 ### Typography
-*   **Headers:** `Outfit` (or similar geometric sans-serif) for a modern, tech-forward feel.
-*   **Body:** `Inter` (or similar highly legible sans-serif) for UI elements and trail data.
-*   *Rule:* No aggressive all-caps body text. Legibility is paramount, especially on a glaring phone screen outdoors.
+*   **Headers:** `Cabinet Grotesk` – A bold, geometric display font used for headings and hero sections.
+*   **Body:** `Satoshi` – A clean, highly legible sans-serif used for all body copy and UI elements.
+*   **Mono:** `JetBrains Mono` – Used for coordinate displays, distance measurements, and technical data.
 
-### UI Elements
-*   **Border Radius:** `6px` (`var(--radius-md)`). Soft but structured.
-*   **Textures:** Subtle 24px tactical grids or very low-opacity CSS camo patterns on empty backgrounds.
-*   **Interactions:** Sleek, high-tech glow effects (`--accent-glow`) on hover states rather than simple color fills.
+### Visual Elements
+*   **Background Animation:** "Tentacles" – A set of subtle, drifting vertical lines that provide depth and motion to the global backdrop.
+*   **Surfaces:** Glassy, semi-transparent panels (`rgba(255, 255, 255, 0.72)`) with `backdrop-filter: blur(16px)`.
+*   **Border Radius:** Multi-scale: `radius-md` (8px), `radius-lg` (16px), `radius-xl` (24px).
+*   **Shadows:** Soft, deep shadows (`--shadow-lg`) to create elevation without harsh borders.
 
 ## 2. Mascot Usage: Reki the Deer
 Reki is a tool for empathy and brand recognition.
 *   **Tone:** Reki is helpful, curious, and slightly playful. He is never condescending.
-*   **Visuals:** Use the official flat-vector style. He should integrate seamlessly into the Tactical Hi-Tech UI, often providing a splash of warmth (Deer Brown `#C0763C`) against the dark backgrounds.
+*   **Visuals:** Use the official flat-vector style. He should integrate seamlessly into the Light Tactical UI, often appearing in `.box` or `.panel` containers.
 *   **Placement:** Use him for empty states, errors, loading screens, and donation appeals. Do *not* use him to interrupt the core routing workflow.
 
 ## 3. Code Architecture & Conventions

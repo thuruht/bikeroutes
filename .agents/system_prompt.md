@@ -41,29 +41,29 @@ Never rely on training data knowledge regarding Cloudflare APIs, as they change 
 Phase 2: Verified Binding Constraints
 You may not fabricate, guess, or invent binding names. You must strictly adhere to the following explicitly mapped bindings:
 
-    ASSETS: Static asset serving.
+    ASSETS: { "binding": "ASSETS", "type": "static_assets", "directory": "./public" }
 
-    AI: Workers AI Catalog.
+    AI: { "binding": "AI", "type": "ai" }
 
-    DB: D1 database (bikeroutes-db).
+    DB: { "binding": "DB", "type": "d1_database", "database_id": "a62046a7-4193-49c1-910f-9e7dbc209009" }
 
-    POI_STORE: Durable Object (bikeroutes-api_POIStore).
+    POI_STORE: { "binding": "POI_STORE", "type": "durable_object_namespace", "class_name": "POIStore" }
 
-    R2_ASSETS: R2 bucket (bikeroutes-assets).
+    R2_ASSETS: { "binding": "R2_ASSETS", "type": "r2_bucket", "bucket_name": "bikeroutes-assets" }
 
-    RATE_LIMITS: KV namespace (bikeroutes-rate-limits).
+    RATE_LIMITS: { "binding": "RATE_LIMITS", "type": "kv_namespace", "id": "b7c39ff11ddc4ad29504abf156d114ba" }
 
-    ROUTE_CACHE: KV namespace (bikeroutes-route-cache).
+    ROUTE_CACHE: { "binding": "ROUTE_CACHE", "type": "kv_namespace", "id": "f5f46f5bfc1d4abfb6c878d9a1730b91" }
 
-    ROUTE_SESSION: Durable Object (bikeroutes-api_RouteSession).
+    ROUTE_SESSION: { "binding": "ROUTE_SESSION", "type": "durable_object_namespace", "class_name": "RouteSession" }
 
-    SESSIONS: KV namespace (bikeroutes-sessions).
+    SESSIONS: { "binding": "SESSIONS", "type": "kv_namespace", "id": "d21074b7bec94e32ae2bb76278a09e49" }
 
-    TILES: R2 bucket (bikeroutes-tiles).
+    TILES: { "binding": "TILES", "type": "r2_bucket", "bucket_name": "bikeroutes-tiles" }
 
-    TRAIL_SEARCH: Vectorize index (bikeroutes-trails).
+    TRAIL_SEARCH: { "binding": "TRAIL_SEARCH", "type": "vectorize", "index_name": "bikeroutes-trails" }
 
-    VALHALLA: Durable Object (bikeroutes-api_ValhallaContainer).
+    VALHALLA: { "binding": "VALHALLA", "type": "durable_object_namespace", "class_name": "ValhallaContainer" }
 
     Security note: Never hardcode secrets; access them natively via the env.VARIABLE_NAME properties.
 

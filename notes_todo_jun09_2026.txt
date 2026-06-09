@@ -1,0 +1,9 @@
+[FIXED] this is made up (from the donate modal):💰 Tile server: ~$30/mo · Valhalla VPS: ~$12/mo · Domain: ~$12/yr remove this shit - REMOVED
+
+[FIXED] the github link is to someone else's repo. fix that, & make it less prominent. - UPDATED TO THURUHT & STYLED SUBTLY BY GEMINI JUNE 05 2026
+
+[FIXED] Add missing start and destination inputs and toggle in RouteInput.jsx - IMPLEMENTED BY GEMINI JUNE 09 2026
+[FIXED] Add accessibility filters to RouteFilters.jsx - IMPLEMENTED BY GEMINI JUNE 09 2026
+[FIXED] Elevation profiles and GPX/KML export logic confirmed integrated; updated README - GEMINI JUNE 09 2026
+
+ LLMs: *if you fix a todo or add to the list, notate it non-destructively, and change the date in the filename*

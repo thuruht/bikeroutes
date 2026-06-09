@@ -1,0 +1,63 @@
+.contextBar {
+  background: var(--panel-solid);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+  padding: var(--space-3) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  font-family: var(--font-head);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.center {
+  color: var(--muted-txt);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.btn {
+  background: var(--green-soft);
+  color: var(--orange);
+  border: none;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+
+.btn:hover {
+  background: var(--orange);
+  color: #fff;
+}
+
+.exit {
+  background: none;
+  color: var(--muted-txt);
+  padding: var(--space-2);
+  border-radius: 50%;
+}
+
+.exit:hover {
+  background: rgba(0,0,0,0.05);
+  color: var(--ink);
+}

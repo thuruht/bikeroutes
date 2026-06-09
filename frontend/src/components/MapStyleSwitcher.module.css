@@ -1,0 +1,201 @@
+/* ======================================================
+   MapStyleSwitcher — Tactical Hi-Tech
+   ====================================================== */
+
+.mapStyleSwitcher {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 100;
+}
+
+/* ─── Toggle button ─────────────────────────────────── */
+.styleSwitcherToggle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  color: var(--muted-txt);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.styleSwitcherToggle:hover {
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+
+/* ─── Panel ─────────────────────────────────────────── */
+.styleSwitcherPanel {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  width: min(280px, calc(100vw - 32px));
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow);
+}
+
+.styleSwitcherHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.styleSwitcherHeader h3 {
+  font-family: var(--font-head);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.styleSwitcherClose {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--muted-txt);
+  cursor: pointer;
+}
+
+.styleSwitcherClose:hover {
+  color: var(--ink);
+}
+
+/* ─── Basemap & Overlay sections ────────────────────── */
+.styleSwitcherBasemaps,
+.styleSwitcherOverlays {
+  margin-bottom: var(--space-6);
+}
+
+.basemapGroupLabel {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted-txt);
+  margin-bottom: var(--space-2);
+}
+
+.basemapGroupItems {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.basemapItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.basemapItem:hover {
+  border-color: var(--line-2);
+  background: var(--panel-solid);
+}
+
+.basemapItem.active {
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.basemapIcon {
+  font-size: 1.2rem;
+}
+
+.basemapLabel {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* ─── Overlays ──────────────────────────────────────── */
+.overlayItems {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.overlayItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.overlayItem:hover {
+  border-color: var(--line-2);
+}
+
+.overlayItem.active {
+  border-color: var(--green);
+}
+
+.overlayLabel {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--ink);
+  flex: 1;
+}
+
+.overlayToggle {
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--line-2);
+  position: relative;
+  transition: background var(--dur);
+}
+
+.overlayToggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--dur);
+}
+
+.overlayToggle.on {
+  background: var(--green);
+}
+
+.overlayToggle.on::after {
+  transform: translateX(14px);
+}
+
+@media (max-width: 420px) {
+  .mapStyleSwitcher {
+    top: auto;
+    bottom: calc(70vh + 56px);
+    left: var(--space-3);
+  }
+}

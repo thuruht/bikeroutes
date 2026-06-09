@@ -4,6 +4,7 @@
 
 import { Hono } from "hono";
 import { getContainer } from "@cloudflare/containers";
+import { logger } from "../lib/logger";
 
 export const routeRoutes = new Hono<{ Bindings: Env }>();
 
@@ -55,43 +56,65 @@ routeRoutes.post("/", async (c) => {
 		return c.json(cached, 200, {
 			"X-Cache": "HIT",
 			"X-Reki": encodeURIComponent("🦌 cached trail"),
+			"X-Reki-Source": "cache",
 		});
 	}
 
-	// 2. Forward to Valhalla container
+	// 2. Try Local Valhalla Container
+	let routeData;
+	let source = "edge";
+
 	try {
-		// We temporarily bypass the Cloudflare Container to use the public FOSSGIS Valhalla API
-		// so the app is 100% functional immediately without waiting for tile builds.
-		const valhallaResp = await fetch(
-			new Request("https://valhalla1.openstreetmap.de/route", {
+		const container = getContainer(c.env.VALHALLA, "valhalla-router");
+		const valhallaResp = await container.fetch(new Request("http://localhost:8002/route", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body,
+		}));
+
+		if (valhallaResp.ok) {
+			routeData = await valhallaResp.json();
+		} else {
+			const errText = await valhallaResp.text();
+			console.warn(`[Valhalla Edge Offline] Status: ${valhallaResp.status}. Error: ${errText}. Attempting FOSSGIS fallback.`);
+			source = "fallback";
+		}
+	} catch (error) {
+		console.warn("[Valhalla Edge Error] Exception occurred, attempting FOSSGIS fallback.", error);
+		source = "fallback";
+	}
+
+	// 3. Fallback to FOSSGIS if local failed
+	if (source === "fallback") {
+		try {
+			const fossgisResp = await fetch("https://valhalla1.openstreetmap.de/route", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body,
-			})
-		);
+			});
 
-		if (!valhallaResp.ok) {
-			const errText = await valhallaResp.text();
-			console.warn(`[Valhalla Offline] Returning mock route. Error: ${errText}`);
-			
-			// Return a clean 503 instead of 200 mock response to signal frontend backoff
+			if (!fossgisResp.ok) {
+				throw new Error(`FOSSGIS returned ${fossgisResp.status}`);
+			}
+			routeData = await fossgisResp.json();
+		} catch (fallbackError) {
+			logger.error("All routing methods failed", fallbackError, "ROUTING");
 			return c.json({
-				error: "Routing Engine Offline",
-				message: "The Valhalla container failed to return a valid route.",
-				details: errText
+				error: "Reki got lost",
+				message: "All routing engines are taking a nap. Try again shortly.",
 			}, 503);
 		}
+	}
 
-		const routeData = await valhallaResp.json();
-
-		// 3. Cache for 24 hours
+	// 4. Cache & Return
+	if (routeData) {
 		c.executionCtx.waitUntil(
 			c.env.ROUTE_CACHE.put(cacheKey, JSON.stringify(routeData), {
 				expirationTtl: 86400,
 			})
 		);
 
-		// 4. Log route to D1 for analytics
+		// Log route to D1 for analytics
 		c.executionCtx.waitUntil(
 			c.env.DB.prepare(
 				"INSERT INTO route_logs (request_hash, created_at) VALUES (?, ?)"
@@ -100,15 +123,12 @@ routeRoutes.post("/", async (c) => {
 
 		return c.json(routeData, 200, {
 			"X-Cache": "MISS",
-			"X-Reki": encodeURIComponent("🦌 fresh scouted trail"),
+			"X-Reki": encodeURIComponent(source === "edge" ? "🦌 fresh scouted trail" : "🦌 scouted via fallback"),
+			"X-Reki-Source": source,
 		});
-	} catch (error) {
-		console.error("Route error:", error);
-		return c.json({
-			error: "Reki got lost",
-			message: "The routing engine is taking a nap. Try again shortly.",
-		}, 503);
 	}
+
+	return c.json({ error: "Routing failed" }, 500);
 });
 
 /**

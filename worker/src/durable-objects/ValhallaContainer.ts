@@ -19,7 +19,7 @@ export class ValhallaContainer extends Container<Env> {
 		// Use the bike costing model by default
 		DEFAULT_COSTING: "bicycle",
 		// Serve the Midwest region
-		TILE_EXTRACT: "midwest-latest.osm.pbf",
+		TILE_EXTRACT: "midwest.osm.pbf",
 	};
 
 	override async onStart(): Promise<void> {

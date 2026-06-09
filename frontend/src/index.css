@@ -96,7 +96,7 @@
   /* ---------- 2. SEMANTIC TOKENS · LIGHT ---------- */
   --paper:      #f4efe3;
   --paper-2:    #ebe4d3;
-  --ink:        #1b1c12;
+  --ink:        #1b1c12;  /* ← dark-hoof, raised for soft contrast  */
   --ink-2:      #46473a;
   --muted:      #827c68;
   --muted-txt:  #827c68;
@@ -147,10 +147,12 @@
 }
 
 [data-theme="dark"] {
-  /* ---------- 2. SEMANTIC TOKENS · DARK ---------- */
-  --paper:      #0b0c08;
+  /* ---------- 2. SEMANTIC TOKENS · DARK ----------
+     Tactical Hi-Tech — MO Camo Edition. The PRIMARY brand
+     expression. Dark-hoof base, cream text, blaze accent. */
+  --paper:      #0b0c08;   /* ← dark-hoof, verbatim                 */
   --paper-2:    #15160e;
-  --ink:        #fff5e6;
+  --ink:        #fff5e6;   /* ← cream-white, verbatim               */
   --ink-2:      #c5c1ad;
   --muted:      #8c8970;
   --muted-txt:  #8c8970;
@@ -335,7 +337,7 @@ h1, h2, h3, h4,
 .io-row {
   display: flex; align-items: center; gap: 11px;
   background: var(--panel-solid); border: 1px solid var(--line);
-  padding: 11px 12px;
+  padding: 11px 12px; 
 }
 .io-row:first-child { border-radius: 12px 12px 0 0; }
 .io-row:last-child { border-radius: 0 0 12px 12px; border-top: 0; }

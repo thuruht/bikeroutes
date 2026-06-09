@@ -75,9 +75,9 @@ export class POIStore extends DurableObject<Env> {
 			`SELECT COUNT(*) as cnt FROM submissions
 			 WHERE ip_hash = ? AND submitted_at LIKE ?`,
 			ipHash, `${today}%`
-		).one() as { cnt: number };
+		).one() as Record<string, any>;
 
-		if (countResult.cnt >= 10) {
+		if (Number(countResult.cnt) >= 10) {
 			return new Response(JSON.stringify({
 				error: "Daily submission limit reached",
 				message: "🦌 Reki says slow down — 10 POIs per day is the limit!",
@@ -119,11 +119,26 @@ export class POIStore extends DurableObject<Env> {
 
 		// If approved, also write to the main D1 database
 		if (action === "approve") {
-			const poi = this.ctx.storage.sql.exec(
+			const result = this.ctx.storage.sql.exec(
 				`SELECT * FROM submissions WHERE id = ?`, id
-			).one() as unknown as POISubmission | null;
+			);
+			
+			const poiRow = result.one() as Record<string, any> | null;
 
-			if (poi) {
+			if (poiRow) {
+				const poi: POISubmission = {
+					id: String(poiRow.id),
+					name: String(poiRow.name),
+					category: String(poiRow.category),
+					lat: Number(poiRow.lat),
+					lon: Number(poiRow.lon),
+					description: poiRow.description ? String(poiRow.description) : undefined,
+					geohash: String(poiRow.geohash),
+					submittedAt: String(poiRow.submitted_at),
+					ip: "", // IP hash not needed for main DB
+					status: "approved"
+				};
+
 				await this.env.DB.prepare(
 					`INSERT INTO pois (id, name, category, lat, lon, description, submitted_by, status, created_at)
 					 VALUES (?, ?, ?, ?, ?, ?, ?, 'approved', ?)`
