@@ -20,7 +20,7 @@
 }
 
 .heroTitle {
-  font-family: var(--font-display);
+  font-family: var(--font-head);
   font-size: var(--text-2xl);
   font-weight: 800;
   margin-bottom: var(--space-4);
@@ -28,7 +28,7 @@
 
 .heroSubtitle {
   font-size: var(--text-base);
-  color: var(--color-text-muted);
+  color: var(--muted-txt);
   margin-bottom: var(--space-8);
 }
 
@@ -39,18 +39,18 @@
 }
 
 .primaryBtn {
-  background: var(--color-primary);
+  background: var(--orange);
   color: #fff;
   padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   font-weight: 700;
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   border: none;
   cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: 0 4px 12px var(--color-primary-soft);
+  transition: all var(--dur-fast) var(--ease-out);
+  box-shadow: 0 4px 12px var(--green-soft);
 }
 
 .primaryBtn:hover {
@@ -60,19 +60,19 @@
 
 .secondaryBtn {
   background: transparent;
-  color: var(--color-text);
+  color: var(--ink);
   padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   font-weight: 700;
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--line);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all var(--dur-fast) var(--ease-out);
 }
 
 .secondaryBtn:hover {
-  background: var(--color-surface-2);
-  border-color: var(--color-primary);
+  background: var(--panel-solid);
+  border-color: var(--orange);
 }

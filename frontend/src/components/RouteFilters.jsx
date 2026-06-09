@@ -1,7 +1,7 @@
 import styles from './RouteFilters.module.css'
 
 const SURFACE_TYPES = [
-  { id: 'paved', label: 'Paved', color: 'var(--color-primary)' },
+  { id: 'paved', label: 'Paved', color: 'var(--orange)' },
   { id: 'gravel', label: 'Gravel', color: '#c4a484' },
   { id: 'dirt', label: 'Dirt', color: '#8b5a2b' },
   { id: 'mtb', label: 'MTB', color: '#556b2f' },
@@ -25,7 +25,7 @@ export default function RouteFilters({ activeFilters, onToggleFilter }) {
           >
             <span 
               className={styles.dot} 
-              style={{ backgroundColor: activeFilters.includes(type.id) ? type.color : 'var(--color-border)' }} 
+              style={{ backgroundColor: activeFilters.includes(type.id) ? type.color : 'var(--line)' }} 
             />
             {type.label}
           </button>

@@ -202,8 +202,11 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
       const el = document.createElement('div')
       el.className = "map-marker"
       el.innerHTML = `
-        <svg viewBox="0 0 40 40" width="36" height="36" style="fill: ${i === 0 ? 'var(--orange)' : 'var(--blue)'}; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)); margin-left: -18px; margin-top: -36px;">
-          <use href="/brand-marks.svg#pin-wing" />
+        <svg viewBox="0 0 40 40" width="36" height="36"
+          style="--body:${i === 0 ? 'var(--orange)' : 'var(--green)'}; --edge:var(--route-edge);
+                 filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
+                 margin-left: -18px; margin-top: -36px; display:block;">
+          <use href="#pin-wing" />
         </svg>
       `
 
@@ -468,8 +471,8 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
   }, [])
 
   return (
-    <div className={styles.mapContainer} id="map-container">
-      <div ref={mapContainer} className={styles.mapCanvas} />
+    <div className="map-layer" id="map-container">
+      <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
 
       {/* Basemap & overlay switcher */}
       <MapStyleSwitcher

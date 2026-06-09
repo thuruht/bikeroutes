@@ -12,7 +12,7 @@ export default function Reki({ size = 64, mood = "scout" }) {
         display: "grid", placeItems: "center", overflow: "hidden" }}>
         <svg viewBox="34 20 172 172" width={size - 10} height={size - 10}
           role="img" aria-label="Reki the deer" style={{ display: "block" }}>
-          <use href="/brand-marks.svg#reki-head" x="34" y="20" width="172" height="172" />
+          <use href="#reki-head" />
         </svg>
       </span>
       <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>{lines[mood]}</div>
