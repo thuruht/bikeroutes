@@ -107,7 +107,7 @@
 	"containers": [
 		{
 			"class_name": "ValhallaContainer",
-			"image": "./Dockerfile.valhalla",
+			"image": "../routing/valhalla/Dockerfile.valhalla",
 			"max_instances": 3
 		}
 	],

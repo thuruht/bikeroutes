@@ -69,7 +69,11 @@ routeRoutes.post("/", async (c) => {
 		const valhallaResp = await container.fetch(new Request("http://localhost:8002/route", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body,
+			body: JSON.stringify({
+				...parsed,
+				shape_format: "geojson",
+				directions_options: { units: "kilometers", language: "en-US" },
+			}),
 		}));
 
 		if (valhallaResp.ok) {
@@ -90,7 +94,11 @@ routeRoutes.post("/", async (c) => {
 			const fossgisResp = await fetch("https://valhalla1.openstreetmap.de/route", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body,
+				body: JSON.stringify({
+					...parsed,
+					shape_format: "geojson",
+					directions_options: { units: "kilometers", language: "en-US" },
+				}),
 			});
 
 			if (!fossgisResp.ok) {
