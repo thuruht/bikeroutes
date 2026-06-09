@@ -49,7 +49,7 @@ authRoutes.post("/verify", async (c) => {
 	const emailHash = await hashEmail(email);
 	
 	const storedCode = await c.env.SESSIONS.get(`login_code:${emailHash}`);
-	if (storedCode !== code) {
+	if (!storedCode || storedCode !== code) {
 		return c.json({ error: "Invalid or expired code" }, 401);
 	}
 

@@ -1,62 +1,51 @@
-.planner {
-  display: flex;
-  gap: var(--space-8);
-  height: calc(100vh - clamp(var(--space-6), 5vw, var(--space-16)) * 2 - var(--space-12) * 2);
-  min-height: 600px;
-  flex: 1;
+.plannerShell {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  height: calc(100dvh - 80px); /* Default subtract header */
+  gap: var(--space-4);
+  padding: var(--space-4);
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.sidebar {
-  width: 400px;
-  flex-shrink: 0;
+.plannerShell.withBanner {
+  height: calc(100dvh - 80px - 60px); /* Subtract header + banner */
+}
+
+.leftColumn {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(16px);
+  padding: var(--space-4);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  overflow-y: auto;
-  padding-right: var(--space-4);
 }
 
-.mapContainer {
-  flex: 1;
-  position: relative;
+.rightColumn {
   background: var(--color-bg);
-  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-}
-
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 340px;
-  }
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  min-height: 300px; /* Ensure map is always visible */
 }
 
 @media (max-width: 768px) {
-  .planner {
-    flex-direction: column;
-    height: auto;
+  .plannerShell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr; /* Split screen 50/50 */
+    padding: var(--space-2);
+    height: calc(100dvh - 60px); /* Mobile header is smaller */
   }
-  .sidebar {
-    width: 100%;
-    order: 2;
+
+  .plannerShell.withBanner {
+    height: calc(100dvh - 60px - 100px); /* Mobile header + larger banner */
   }
-  .mapContainer {
-    height: 400px;
-    order: 1;
+
+  .leftColumn {
+    order: 2; /* Sidebar below map on mobile */
   }
-}
-/* Scrollbar styling for sidebar */
-.sidebar::-webkit-scrollbar {
-  width: 4px;
-}
-.sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.sidebar::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-soft);
 }

@@ -1,10 +1,15 @@
 import styles from './RouteFilters.module.css'
 
 const SURFACE_TYPES = [
-  { id: 'paved', label: 'Paved', color: 'var(--paved)' },
-  { id: 'gravel', label: 'Gravel', color: 'var(--gravel)' },
-  { id: 'dirt', label: 'Dirt', color: 'var(--dirt)' },
-  { id: 'mtb', label: 'MTB', color: 'var(--mtb)' },
+  { id: 'paved', label: 'Paved', color: 'var(--color-primary)' },
+  { id: 'gravel', label: 'Gravel', color: '#c4a484' },
+  { id: 'dirt', label: 'Dirt', color: '#8b5a2b' },
+  { id: 'mtb', label: 'MTB', color: '#556b2f' },
+]
+
+const ACCESSIBILITY_FILTERS = [
+  { id: 'wheelchair', label: 'Wheelchair Friendly', icon: '♿' },
+  { id: 'kid-trailer', label: 'Kid-trailer Friendly', icon: '👶' },
 ]
 
 export default function RouteFilters({ activeFilters, onToggleFilter }) {
@@ -22,6 +27,20 @@ export default function RouteFilters({ activeFilters, onToggleFilter }) {
               className={styles.dot} 
               style={{ backgroundColor: activeFilters.includes(type.id) ? type.color : 'var(--color-border)' }} 
             />
+            {type.label}
+          </button>
+        ))}
+      </div>
+      
+      <h3 className={styles.title} style={{ marginTop: 'var(--space-4)' }}>Accessibility</h3>
+      <div className={styles.grid}>
+        {ACCESSIBILITY_FILTERS.map((type) => (
+          <button
+            key={type.id}
+            className={`${styles.chip} ${activeFilters.includes(type.id) ? styles.active : ''}`}
+            onClick={() => onToggleFilter(type.id)}
+          >
+            <span style={{ fontSize: '12px' }}>{type.icon}</span>
             {type.label}
           </button>
         ))}

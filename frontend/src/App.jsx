@@ -7,6 +7,7 @@ import MapView from './components/MapView'
 import Sidebar from './components/Sidebar'
 import CommunityView from './components/CommunityView'
 import AboutView from './components/AboutView'
+import FulfillmentView from './components/FulfillmentView'
 import WCContextBar from './components/WCContextBar'
 import DonateBanner from './components/DonateBanner'
 import './App.css'
@@ -15,7 +16,7 @@ import './App.css'
 let _wcAcknowledged = false
 
 function App() {
-  const [view, setView] = useState('landing') // 'landing' | 'planner' | 'community' | 'about'
+  const [view, setView] = useState('landing') // 'landing' | 'planner' | 'community' | 'about' | 'fulfillment'
   const [activeFilters, setActiveFilters] = useState(['paved', 'gravel', 'dirt', 'mtb'])
   const [routeInfo, setRouteInfo] = useState(null)
   const [routeGeoJSON, setRouteGeoJSON] = useState(null)
@@ -36,6 +37,7 @@ function App() {
   // World Cup Mode State
   const [wcMode, setWcMode] = useState(false)
   const [wcAcknowledged, setWcAcknowledged] = useState(_wcAcknowledged)
+  const [activeOverlays, setActiveOverlays] = useState(['cycling_routes', 'marc_bikeways', 'marc_restrooms', 'marc_bikehubs'])
 
   const toggleFilter = useCallback((filter) => {
     setActiveFilters(prev =>
@@ -148,7 +150,10 @@ function App() {
   return (
     <ShellLayout>
       {view === 'landing' ? (
-        <LandingView onOpenPlanner={() => setView('planner')} />
+        <LandingView 
+          onOpenPlanner={() => setView('planner')} 
+          onAboutClick={() => setView('about')}
+        />
       ) : (
         <>
           <Header
@@ -169,6 +174,7 @@ function App() {
           )}
           {view === 'planner' ? (
             <PlannerView
+              hasBanner={wcMode}
               leftColumn={
                 <Sidebar
                   isOpen={true}
@@ -208,13 +214,18 @@ function App() {
             />
           ) : view === 'community' ? (
             <CommunityView wcMode={wcMode} onWcRouteSelect={handleWcRouteSelect} />
+          ) : view === 'about' ? (
+            <AboutView onFulfillmentClick={() => setView('fulfillment')} />
           ) : (
-            <AboutView />
+            <FulfillmentView onBack={() => setView('about')} />
           )}
         </>
       )}
       {showDonate && (
-        <DonateBanner onClose={() => setShowDonate(false)} />
+        <DonateBanner 
+          onClose={() => setShowDonate(false)} 
+          onFulfillmentClick={() => { setShowDonate(false); setView('fulfillment'); }}
+        />
       )}
     </ShellLayout>
   )

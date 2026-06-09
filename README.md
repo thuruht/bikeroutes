@@ -22,10 +22,10 @@ BikeRoutes.org is a **free, donation‑supported** web platform for urban and of
 - 🔍 **Semantic trail search** — *"quiet riverside path near downtown"*
 - 📱 **Mobile‑first responsive UI**
 - 💛 **Donation‑supported** — no ads, no tracking, free forever
+- ⛰️ **Elevation profiles** *(Integrated with `uplot`)*
+- 📥 **GPX/KML export** *(Integrated with `togpx`)*
 
 ### 🚧 In Progress / Temporarily Delayed (Phase 1.5 - 2)
-- ⛰️ **Elevation profiles** *(UI pending `uplot` integration)*
-- 📥 **GPX/KML export** *(UI complete, export logic pending `togpx`)*
 - 📍 User‑submitted POIs (water stations, bike shops, scenic lookouts)
 - 🔥 Community heatmap of popular routes
 

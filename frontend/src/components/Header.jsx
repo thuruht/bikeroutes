@@ -1,45 +1,47 @@
 import WCBadge from './WCBadge'
-import styles from './Header.module.css'
 
 export default function Header({ activeTab, onTabChange, onDonateClick, wcMode, wcAcknowledged, onToggleWcMode }) {
   return (
-    <header className={styles.header}>
-      <div className={styles.left}>
-        <a href="/" className={styles.logo} onClick={(e) => { e.preventDefault(); window.location.href='/'; }}>
-          <img src="/reki_icon.png" alt="Reki" className={styles.logoIcon} />
-          <span>bikeroutes.org</span>
-        </a>
+    <header className="topbar">
+      <div className="brand" onClick={(e) => { window.location.href='/'; }} style={{ cursor: 'pointer' }}>
+        <svg viewBox="0 0 40 40" width="22" height="22">
+          <use href="/brand-marks.svg#mark-b" />
+        </svg>
+        BikeRoutes
       </div>
 
-      <nav className={styles.nav}>
-        <button 
-          className={`${styles.navBtn} ${(activeTab === 'explore' || activeTab === 'planner') ? styles.active : ''}`}
-          onClick={() => onTabChange('explore')}
+      <nav className="nav">
+        <a 
+          href="#" 
+          className={(activeTab === 'explore' || activeTab === 'planner') ? "active" : ""}
+          onClick={(e) => { e.preventDefault(); onTabChange('explore') }}
         >
           Map
-        </button>
-        <button 
-          className={`${styles.navBtn} ${activeTab === 'community' ? styles.active : ''}`}
-          onClick={() => onTabChange('community')}
+        </a>
+        <a 
+          href="#"
+          className={activeTab === 'community' ? "active" : ""}
+          onClick={(e) => { e.preventDefault(); onTabChange('community') }}
         >
           Community
-        </button>
-        <button 
-          className={`${styles.navBtn} ${activeTab === 'about' ? styles.active : ''}`}
-          onClick={() => onTabChange('about')}
+        </a>
+        <a 
+          href="#"
+          className={activeTab === 'about' ? "active" : ""}
+          onClick={(e) => { e.preventDefault(); onTabChange('about') }}
         >
           About
-        </button>
+        </a>
       </nav>
 
-      <div className={styles.right}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
         <WCBadge 
           wcMode={wcMode} 
           onToggle={onToggleWcMode} 
           acknowledged={wcAcknowledged} 
         />
         <button
-          className={styles.donateBtn}
+          className="pillbtn"
           onClick={onDonateClick}
         >
           Donate

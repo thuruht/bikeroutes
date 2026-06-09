@@ -7,6 +7,7 @@
 
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { logger } from "./lib/logger";
 import { routeRoutes } from "./routes/route";
 import { searchRoutes } from "./routes/search";
 import { tileRoutes } from "./routes/tiles";
@@ -54,7 +55,7 @@ app.all("/*", (c) => {
 
 // ─── Error handler ────────────────────────────────────
 app.onError((err, c) => {
-	console.error("Worker error:", err);
+	logger.error("Worker unhandled exception", err);
 	return c.json({
 		error: "Reki tripped on a root",
 		message: "Something went wrong. Try again in a sec.",
@@ -66,7 +67,7 @@ app.onError((err, c) => {
 import { syncGisData } from "./tasks/sync-gis";
 
 const scheduled: ExportedHandlerScheduledHandler<Env> = async (event, env, ctx) => {
-	console.log(`[CRON] Scheduled event triggered at ${new Date().toISOString()} via ${event.cron}`);
+	logger.info("Scheduled event triggered", { cron: event.cron, time: new Date().toISOString() }, "CRON");
 
 	try {
 		// Run the MARC GIS Sync
@@ -77,9 +78,9 @@ const scheduled: ExportedHandlerScheduledHandler<Env> = async (event, env, ctx) 
 			expirationTtl: 86400 * 7, // keep for 7 days
 		});
 
-		console.log("[CRON] All scheduled tasks completed successfully");
+		logger.info("Scheduled tasks completed successfully", undefined, "CRON");
 	} catch (error) {
-		console.error("[CRON] Scheduled tasks failed:", error);
+		logger.error("Scheduled tasks failed", error, "CRON");
 	}
 };
 

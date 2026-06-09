@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { logger } from "../lib/logger";
 
 export const reportRoutes = new Hono<{ Bindings: Env }>();
 
@@ -8,7 +9,13 @@ async function getUserId(c: any): Promise<string | null> {
 	if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
 	
 	const token = authHeader.split(" ")[1];
-	return await c.env.SESSIONS.get(`session:${token}`);
+	try {
+		const userId = await c.env.SESSIONS.get(`session:${token}`);
+		return userId || null;
+	} catch (error) {
+		logger.error("Failed to retrieve session from KV", error, "AUTH");
+		return null;
+	}
 }
 
 // ─── Get Active Reports ──────────────────────────────────────────

@@ -1,115 +1,72 @@
-import { useEffect, useRef, useMemo } from 'react';
-import uPlot from 'uplot';
-import 'uplot/dist/uPlot.min.css';
-import styles from './ElevationProfile.module.css';
+import { useState, useRef } from 'react';
 
-// Simple distance calculation (Haversine)
-function getDistance(lon1, lat1, lon2, lat2) {
-  const R = 3958.8; // Miles
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
+export default function ElevationProfile({ data, onHover }) {
+  const ref = useRef(null);
+  const [tip, setTip] = useState(null);
+  
+  if (!data || data.length < 2) return null;
 
-export default function ElevationProfile({ geojson }) {
-  const containerRef = useRef(null);
-  const chartRef = useRef(null);
+  // Convert legacy [{distance, elevation}] to [{d, e}]
+  // Ensure distance is parsed to float and treated as meters for logic, though it might be in km
+  // the data from MapView provides distance in km string.
+  const elev = data.map(pt => ({
+    d: parseFloat(pt.distance) * 1000, 
+    e: pt.elevation
+  }));
+  
+  const W = 340, H = 88;
+  const maxD = elev[elev.length - 1].d || 1;
+  const es = elev.map(p => p.e);
+  const lo = Math.min(...es), hi = Math.max(...es), span = Math.max(1, hi - lo);
+  
+  const x = (d) => (d / maxD) * W;
+  const y = (e) => H - ((e - lo) / span) * (H - 12) - 4;
+  
+  let line = `M ${x(elev[0].d)} ${y(elev[0].e)}`;
+  let area = `M ${x(elev[0].d)} ${H} L ${x(elev[0].d)} ${y(elev[0].e)}`;
+  elev.forEach(p => { line += ` L ${x(p.d)} ${y(p.e)}`; area += ` L ${x(p.d)} ${y(p.e)}`; });
+  area += ` L ${x(maxD)} ${H} Z`;
 
-  const data = useMemo(() => {
-    if (!geojson || !geojson.features || !geojson.features[0]) return null;
-    const coords = geojson.features[0].geometry.coordinates;
-    if (!coords || coords.length === 0) return null;
-
-    const distances = [0];
-    const elevations = [Math.round((coords[0][2] || 0) * 3.28084)]; // Convert meters to feet
-    let totalDist = 0;
-
-    for (let i = 1; i < coords.length; i++) {
-      const d = getDistance(coords[i-1][0], coords[i-1][1], coords[i][0], coords[i][1]);
-      totalDist += d;
-      distances.push(parseFloat(totalDist.toFixed(2)));
-      elevations.push(Math.round((coords[i][2] || 0) * 3.28084));
-    }
-
-    return [distances, elevations];
-  }, [geojson]);
-
-  useEffect(() => {
-    if (!data || !containerRef.current) return;
-
-    const opts = {
-      width: containerRef.current.offsetWidth,
-      height: 140,
-      padding: [10, 10, 0, 10],
-      cursor: {
-        show: true,
-        drag: { x: false, y: false },
-      },
-      scales: {
-        x: { time: false },
-      },
-      series: [
-        {},
-        {
-          label: "Elevation",
-          stroke: "#1b7b81",
-          fill: "rgba(27, 123, 129, 0.1)",
-          width: 2,
-          points: { show: false },
-          value: (u, v) => v + " ft",
-        },
-      ],
-      axes: [
-        {
-          stroke: "#5e5b56",
-          grid: { show: false },
-          size: 30,
-          values: (u, vals) => vals.map(v => v + " mi"),
-        },
-        {
-          stroke: "#5e5b56",
-          grid: { stroke: "rgba(34, 33, 31, 0.05)", width: 1 },
-          size: 50,
-          values: (u, vals) => vals.map(v => v + " ft"),
-        },
-      ],
-    };
-
-    if (chartRef.current) {
-      chartRef.current.setData(data);
-    } else {
-      chartRef.current = new uPlot(opts, data, containerRef.current);
-    }
-
-    const handleResize = () => {
-      if (chartRef.current && containerRef.current) {
-        chartRef.current.setSize({
-          width: containerRef.current.offsetWidth,
-          height: 140
-        });
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [data]);
-
-  if (!data) return null;
+  const move = (e) => {
+    const rect = ref.current.getBoundingClientRect();
+    const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const dAt = frac * maxD;
+    let near = elev[0];
+    for (const p of elev) if (Math.abs(p.d - dAt) < Math.abs(near.d - dAt)) near = p;
+    setTip({ left: frac * 100, e: Math.round(near.e), km: (near.d / 1000).toFixed(1) });
+    if (onHover) onHover(frac);
+  };
+  
+  const leave = () => { setTip(null); if (onHover) onHover(null); };
 
   return (
-    <div className={`box ${styles.container}`}>
-      <div className={styles.header}>
-        <span className={styles.title}>Elevation Profile</span>
-        <span className={styles.hint}>🦌 Reki's scouted terrain</span>
+    <div className="elev" style={{ marginTop: 16 }}>
+      <div className="elev-head" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+        <span className="t" style={{ fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: 'var(--muted-txt)' }}>Elevation</span>
+        <span className="r mono" style={{ fontSize: 12, color: 'var(--ink-2)' }}><b>{Math.round(lo)}–{Math.round(hi)} m</b></span>
       </div>
-      <div ref={containerRef} className={styles.chart} />
+      <div className="elev-chart" ref={ref} onMouseMove={move} onMouseLeave={leave} style={{ position: 'relative', height: 88, cursor: 'crosshair' }}>
+        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}>
+          <defs>
+            <linearGradient id="elevg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--orange)" stopOpacity="0.30" />
+              <stop offset="100%" stopColor="var(--orange)" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+          {[0.33, 0.66].map((g, i) => <line key={i} x1="0" x2={W} y1={H * g} y2={H * g} stroke="var(--line)" strokeWidth="1" />)}
+          <path d={area} fill="url(#elevg)" />
+          <path d={line} fill="none" stroke="var(--orange)" strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          {tip && <line x1={(tip.left / 100) * W} x2={(tip.left / 100) * W} y1="0" y2={H} stroke="var(--ink)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" vectorEffect="non-scaling-stroke" />}
+        </svg>
+        <div className={`elev-tip mono ${tip ? "show" : ""}`} style={{ 
+          left: (tip ? tip.left : 0) + "%", 
+          position: 'absolute', transform: 'translate(-50%, -100%)', top: 0,
+          background: 'var(--ink)', color: 'var(--paper)', fontSize: 11, padding: '4px 7px',
+          borderRadius: 6, whiteSpace: 'nowrap', pointerEvents: 'none', opacity: tip ? 1 : 0, transition: 'opacity .12s'
+        }}>
+          {tip && `${tip.e} m · ${tip.km} km`}
+        </div>
+      </div>
     </div>
   );
 }

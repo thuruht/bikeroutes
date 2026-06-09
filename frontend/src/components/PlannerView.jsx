@@ -1,16 +1,14 @@
 import styles from './PlannerView.module.css'
 
-function PlannerView({ leftColumn, rightColumn }) {
+export default function PlannerView({ leftColumn, rightColumn, hasBanner }) {
   return (
-    <div className={styles.planner}>
-      <aside className={styles.sidebar}>
+    <div className={`${styles.plannerShell} ${hasBanner ? styles.withBanner : ''}`}>
+      <aside className={styles.leftColumn}>
         {leftColumn}
       </aside>
-      <main className={styles.mapContainer}>
+      <section className={styles.rightColumn}>
         {rightColumn}
-      </main>
+      </section>
     </div>
   )
 }
-
-export default PlannerView

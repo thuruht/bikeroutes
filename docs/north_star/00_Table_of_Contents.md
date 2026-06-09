@@ -68,3 +68,18 @@ Welcome to the central repository for the vision, architecture, and future of Bi
 12. [Architecture Refactor Advisory](./12_Architecture_Refactor.md)
     - Map Tiles: Shift from Raster to Vector PMTiles
     - Routing: Valhalla Container Integration
+
+13. [Engineering Standards & Best Practices](./13_Engineering_Standards.md)
+    - Backend (Cloudflare Workers) Standards
+    - Frontend (React) Standards
+    - Data Integrity & Typings
+
+14. [Design Implementation Specs](./14_Design_Implementation.md)
+    - Visual Baseline (CSS Tokens)
+    - UX Concept: Hero to Planner
+    - Component Checklist
+
+15. [AI Search Architecture](./15_AI_Search_Architecture.md)
+    - Semantic Understanding & Vectorize
+    - Reki's LLM Persona
+    - Analytics & Feedback Loop

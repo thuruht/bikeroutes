@@ -1,23 +1,23 @@
-import './WCContextBar.css'
+import styles from './WCContextBar.module.css'
 
 export default function WCContextBar({ onMatchDayRoutes, onTrailsForVisitors, onExit }) {
   return (
-    <div className="wc-context-bar" id="wc-context-bar">
-      <div className="wc-context-left">
-        <span className="wc-context-icon">⚽</span>
-        <span className="wc-context-label">FIFA World Cup 26 — Kansas City Mode</span>
+    <div className={styles.contextBar} id="wc-context-bar">
+      <div className={styles.left}>
+        <span>⚽</span>
+        <span>FIFA World Cup 26 — Kansas City Mode</span>
       </div>
-      <div className="wc-context-center">
-        <span className="wc-context-tagline">Bike to the game. Beat the traffic.</span>
+      <div className={styles.center}>
+        <span>Bike to the game. Beat the traffic.</span>
       </div>
-      <div className="wc-context-right">
-        <button type="button" className="wc-context-btn" onClick={onMatchDayRoutes}>
-          <span>📍</span> <span className="wc-ctx-btn-text">Match Day Routes</span>
+      <div className={styles.right}>
+        <button type="button" className={styles.btn} onClick={onMatchDayRoutes}>
+          Route to Venue
         </button>
-        <button type="button" className="wc-context-btn" onClick={onTrailsForVisitors}>
-          <span>🚲</span> <span className="wc-ctx-btn-text">Trails for Visitors</span>
+        <button type="button" className={styles.btn} onClick={onTrailsForVisitors}>
+          Visitor Routing
         </button>
-        <button type="button" className="wc-context-btn exit" onClick={onExit} aria-label="Exit KC Mode">
+        <button type="button" className={`${styles.btn} ${styles.exit}`} onClick={onExit} aria-label="Exit KC Mode">
           ✕
         </button>
       </div>

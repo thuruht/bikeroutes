@@ -5,6 +5,8 @@ import RouteStats from './RouteStats'
 import ElevationProfile from './ElevationProfile'
 import RouteFilters from './RouteFilters'
 import RouteActions from './RouteActions'
+import Reki from './Reki'
+import styles from './Sidebar.module.css'
 
 export default function Sidebar({
   activeFilters,
@@ -40,6 +42,22 @@ export default function Sidebar({
     URL.revokeObjectURL(url)
   }
 
+  const handleExportKML = () => {
+    if (!routeGeoJSON) return
+    const coords = routeGeoJSON.features[0].geometry.coordinates;
+    const line = coords.map(c => `${c[0]},${c[1]}${c[2] != null ? "," + c[2] : ""}`).join(" ");
+    const text = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>BikeRoutes route</name><Placemark><name>Route</name><LineString><tessellate>1</tessellate><coordinates>${line}</coordinates></LineString></Placemark></Document></kml>`;
+    const blob = new Blob([text], { type: 'application/vnd.google-earth.kml+xml' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'bikeroutes-scouted-trail.kml'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   const handleShareRoute = () => {
     if (waypoints.length < 2) return
     const params = new URLSearchParams()
@@ -60,7 +78,7 @@ export default function Sidebar({
   }
 
   return (
-    <>
+    <div className="panel">
       <RouteInput 
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
@@ -69,6 +87,7 @@ export default function Sidebar({
         isSearching={isSearching}
         onSnapLocation={onSnapLocation}
         setWaypoints={setWaypoints}
+        waypoints={waypoints}
       />
 
       <RideTypeSelector 
@@ -82,23 +101,30 @@ export default function Sidebar({
         }}
       />
 
-      <RouteStats info={routeInfo} />
+      {!routeInfo && (
+        <Reki mood={waypoints.length > 0 ? "scout" : "empty"} size={64} />
+      )}
 
-      <ElevationProfile geojson={routeGeoJSON} />
+      {routeInfo && (
+        <>
+          <RouteStats info={routeInfo} />
+          <ElevationProfile data={routeInfo?.elevationData || []} />
+          <RouteActions 
+            isNavigating={isNavigating}
+            onToggleNavigation={() => setIsNavigating(!isNavigating)}
+            onExport={handleExportGPX}
+            onExportKML={handleExportKML}
+            onShare={handleShareRoute}
+            onClear={onClearRoute}
+          />
+        </>
+      )}
 
       <RouteFilters 
         activeFilters={activeFilters} 
         onToggleFilter={onToggleFilter} 
       />
-
-      <RouteActions 
-        isNavigating={isNavigating}
-        onToggleNavigation={() => setIsNavigating(!isNavigating)}
-        onExport={handleExportGPX}
-        onShare={handleShareRoute}
-        onClear={onClearRoute}
-      />
-    </>
+    </div>
   )
 
   function handleSearchSubmit(query) {

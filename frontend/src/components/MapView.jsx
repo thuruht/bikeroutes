@@ -49,10 +49,23 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
 
   const markersRef = useRef([])
   const wcMarkersRef = useRef([])
+  const onRouteCalculatedRef = useRef(onRouteCalculated)
+  const activeBasemapRef = useRef(activeBasemap)
 
-  // Initialize map
+  useEffect(() => {
+    onRouteCalculatedRef.current = onRouteCalculated
+  }, [onRouteCalculated])
 
-  // Removed global helper to avoid scope leaks
+  useEffect(() => {
+    activeBasemapRef.current = activeBasemap
+  }, [activeBasemap])
+
+  // Clear route when waypoints are cleared
+  useEffect(() => {
+    if (waypoints.length !== 2 && routeGeoJSON !== null) {
+      setRouteGeoJSON(null)
+    }
+  }, [waypoints.length, routeGeoJSON])
 
   // WebGL Context Loss Recovery
   useEffect(() => {
@@ -110,7 +123,8 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
     // Geolocation
     geolocateControl.current = new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: true,
+      showUserLocation: true,
+      trackUserLocation: false,
     })
     map.current.addControl(geolocateControl.current, 'bottom-right')
 
@@ -123,8 +137,9 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
     // MapLibre Error Bounds (Bug 4 Fallback)
     map.current.on('error', (e) => {
       if (e && e.error && e.error.message) {
-        console.warn('MapLibre resource error:', e.error.message)
-        if (activeBasemap.includes('usgs') && e.error.message.includes('fetch')) {
+        const msg = e.error.message;
+        console.warn('MapLibre resource error:', msg)
+        if (activeBasemapRef.current.includes('usgs') && msg.includes('fetch')) {
           console.warn('Falling back from USGS to OSM basemap due to persistent errors.')
           setActiveBasemap('osm')
         }
@@ -136,6 +151,14 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
         map.current.remove()
         map.current = null
       }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Handle style updates separately
+  useEffect(() => {
+    if (map.current && map.current.isStyleLoaded()) {
+      map.current.setStyle(buildMapStyle(activeBasemap, activeOverlays, routeGeoJSON))
     }
   }, [activeBasemap, activeOverlays, routeGeoJSON])
 
@@ -155,7 +178,7 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
     if (!map.current || isNavigating) return
 
     const handleClick = (e) => {
-      setWaypoints(prev => {
+      setWaypoints((prev) => {
         if (prev.length >= 2) return prev // Max 2 for now
         return [...prev, [e.lngLat.lng, e.lngLat.lat]]
       })
@@ -177,8 +200,12 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
 
     waypoints.forEach((pt, i) => {
       const el = document.createElement('div')
-      el.className = `${styles.waypointMarker} ${i === 0 ? 'start' : 'end'}`
-      el.innerHTML = i === 0 ? 'A' : 'B'
+      el.className = "map-marker"
+      el.innerHTML = `
+        <svg viewBox="0 0 40 40" width="36" height="36" style="fill: ${i === 0 ? 'var(--orange)' : 'var(--blue)'}; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25)); margin-left: -18px; margin-top: -36px;">
+          <use href="/brand-marks.svg#pin-wing" />
+        </svg>
+      `
 
       // Hide markers during active navigation for a cleaner map
       if (isNavigating) el.style.opacity = '0'
@@ -196,111 +223,90 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
     let active = true
 
     if (waypoints.length !== 2) {
-      // Defer to avoid synchronous state update warning
-      const timer = setTimeout(() => {
-        if (active) {
-          setRouteGeoJSON(null)
-          onRouteCalculated(null, [], null)
-        }
-      }, 0)
-      return () => { active = false; clearTimeout(timer) }
+      return
     }
 
-    let retryCount = 0
-    const maxRetries = 3
-
-    const fetchRoute = () => {
-      const attempt = async () => {
-        try {
-          // Construct custom Valhalla costing options based on user toggles
-          const costingOptions = {
-            bicycle: {
-              use_hills: routeOptions?.minimizeHills ? 0.1 : 0.5,
-              use_roads: routeOptions?.avoidRoads ? 0.1 : 0.5,
-            }
+    const fetchRoute = async () => {
+      try {
+        // Construct custom Valhalla costing options based on user toggles
+        const costingOptions = {
+          bicycle: {
+            use_hills: routeOptions?.minimizeHills ? 0.1 : 0.5,
+            use_roads: routeOptions?.avoidRoads ? 0.1 : 0.5,
           }
-          
-          if (routeOptions?.pavedOnly) {
-            costingOptions.bicycle.bicycle_type = "Road"
-            costingOptions.bicycle.avoid_bad_surfaces = 0.9
-          }
+        }
+        
+        if (routeOptions?.pavedOnly) {
+          costingOptions.bicycle.bicycle_type = "Road"
+          costingOptions.bicycle.avoid_bad_surfaces = 0.9
+        }
 
-          const res = await fetch('/api/route', {
-            method: 'POST',
-            body: JSON.stringify({
-              locations: waypoints.map(pt => ({ lon: pt[0], lat: pt[1] })),
-              costing: 'bicycle',
-              costing_options: costingOptions,
-              heights: true // Request elevation data
-            })
+        const res = await fetch('/api/route', {
+          method: 'POST',
+          body: JSON.stringify({
+            locations: waypoints.map((pt) => ({ lon: pt[0], lat: pt[1] })),
+            costing: 'bicycle',
+            costing_options: costingOptions,
+            heights: true // Request elevation data
           })
+        })
 
-          if (res.status === 503) {
-            if (retryCount < maxRetries) {
-              retryCount++
-              const backoff = Math.pow(2, retryCount) * 1000 // 2s, 4s, 8s
-              console.warn(`[Routing] 503 Engine Offline. Retrying in ${backoff}ms (Attempt ${retryCount}/${maxRetries})`)
-              setTimeout(() => { if (active) attempt() }, backoff)
-              return
-            } else {
-              console.error("[Routing] Max retries reached. Routing engine is offline.")
-              return
-            }
-          }
+        if (!active) return
 
-          const data = await res.json()
-          
-          if (!active) return
-
-          if (data.trip && data.trip.legs) {
-            const { decodePolyline } = await import('../lib/polyline.js')
-            const coords = decodePolyline(data.trip.legs[0].shape, 6, 3)
-            
-            const geojson = {
-              type: 'FeatureCollection',
-              features: [{
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                  type: 'LineString',
-                  coordinates: coords
-                }
-              }]
-            }
-            setRouteGeoJSON(geojson)
-
-            onRouteCalculatedRef.current({
-              distance: data.trip.summary.length.toFixed(1),
-              elevation: Math.round(data.trip.summary.elevation || 0),
-              time: Math.round(data.trip.summary.time / 60) + ' min'
-            }, data.trip.legs[0].maneuvers, geojson)
-          }
-        } catch (err) {
-          console.error("Routing error:", err)
+        if (res.status === 503) {
+          console.warn("[Routing] Engine offline (503)")
+          return
         }
+
+        const data = await res.json()
+        
+        if (!active) return
+
+        if (data.trip && data.trip.legs) {
+          const { decodePolyline } = await import('../lib/polyline.js')
+          const leg = data.trip.legs[0]
+          const coords = decodePolyline(leg.shape, 6, 3)
+          
+          const elevationData = coords.map((c, i) => ({
+            distance: (i * (data.trip.summary.length / coords.length)).toFixed(2),
+            elevation: c[2] || 0
+          }))
+
+          const geojson = {
+            type: 'FeatureCollection',
+            features: [{
+              type: 'Feature',
+              properties: {},
+              geometry: {
+                type: 'LineString',
+                coordinates: coords
+              }
+            }]
+          };
+          setRouteGeoJSON(geojson)
+
+          onRouteCalculatedRef.current({
+            distance: data.trip.summary.length.toFixed(1),
+            elevation: Math.round(data.trip.summary.elevation || 0),
+            time: Math.round(data.trip.summary.time / 60) + ' min',
+            elevationData
+          }, leg.maneuvers, geojson)
+        }
+      } catch (err) {
+        console.error("Routing error:", err)
       }
-
-      // Initial debounce of 1s to prevent rapid requests when markers are rapidly clicked
-      const debounceTimer = setTimeout(() => {
-        if (active) attempt()
-      }, 1000)
-
-      return () => clearTimeout(debounceTimer)
     }
-    
-    const cleanup = fetchRoute()
+
+    // Initial debounce of 1s to prevent rapid requests
+    const timer = setTimeout(() => {
+      if (active) fetchRoute()
+    }, 1000)
+
     return () => { 
       active = false
-      if (cleanup) cleanup()
+      clearTimeout(timer)
     }
   }, [waypoints, routeOptions])
-
-  // Update map style when basemap, overlays, or route changes
-  useEffect(() => {
-    if (map.current) {
-      map.current.setStyle(buildMapStyle(activeBasemap, activeOverlays, routeGeoJSON))
-    }
-  }, [activeBasemap, activeOverlays, routeGeoJSON])
 
   // ─── World Cup Mode: Venue Markers & MKT Corridor ───────────
   useEffect(() => {
@@ -401,6 +407,7 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
       const props = e.features[0].properties;
       const name = props.Name || props.NAME || props.name || 'BBQ Joint';
       const address = props.Address || props.ADDRESS || props.address || '';
+      const website = props.Website || props.URL || props.website || '';
 
       const safeLng = e.lngLat.lng.toFixed(5).replace('.','_');
       const safeLat = e.lngLat.lat.toFixed(5).replace('.','_');
@@ -412,6 +419,7 @@ export default function MapView({ onRouteCalculated, waypoints, setWaypoints, ro
           <div class="${styles.wcPopup}">
             <strong>🍖 ${name}</strong>
             ${address ? `<p style="font-size:0.75rem; color:#666; margin: 4px 0;">${address}</p>` : ''}
+            ${website ? `<a href="${website}" target="_blank" style="font-size:0.75rem; display:block; margin-bottom: 4px;">Visit Website</a>` : ''}
             <button type="button" class="${styles.wcPopupRouteBtn}" style="margin-top: 8px;" id="${btnId}">Route here →</button>
           </div>
         `)

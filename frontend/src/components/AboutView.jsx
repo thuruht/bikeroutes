@@ -1,6 +1,6 @@
 import styles from './AboutView.module.css'
 
-export default function AboutView() {
+export default function AboutView({ onFulfillmentClick }) {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -44,15 +44,30 @@ export default function AboutView() {
             </p>
           </div>
         </div>
+
+        <div className={`box ${styles.merchBox}`} style={{ marginTop: 'var(--space-8)' }}>
+          <div className="eyebrow">Support Gear</div>
+          <h4 className={styles.faqQuestion}>Already donated $25 or more?</h4>
+          <p className={styles.faqAnswer}>
+            Thank you for being a Route Builder or part of Reki's Inner Circle! 
+            You can check the status of your T-shirt or Hoodie and claim it once designs are finalized.
+          </p>
+          <button onClick={onFulfillmentClick} className={styles.merchBtn}>
+            CHECK MERCH STATUS →
+          </button>
+        </div>
       </div>
 
       <div className={styles.footer}>
-        <a href="https://github.com/bikeroutes" target="_blank" rel="noopener noreferrer" className={styles.link}>
-          GitHub Repository
-        </a>
         <a href="mailto:hello@bikeroutes.org" className={styles.link}>
           Contact Us
         </a>
+        <div className={styles.legal}>
+          <span>© 2026 BikeRoutes.org</span>
+          <a href="https://github.com/thuruht/bikeroutes" target="_blank" rel="noopener noreferrer" className={styles.githubLink}>
+            Source
+          </a>
+        </div>
       </div>
     </div>
   )

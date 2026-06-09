@@ -1,28 +1,27 @@
 import styles from './LandingView.module.css'
 
-function LandingView({ onOpenPlanner }) {
+function LandingView({ onOpenPlanner, onAboutClick }) {
   return (
-    <section className="panel box tint" aria-labelledby="hero-title">
-      <div className="stack">
-        <div className="eyebrow">Kansas City & beyond</div>
-        <h1 id="hero-title">to</h1>
-        <div className="hero">BikeRoutes.org</div>
-        <div className="subtitle">ride better routes</div>
-      </div>
+    <div className={styles.container}>
+      <img src="/reki_icon.png" alt="Reki the scout deer" className={styles.heroIcon} />
+      
+      <div className={styles.heroContent}>
+        <div className="eyebrow">Kansas City & Midwest Trails</div>
+        <h1 className={styles.heroTitle}>BikeRoutes.org</h1>
+        <p className={styles.heroSubtitle}>
+          Community-driven navigation for Midwest bike trails and connectors.
+        </p>
 
-      <div className={styles.actions}>
-        <button className={styles.primaryBtn} onClick={onOpenPlanner}>
-          Open the Route Planner
-        </button>
-        <button className={styles.secondaryBtn}>
-          Learn about the project
-        </button>
+        <div className={styles.actions}>
+          <button className={styles.primaryBtn} onClick={onOpenPlanner}>
+            OPEN ROUTE PLANNER →
+          </button>
+          <button className={styles.secondaryBtn} onClick={onAboutClick}>
+            LEARN MORE
+          </button>
+        </div>
       </div>
-
-      <p className="note">
-        Free, open-source bike trail navigation. No ads, no tracking.
-      </p>
-    </section>
+    </div>
   )
 }
 

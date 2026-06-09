@@ -12,7 +12,7 @@ This document serves as a quick reference for key terms, architectural concepts,
 *   **OSM (OpenStreetMap):** The foundational, open-source geographic database that powers all routing and map tiles on the platform.
 *   **Printful:** The print-on-demand API used for fulfilling high-tier donation rewards (T-shirts, hoodies).
 *   **Reki:** The white-tailed deer mascot of BikeRoutes.org. [See Project Overview](./01_Project_Overview.md), [See Mascot Identity](./08_Mascot_Identity.md)
-*   **Tactical Hi-Tech:** The official design system and aesthetic of the platform, characterized by dark olive/hoof surfaces and blaze orange accents. [See Style Guide](./05_Style_Guide.md)
+*   **Light Tactical (Teal/Camo):** The current design system and aesthetic of the platform, characterized by off-white/bone surfaces, teal accents, and glassy textures. [See Style Guide](./05_Style_Guide.md)
 *   **Valhalla:** The open-source routing engine (running in Docker) responsible for calculating paths, elevation, and surface types.
 *   **Vectorize:** Cloudflare's vector database, used to store text embeddings of trail data for semantic search.
 
@@ -20,12 +20,16 @@ This document serves as a quick reference for key terms, architectural concepts,
 *   **FIFA World Cup 26 Mode:** [11_FWC26_Prompt](./11_FWC26_Prompt.md)
 *   **Interactive Route Builder:** [10_Route_Builder](./10_Route_Builder.md)
 *   **Architecture Refactor (PMTiles/Valhalla):** [12_Architecture_Refactor](./12_Architecture_Refactor.md)
+*   **Engineering Standards & Best Practices:** [13_Engineering_Standards](./13_Engineering_Standards.md)
+*   **Design Implementation Specs:** [14_Design_Implementation](./14_Design_Implementation.md)
+*   **AI Search Architecture:** [15_AI_Search_Architecture](./15_AI_Search_Architecture.md)
 
 ## Cross-Referencing Tags (For LLM / AI Agents)
 
 When building new features, agentic LLMs should search the documentation for these tags to find relevant context:
 
 *   `#architecture-cleanup`: References the immediate tasks needed to fix the scaffolded repo state. (Found in `02_Technical_Todo.md`)
+*   `#semantic-search`: Details on the Vectorize and Workers AI implementation. (Found in `15_AI_Search_Architecture.md`)
 *   `#valhalla-config`: References the setup, Dockerization, and tuning of the routing engine.
 *   `#monetization`: References donation models, PayPal integration, and B2B strategies. (Found in `01_Project_Overview.md`, `03_Product_Todo.md`, `04_Future_Roadmaps.md`)
 *   `#reki-mascot`: References the visual and tonal guidelines for the mascot. (Found in `01_Project_Overview.md`, `05_Style_Guide.md`)

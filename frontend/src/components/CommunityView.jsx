@@ -14,7 +14,7 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [authStep, setAuthStep] = useState('email') // email, code
-  const [now, setNow] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
 
   const checkAuth = useCallback(() => {
     const token = localStorage.getItem('bikeroutes_session')
@@ -41,12 +41,14 @@ export default function CommunityView({ wcMode, onWcRouteSelect }) {
   }, [])
 
   useEffect(() => {
-    const init = async () => {
-      await fetchReports()
-      checkAuth()
+    fetchReports()
+    checkAuth()
+    
+    const interval = setInterval(() => {
       setNow(Date.now())
-    }
-    init()
+    }, 60000) // Update relative times every minute
+    
+    return () => clearInterval(interval)
   }, [fetchReports, checkAuth])
 
   const handleRequestCode = async (e) => {
