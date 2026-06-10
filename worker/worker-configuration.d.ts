@@ -22,9 +22,13 @@ declare namespace Cloudflare {
 		mainModule: typeof import("./src/index");
 		durableNamespaces: "POIStore" | "RouteSession" | "ValhallaContainer";
 	}
-	interface Env extends __BaseEnv_Env {}
+	interface Env extends __BaseEnv_Env {
+		ADMIN_SECRET: string;
+	}
 }
-interface Env extends __BaseEnv_Env {}
+interface Env extends __BaseEnv_Env {
+	ADMIN_SECRET: string;
+}
 type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };

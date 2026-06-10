@@ -130,7 +130,7 @@ out center tags 50;
 
 		const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
 			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "bikeroutes.org/1.0 (contact@bikeroutes.org)" },
 			body: new URLSearchParams({ data: query }),
 		});
 

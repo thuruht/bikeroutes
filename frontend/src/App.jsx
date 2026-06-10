@@ -37,12 +37,58 @@ function Reki({ size = 64, mood = "scout" }) {
       <span style={{ flex: "none", width: size, height: size, borderRadius: 12,
         background: "var(--green-soft)", border: "1px solid var(--line)",
         display: "grid", placeItems: "center", overflow: "hidden" }}>
-        <svg viewBox="34 20 172 172" width={size - 10} height={size - 10}
+        <svg viewBox="0 -3 172 172" width={size - 10} height={size - 10}
           role="img" aria-label="Reki the deer" style={{ display: "block" }}>
-          <use href="#reki-head" x="34" y="20" width="172" height="172" />
+          <use href="#reki-head" x="0" y="-3" width="172" height="172" />
         </svg>
       </span>
       <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>{lines[mood]}</div>
+    </div>
+  );
+}
+
+/* ---- Explore view ---- */
+function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBusy }) {
+  const search = async (q) => {
+    setQuery(q);
+    if (!q.trim()) { setResults([]); return; }
+    setBusy(true);
+    try {
+      const r = await fetch("/api/search?q=" + encodeURIComponent(q));
+      const d = await r.json();
+      setResults(d.results || []);
+    } catch (_) { setResults([]); }
+    setBusy(false);
+  };
+  const go = (r) => {
+    const m = mapObj.current;
+    if (m && r.metadata) m.flyTo({ center: [r.metadata.lon, r.metadata.lat], zoom: 15, duration: 800 });
+  };
+  let body;
+  if (results.length > 0) {
+    body = <div>{results.map((r, i) => (
+      <div key={r.id} className="turn" style={{ cursor: "pointer" }} onClick={() => go(r)}>
+        <div className="ic">{Ic.search}</div>
+        <div className="body">
+          <div className="road">{r.metadata?.name || r.id}</div>
+          <div className="meta mono">{r.metadata?.category || ""} &middot; {(r.score * 100).toFixed(0)}% match</div>
+        </div>
+      </div>
+    ))}</div>;
+  } else if (query.trim() && !busy) {
+    body = <div className="mono" style={{ padding: "20px 0", textAlign: "center", color: "var(--muted-txt)" }}>No results found</div>;
+  } else body = null;
+  return (
+    <div>
+      <div style={{ marginBottom: 14, fontSize: 12.5, color: "var(--muted-txt)", lineHeight: 1.4 }}>
+        Search for trails, bike shops, water stations, and more.
+      </div>
+      <div className="io-row" style={{ borderRadius: 12, marginBottom: 12 }}>
+        <input value={query} placeholder="Search trails, POIs..."
+          onChange={e => search(e.target.value)} />
+        {busy && <span className="mono" style={{ fontSize: 10, color: "var(--muted-txt)", padding: "0 10px" }}>...</span>}
+      </div>
+      {body}
     </div>
   );
 }
@@ -176,6 +222,11 @@ export default function LiveApp() {
   const [saved, setSaved] = useState(false);
   const [hoverTurn, setHoverTurn] = useState(null);
   const [readout, setReadout] = useState({ scale: null, coords: null });
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [view, setView] = useState("plan");
+  const [exploreQuery, setExploreQuery] = useState("");
+  const [exploreResults, setExploreResults] = useState([]);
+  const [exploreBusy, setExploreBusy] = useState(false);
 
   const mapRef = useRef(null);
   const mapObj = useRef(null);
@@ -416,40 +467,61 @@ export default function LiveApp() {
             <svg viewBox="0 0 40 40"><use href="#mark-b" /></svg>
           </span>
           <div className="brand-txt">
-            <div className="wordmark name" aria-label="bikeroutes.org">
-              b<span className="i-slot"><span className="head"><svg viewBox="34 20 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+            <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
+              b<span className="i-slot"><span className="head"><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
             </div>
             <div className="tag mono">open cycling maps · midwest</div>
           </div>
           <span className="ver-chip mono" title="Penultimate — release candidate">v0.9 · RC</span>
         </div>
-        <nav className="nav">
-          <a href="#" className="active">Plan</a>
-          <a href="#">Explore</a>
-          <a href="#">Map data</a>
-          <a href="#">About</a>
-        </nav>
         <div className="spacer" />
         <div className="theme-toggle" role="group" aria-label="Map theme">
           <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")} title="Daylight" aria-label="Daylight theme">{Ic.sun}</button>
           <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} title="Tactical dark" aria-label="Dark theme">{Ic.moon}</button>
         </div>
+        <button className="pillbtn" onClick={() => setInfoOpen(true)} title="Info" style={{ padding: "9px 11px" }}>{Ic.info}</button>
         <button className="pillbtn solid" onClick={() => setWps([])} title="Clear route">{Ic.plus}<span className="btn-label"> New route</span></button>
       </div>
 
-      {/* PRIVACY BADGE */}
-      <div className="privacy">
-        <div className="ic">{Ic.lock}</div>
-        <div className="txt">
-          <b>No tracking, no ads.</b><br />
-          <span className="mono">Open source · OSM / ODbL</span>
+      {/* INFO MODAL */}
+      {infoOpen && (
+        <div className="modal-overlay" onClick={() => setInfoOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setInfoOpen(false)}>{Ic.x}</button>
+            <div className="wordmark" aria-label="bikeroutes.org">
+              b<span className="i-slot"><span className="head"><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+            </div>
+            <div className="modal-nav">
+              <a href="#" className={view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setView("plan"); setInfoOpen(false); }}>Plan</a>
+              <a href="#" className={view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setView("explore"); setInfoOpen(false); }}>Explore</a>
+              <a href="#">Map data</a>
+              <a href="#">About</a>
+            </div>
+            <div className="modal-section">
+              <div className="modal-privacy">
+                <span className="modal-icon">{Ic.lock}</span>
+                <div>
+                  <b>No tracking, no ads.</b><br />
+                  <span className="mono">Open source · OSM / ODbL</span>
+                </div>
+              </div>
+            </div>
+            <div className="modal-section mono" style={{ fontSize: 11.5, color: "var(--muted-txt)" }}>
+              bikeroutes.org · v0.9 RC<br />
+              open cycling maps · midwest
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* PANEL */}
       <div className="panel">
-        <div className="modetabs"><button className="active">Plan a route</button></div>
+        <div className="modetabs">
+          <button className={view === "plan" ? "active" : ""} onClick={() => setView("plan")}>Plan a route</button>
+          <button className={view === "explore" ? "active" : ""} onClick={() => setView("explore")}>Explore</button>
+        </div>
         <div className="panel-scroll">
+          {view === "plan" && <>
           <div style={{ marginBottom: 14, fontSize: 12.5, color: "var(--muted-txt)", lineHeight: 1.4 }}>
             Type a start and destination below, or click the map to set waypoints.
           </div>
@@ -534,6 +606,11 @@ export default function LiveApp() {
               </div>
             </>
           ) : null}
+          </>}
+          {view === "explore" && <ExploreView
+            mapObj={mapObj} query={exploreQuery} setQuery={setExploreQuery}
+            results={exploreResults} setResults={setExploreResults}
+            busy={exploreBusy} setBusy={setExploreBusy} />}
         </div>
       </div>
 

@@ -54,11 +54,17 @@ app.get("/api/admin/seed-trails", async (c) => {
 	}, 410);
 });
 
-app.get("/api/admin/sync-gis", async (c) => {
-	return c.json({
-		message: "This endpoint is retired. Use POST /api/admin/ingest?source=d1",
-		hint: "Requires X-Admin-Secret header",
-	}, 410);
+app.post("/api/admin/sync-gis", async (c) => {
+	const secret = c.req.header("X-Admin-Secret");
+	if (!secret || secret !== c.env.ADMIN_SECRET) {
+		return c.json({ error: "Unauthorized" }, 403);
+	}
+	try {
+		await syncGisData(c.env);
+		return c.json({ message: "MARC GIS sync complete 🦌" });
+	} catch (e) {
+		return c.json({ error: "Sync failed", message: String(e) }, 500);
+	}
 });
 
 // ─── Fallthrough to static assets ─────────────────────

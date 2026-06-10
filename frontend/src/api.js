@@ -104,22 +104,22 @@ export async function geocode(q) {
   try {
     const r = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
     const data = await r.json();
-    if (!data.results) return [];
-    return data.results.map((d) => ({
-      label: d.description,
-      short: d.name,
-      kind: "place",
-      lng: d.coords[0],
-      lat: d.coords[1],
+    if (!Array.isArray(data)) return [];
+    return data.map((d) => ({
+      label: d.label,
+      short: d.short,
+      kind: d.kind || "place",
+      lng: d.lng,
+      lat: d.lat,
     }));
   } catch (e) { console.warn("geocode failed", e); return []; }
 }
 
 export async function reverse(lng, lat) {
   try {
-    const r = await fetch(`/api/reverse?lat=${lat}&lon=${lng}`);
+    const r = await fetch(`/api/reverse?lat=${lat}&lng=${lng}`);
     const data = await r.json();
-    return data.name || data.description || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    return data.label || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
   } catch { return `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
 }
 
@@ -190,11 +190,9 @@ export async function route(points, pref) {
       totalTime += leg.summary?.time || 0;
     });
 
-    // Sanity check: if total distance is > 500km for a bike route, something is wrong
-    // (unless user really wants to bike across a continent)
-    if (totalDist > 500000) {
-      console.warn("Route exceeds 500km — possibly invalid or cross-continental");
-      // Still return it but mark as suspicious
+    // Sanity check: flag extremely long routes but still return them
+    if (totalDist > 3000000) {
+      console.debug("Route exceeds 3000km — unusually long");
     }
 
     if (coords.length < 2) throw new Error("no coordinates in route");

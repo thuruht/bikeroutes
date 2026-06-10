@@ -3,7 +3,7 @@
  * /api/reverse  GET ?lng=&lat=     → "display string"
  *
  * Proxies Nominatim with a proper User-Agent (required by OSM policy).
- * Results cached in GEO_CACHE KV — geocode TTL 30 days, reverse 7 days.
+ * Results cached in ROUTE_CACHE KV — geocode TTL 30 days, reverse 7 days.
  * All external calls are server-side only; never exposed to the client.
  */
 
@@ -24,10 +24,10 @@ function kvKey(prefix: string, val: string) {
 /* ── GET /api/geocode?q=... ─────────────────────────────────────────────── */
 geocodeRoutes.get("/geocode", async (c) => {
 	const q = (c.req.query("q") || "").trim();
-	if (q.length < 2) return c.json({ error: "Query too short" }, 400);
+	if (!q) return c.json({ error: "Query too short" }, 400);
 
 	const cacheKey = kvKey("geo", q);
-	const cached = await c.env.GEO_CACHE.get(cacheKey, "json");
+	const cached = await c.env.ROUTE_CACHE.get(cacheKey, "json");
 	if (cached) {
 		return c.json(cached, 200, { "X-Cache": "HIT" });
 	}
@@ -48,7 +48,7 @@ geocodeRoutes.get("/geocode", async (c) => {
 
 		// Cache 30 days
 		c.executionCtx.waitUntil(
-			c.env.GEO_CACHE.put(cacheKey, JSON.stringify(results), { expirationTtl: 86400 * 30 })
+			c.env.ROUTE_CACHE.put(cacheKey, JSON.stringify(results), { expirationTtl: 86400 * 30 })
 		);
 
 		return c.json(results, 200, { "X-Cache": "MISS" });
@@ -66,7 +66,7 @@ geocodeRoutes.get("/reverse", async (c) => {
 
 	// round to 4dp for cache key (~11m precision — good enough for reverse)
 	const cacheKey = `rev:${lat.toFixed(4)},${lng.toFixed(4)}`;
-	const cached = await c.env.GEO_CACHE.get(cacheKey);
+	const cached = await c.env.ROUTE_CACHE.get(cacheKey);
 	if (cached) return c.json({ label: cached }, 200, { "X-Cache": "HIT" });
 
 	try {
@@ -79,7 +79,7 @@ geocodeRoutes.get("/reverse", async (c) => {
 
 		// Cache 7 days
 		c.executionCtx.waitUntil(
-			c.env.GEO_CACHE.put(cacheKey, label, { expirationTtl: 86400 * 7 })
+			c.env.ROUTE_CACHE.put(cacheKey, label, { expirationTtl: 86400 * 7 })
 		);
 
 		return c.json({ label }, 200, { "X-Cache": "MISS" });

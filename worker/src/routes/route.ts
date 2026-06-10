@@ -1,5 +1,5 @@
 /**
- * /api/route — Valhalla routing proxy with KV caching
+ * /api/route — Valhalla routing proxy with KV caching + BRouter fallback
  */
 
 import { Hono } from "hono";
@@ -7,6 +7,9 @@ import { getContainer } from "@cloudflare/containers";
 import { logger } from "../lib/logger";
 
 export const routeRoutes = new Hono<{ Bindings: Env }>();
+
+const BROUTER_URL = "https://brouter.de/brouter";
+const UA = "bikeroutes.org/1.0 (contact@bikeroutes.org)";
 
 // SHA-256 hash for cache keys
 async function sha256(data: string): Promise<string> {
@@ -17,23 +20,76 @@ async function sha256(data: string): Promise<string> {
 		.join("");
 }
 
+function validateCoordinates(locations: any[]): boolean {
+	if (!locations || locations.length < 2) return false;
+	return locations.every(loc =>
+		typeof loc.lat === "number" && typeof loc.lon === "number" &&
+		(loc.lat !== 0 || loc.lon !== 0)
+	);
+}
+
+function mapToBRouterProfile(body: any): string {
+	const opts = body?.costing_options?.bicycle;
+	if (!opts) return "trekking";
+	const roads = opts.use_roads ?? 0.5;
+	const hills = opts.use_hills ?? 0.5;
+	if (roads < 0.3 && hills > 0.3) return "safety";
+	if (roads > 0.6) return "fastbike";
+	return "trekking";
+}
+
+function brouterToValhalla(gj: any, locations: any[]): any {
+	const f = gj.features?.[0];
+	if (!f) throw new Error("BRouter returned no features");
+	const coords = f.geometry.coordinates;
+	if (!coords?.length) throw new Error("BRouter returned empty geometry");
+	const p = f.properties || {};
+	const distKm = (parseFloat(p["track-length"]) || 0) / 1000;
+	const timeS = parseFloat(p["total-time"]) || (distKm * 3600 / 16);
+	const lastIdx = coords.length - 1;
+
+	return {
+		trip: {
+			legs: [{
+				shape: coords,
+				summary: {
+					length: distKm,
+					time: timeS,
+				},
+				maneuvers: [
+					{
+						type: 1,
+						begin_shape_index: 0,
+						street_names: [locations[0]?.label || "Start"],
+						length: 0,
+						time: 0,
+						instruction: "Start riding",
+					},
+					{
+						type: 4,
+						begin_shape_index: lastIdx,
+						street_names: [locations[locations.length - 1]?.label || "Destination"],
+						length: 0,
+						time: 0,
+						instruction: "Arrive at destination",
+					},
+				],
+			}],
+			summary: {
+				has_high_scenery: false,
+			},
+		},
+	};
+}
+
 /**
  * POST /api/route
  * Body: Valhalla-compatible JSON (locations, costing, etc.)
  * Returns: Valhalla route response (GeoJSON-like)
  */
-// Request validation helper
-function validateCoordinates(locations: any[]): boolean {
-	if (!locations || locations.length < 2) return false;
-	return locations.every(loc => 
-		typeof loc.lat === "number" && typeof loc.lon === "number" &&
-		(loc.lat !== 0 || loc.lon !== 0) // Basic 0,0 boundary rejection
-	);
-}
-
 routeRoutes.post("/", async (c) => {
 	const body = await c.req.text();
-	
+
 	let parsed;
 	try {
 		parsed = JSON.parse(body);
@@ -42,9 +98,9 @@ routeRoutes.post("/", async (c) => {
 	}
 
 	if (!validateCoordinates(parsed.locations)) {
-		return c.json({ 
-			error: "Invalid coordinates", 
-			message: "Locations must contain valid lat/lon (0,0 is not permitted)." 
+		return c.json({
+			error: "Invalid coordinates",
+			message: "Locations must contain valid lat/lon (0,0 is not permitted).",
 		}, 400);
 	}
 
@@ -60,7 +116,7 @@ routeRoutes.post("/", async (c) => {
 		});
 	}
 
-	// 2. Try Local Valhalla Container
+	// 2. Try Valhalla Container (edge)
 	let routeData;
 	let source = "edge";
 
@@ -80,20 +136,20 @@ routeRoutes.post("/", async (c) => {
 			routeData = await valhallaResp.json();
 		} else {
 			const errText = await valhallaResp.text();
-			console.warn(`[Valhalla Edge Offline] Status: ${valhallaResp.status}. Error: ${errText}. Attempting FOSSGIS fallback.`);
+			console.warn(`[Valhalla Edge Offline] Status: ${valhallaResp.status}. Error: ${errText}.`, "ROUTING");
 			source = "fallback";
 		}
 	} catch (error) {
-		console.warn("[Valhalla Edge Error] Exception occurred, attempting FOSSGIS fallback.", error);
+		console.warn("[Valhalla Edge Error] Exception:", error, "ROUTING");
 		source = "fallback";
 	}
 
-	// 3. Fallback to FOSSGIS if local failed
+	// 3. Fallback to FOSSGIS Valhalla
 	if (source === "fallback") {
 		try {
 			const fossgisResp = await fetch("https://valhalla1.openstreetmap.de/route", {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
+				headers: { "Content-Type": "application/json", "User-Agent": UA },
 				body: JSON.stringify({
 					...parsed,
 					shape_format: "geojson",
@@ -102,11 +158,39 @@ routeRoutes.post("/", async (c) => {
 			});
 
 			if (!fossgisResp.ok) {
-				throw new Error(`FOSSGIS returned ${fossgisResp.status}`);
+				const errBody = await fossgisResp.text();
+				throw new Error(`FOSSGIS ${fossgisResp.status}: ${errBody.slice(0, 500)}`);
 			}
 			routeData = await fossgisResp.json();
+			source = "fossgis";
 		} catch (fallbackError) {
-			logger.error("All routing methods failed", fallbackError, "ROUTING");
+			console.warn("[FOSSGIS Fallback Failed]", fallbackError, "ROUTING");
+			source = "brouter";
+		}
+	}
+
+	// 4. Tertiary fallback to BRouter
+	if (source === "brouter") {
+		try {
+			const profile = mapToBRouterProfile(parsed);
+			const lonlats = parsed.locations
+				.map((loc: any) => `${loc.lon.toFixed(6)},${loc.lat.toFixed(6)}`)
+				.join("|");
+			const url = `${BROUTER_URL}?lonlats=${lonlats}&profile=${profile}&alternativeidx=0&format=geojson`;
+
+			const brouterResp = await fetch(url, {
+				headers: { "User-Agent": UA },
+			});
+
+			if (!brouterResp.ok) {
+				const errBody = await brouterResp.text();
+				throw new Error(`BRouter ${brouterResp.status}: ${errBody.slice(0, 500)}`);
+			}
+			const gj = await brouterResp.json();
+			routeData = brouterToValhalla(gj, parsed.locations);
+			source = "brouter";
+		} catch (brouterError) {
+			logger.error("All routing engines failed", brouterError, "ROUTING");
 			return c.json({
 				error: "Reki got lost",
 				message: "All routing engines are taking a nap. Try again shortly.",
@@ -114,7 +198,7 @@ routeRoutes.post("/", async (c) => {
 		}
 	}
 
-	// 4. Cache & Return
+	// 5. Cache & Return
 	if (routeData) {
 		c.executionCtx.waitUntil(
 			c.env.ROUTE_CACHE.put(cacheKey, JSON.stringify(routeData), {
@@ -122,7 +206,6 @@ routeRoutes.post("/", async (c) => {
 			})
 		);
 
-		// Log route to D1 for analytics
 		c.executionCtx.waitUntil(
 			c.env.DB.prepare(
 				"INSERT INTO route_logs (request_hash, created_at) VALUES (?, ?)"
@@ -131,7 +214,7 @@ routeRoutes.post("/", async (c) => {
 
 		return c.json(routeData, 200, {
 			"X-Cache": "MISS",
-			"X-Reki": encodeURIComponent(source === "edge" ? "🦌 fresh scouted trail" : "🦌 scouted via fallback"),
+			"X-Reki": encodeURIComponent(source === "edge" ? "🦌 fresh scouted trail" : source === "fossgis" ? "🦌 scouted via FOSSGIS" : "🦌 scouted via BRouter"),
 			"X-Reki-Source": source,
 		});
 	}
