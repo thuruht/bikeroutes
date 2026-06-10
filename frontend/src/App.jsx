@@ -239,7 +239,10 @@ export default function LiveApp() {
   const turnMarker = useRef(null);
   const reqId = useRef(0);
   const wpsRef = useRef(wps);
+  const panelScrollRef = useRef(null);
   useEffect(() => { wpsRef.current = wps; }, [wps]);
+
+  useEffect(() => { if (panelScrollRef.current) panelScrollRef.current.scrollTop = 0; }, [view]);
 
   const tileArr = (th) => ["a", "b", "c"].map(s =>
     th === "dark"
@@ -559,7 +562,7 @@ export default function LiveApp() {
           <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} title="Tactical dark" aria-label="Dark theme">{Ic.moon}</button>
         </div>
         <button className="pillbtn" onClick={() => setInfoOpen(true)} title="Info" style={{ padding: "9px 11px" }}>{Ic.info}</button>
-        <button className="pillbtn solid" onClick={() => setWps([])} title="Clear route">{Ic.plus}<span className="btn-label"> New route</span></button>
+        <button className="pillbtn solid" onClick={() => { if (view === "explore") { setView("plan"); } setWps([]); }} title={view === "explore" ? "Switch to plan" : "Clear route"}>{Ic.plus}<span className="btn-label"> {view === "explore" ? "Plan route" : "New route"}</span></button>
       </div>
 
       {/* INFO MODAL */}
@@ -599,7 +602,7 @@ export default function LiveApp() {
           <button className={view === "plan" ? "active" : ""} onClick={() => setView("plan")}>Plan a route</button>
           <button className={view === "explore" ? "active" : ""} onClick={() => setView("explore")}>Explore</button>
         </div>
-        <div className="panel-scroll">
+        <div className="panel-scroll" ref={panelScrollRef}>
           {view === "plan" && <>
           <div style={{ marginBottom: 14, fontSize: 12.5, color: "var(--muted-txt)", lineHeight: 1.4 }}>
             Type a start and destination below, or click the map to set waypoints.

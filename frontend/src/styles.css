@@ -103,7 +103,7 @@ h1, h2, h3, h4,
 /* ---------- Left panel ---------- */
 .panel {
   position: absolute; top: 78px; left: 20px; z-index: 30;
-  width: 372px; max-height: calc(100vh - 100px);
+  width: 372px; max-height: calc(100vh - 140px);
   display: flex; flex-direction: column;
   background: var(--panel); backdrop-filter: blur(14px);
   border: 1px solid var(--line); border-radius: 18px;
@@ -124,7 +124,7 @@ h1, h2, h3, h4,
 }
 .modetabs { border-bottom: 1px solid var(--line); }
 
-.panel-scroll { overflow-y: auto; padding: 16px; }
+.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
 .panel-scroll::-webkit-scrollbar { width: 8px; }
 .panel-scroll::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
 
@@ -456,7 +456,7 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   /* bottom sheet: anchored to the bottom, swipe/scroll its body */
   .panel {
     top: auto; bottom: 0; left: 0; right: 0; width: auto;
-    max-height: 62vh;
+    max-height: 50vh;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     border-bottom: 0;
   }
@@ -466,7 +466,10 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
     margin: 8px auto 2px;
   }
   .panel-scroll { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
-  .mapctl { bottom: calc(62vh + 14px); }
+  .mapctl { bottom: calc(50vh + 14px); gap: 6px; }
+  .mapctl .zoomstack button { width: 34px; height: 34px; font-size: 16px; }
+  .mapctl .ctlbtn { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+  .mapctl .ctlbtn svg { width: 14px; height: 14px; }
   .summary .dist { font-size: var(--text-2xl); }
 }
 
@@ -474,7 +477,11 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 @media (max-width: 420px) {
   .brand .tag { display: none; }
   .topbar { padding: 10px 8px; }
-  .panel { max-height: 70vh; }
-  .mapctl { bottom: calc(70vh + 12px); }
+  .panel { max-height: 55vh; }
+  .mapctl { bottom: calc(55vh + 10px); gap: 5px; }
+  .mapctl .zoomstack button { width: 30px; height: 30px; font-size: 14px; }
+  .mapctl .ctlbtn { width: 30px; height: 30px; min-width: 30px; min-height: 30px; }
+  .mapctl .ctlbtn svg { width: 12px; height: 12px; }
+  .mapctl .ctlbtn .ctl-label { display: none; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
 }
