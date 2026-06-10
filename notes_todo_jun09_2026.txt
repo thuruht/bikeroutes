@@ -6,4 +6,6 @@
 [FIXED] Add accessibility filters to RouteFilters.jsx - IMPLEMENTED BY GEMINI JUNE 09 2026
 [FIXED] Elevation profiles and GPX/KML export logic confirmed integrated; updated README - GEMINI JUNE 09 2026
 
+[DONE] v1.0 brand system (Brand_Marks Final + Design System) was never integrated — now in: header lockup (b-wheel app-tile + wordmark w/ Reki-head i-dot + v1.0 chip), docs served at /design/ and /design/brand-marks.html, favicon on forest-green tile, themed maplibre attribution. NOTE: diamond helmet badge is canonical (per Brand Marks Final); the arrow variant in the Design System page sprite was superseded and has been corrected to the diamond. - CLAUDE JUNE 09 2026
+
  LLMs: *if you fix a todo or add to the list, notate it non-destructively, and change the date in the filename*

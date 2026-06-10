@@ -541,19 +541,14 @@ function App() {
       {/* TOP BAR */}
       <div className="topbar">
         <div className="brand">
-          <span className="mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-              strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-              <circle cx="6" cy="17" r="3.2"/>
-              <circle cx="18" cy="17" r="3.2"/>
-              <path d="M6 17l4-8h6l-3 8M10 9l-1.5-3H6"/>
-              <circle cx="14.5" cy="6" r="1"/>
-            </svg>
+          <span className="app-tile" aria-hidden="true">
+            <svg viewBox="0 0 40 40"><use href="#mark-b" /></svg>
           </span>
-          <div>
-            <div className="name">bikeroutes.org</div>
+          <div className="brand-txt">
+            <span className="wordmark" role="img" aria-label="bikeroutes.org">b<span className="i-slot"><span className="head"><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span></span>
             <div className="tag mono">open cycling maps · midwest</div>
           </div>
+          <span className="ver-chip">v1.0</span>
         </div>
 
         <nav className="nav">

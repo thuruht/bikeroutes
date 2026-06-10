@@ -85,6 +85,15 @@ worker/src/
 
 ---
 
+## Update — June 09 2026 (`claude/dreamy-brown-i56fmh`)
+
+The **v1.0 brand package** (Brand Marks — Final, "Approved · v1.0" + Design System page) is now integrated:
+- `frontend/public/design/` — tokens.css, styles.css, Design System (`index.html`), Brand Marks (`brand-marks.html`), served at `/design/`. These are the canonical reference docs.
+- App header now renders the real lockup: `#mark-b` on a green app-tile, wordmark with `#reki-head` as the i-dot, `v1.0` chip (`App.jsx` topbar + lockup CSS in `index.css`).
+- `favicon.svg` → solid b-wheel on **forest-green** tile (was dark-hoof).
+- MapLibre attribution themed via `.maplibregl-ctrl-attrib` in `index.css`.
+- **Canon note:** Reki's cap badge is the **diamond** (`M120,59.5 L127.5,68 L120,76.5 L112.5,68 Z`). The arrow variant found in some exploration-board files is superseded — don't "fix" the diamond.
+
 ## Dev setup
 ```bash
 cd frontend && npm install && npm run dev   # Vite on :5173
