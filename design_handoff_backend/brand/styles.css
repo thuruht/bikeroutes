@@ -1,206 +1,13 @@
-@import url('https://fonts.bunny.net/css?family=outfit:400,500,600,700|ibm-plex-sans:400,500,600|ibm-plex-mono:400,500,600');
-
-/* ============================================================
-   bikeroutes.org — DESIGN TOKENS  (single source of truth)
-   ------------------------------------------------------------
-   Tactical Hi-Tech · MO Camo Edition.
-   ============================================================ */
-
-:root {
-  /* ---------- 1. BRAND PALETTE (immutable) ---------- */
-  --brand-deer-brown:   #C0763C;
-  --brand-blaze-orange: #FF6B1A;
-  --brand-camo-olive:   #4B5320;
-  --brand-cream-white:  #FFF5E6;
-  --brand-forest-green: #2D5F3A;
-  --brand-trail-tan:    #D4A96A;
-  --brand-dark-hoof:    #0B0C08;
-  --brand-sky-blue:     #6BAED6;
-
-  /* ---------- 3. SCALES (theme-independent) ---------- */
-
-  /* type families */
-  --font-head: "Outfit", system-ui, -apple-system, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
-
-  /* type scale */
-  --text-2xs:  0.6875rem;
-  --text-xs:   0.75rem;
-  --text-sm:   0.8125rem;
-  --text-base: 0.875rem;
-  --text-md:   1rem;
-  --text-lg:   1.0625rem;
-  --text-xl:   1.3125rem;
-  --text-2xl:  1.625rem;
-  --text-3xl:  1.875rem;
-  --text-4xl:  2.25rem;
-
-  /* line-height */
-  --lh-tight: 1.1;
-  --lh-snug: 1.25;
-  --lh-normal: 1.5;
-  --lh-relaxed: 1.6;
-
-  /* weight */
-  --fw-regular: 400;
-  --fw-medium: 500;
-  --fw-semibold: 600;
-  --fw-bold: 700;
-
-  /* letter-spacing */
-  --track-tight: -0.02em;
-  --track-snug: -0.01em;
-  --track-normal: 0;
-  --track-wide: 0.02em;
-  --track-caps: 0.07em;
-
-  /* spacing — 4px base grid */
-  --space-0: 0;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-
-  /* radius */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 11px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
-  --radius-pill: 999px;
-
-  /* minimum touch target */
-  --touch-min: 44px;
-
-  /* motion */
-  --ease-out: cubic-bezier(.22,.61,.36,1);
-  --ease-in-out: cubic-bezier(.4,0,.2,1);
-  --dur-fast: .12s;
-  --dur: .18s;
-  --dur-slow: .9s;
-
-  /* z-index scale */
-  --z-map: 1;
-  --z-readout: 25;
-  --z-panel: 30;
-  --z-topbar: 40;
-  --z-modal: 80;
-
-  /* ---------- 2. SEMANTIC TOKENS · LIGHT ---------- */
-  --paper:      #f4efe3;
-  --paper-2:    #ebe4d3;
-  --ink:        #1b1c12;  /* ← dark-hoof, raised for soft contrast  */
-  --ink-2:      #46473a;
-  --muted:      #827c68;
-  --muted-txt:  #827c68;
-  --line:       #e0d7c2;
-  --line-2:     #d2c8ae;
-  --panel:      rgba(248, 244, 235, 0.94);
-  --panel-solid:#f8f4eb;
-  --green:      #5e7a2e;
-  --green-deep: #4c6724;
-  --green-soft: #e5ead2;
-  --orange:     #e2590f;
-  --orange-soft:#f6e0ce;
-  --link:       #1f6e93;
-  --accent-glow: 0 0 0 1px rgba(226,89,15,.35), 0 6px 18px rgba(226,89,15,.22);
-  --shadow:     0 1px 2px rgba(40,36,28,.06), 0 8px 28px rgba(40,36,28,.10);
-  --shadow-sm:  0 1px 2px rgba(40,36,28,.08), 0 2px 8px rgba(40,36,28,.06);
-  --grid-line:  rgba(75,83,32,.05);
-
-  /* feedback */
-  --danger:      #c0392b;
-  --danger-soft: #f7ddd8;
-  --warn:        #b9722a;
-  --success:     #4c6724;
-
-  /* focus ring */
-  --focus-ring-color: var(--orange);
-  --focus-ring: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--orange);
-
-  /* map (light) */
-  --m-paper:    #efe8d8;
-  --m-paper-2:  #eae2cf;
-  --m-road:     #e2d8c0;
-  --m-road-art: #fffdf7;
-  --m-road-art-edge: #e0d4b8;
-  --m-water:    #bcd0ce;
-  --m-water-edge:#a6c0bc;
-  --m-park:     #d8e3c0;
-  --m-park-edge:#c7d6a9;
-  --m-contour:  #e5dbc4;
-  --m-label:    #8a8369;
-  --m-build:    #e7dec9;
-
-  --route:      #e2590f;
-  --route-edge: #fffdf7;
-  --route-alt:  #5e7a2e;
-
-  color-scheme: light;
-}
-
-[data-theme="dark"] {
-  /* ---------- 2. SEMANTIC TOKENS · DARK ----------
-     Tactical Hi-Tech — MO Camo Edition. The PRIMARY brand
-     expression. Dark-hoof base, cream text, blaze accent. */
-  --paper:      #0b0c08;   /* ← dark-hoof, verbatim                 */
-  --paper-2:    #15160e;
-  --ink:        #fff5e6;   /* ← cream-white, verbatim               */
-  --ink-2:      #c5c1ad;
-  --muted:      #8c8970;
-  --muted-txt:  #8c8970;
-  --line:       #23241a;
-  --line-2:     #333524;
-  --panel:      rgba(13, 14, 9, 0.90);
-  --panel-solid:#0f100a;
-  --green:      #9fb84a;
-  --green-deep: #88a23b;
-  --green-soft: #1e2410;
-  --orange:     #ff6b1a;
-  --orange-soft:#2a1b0e;
-  --link:       #6BAED6;
-  --accent-glow: 0 0 0 1px rgba(255,107,26,.55), 0 0 22px rgba(255,107,26,.40);
-  --shadow:     0 1px 2px rgba(0,0,0,.5), 0 12px 36px rgba(0,0,0,.55);
-  --shadow-sm:  0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.45);
-  --grid-line:  rgba(159,184,74,.06);
-
-  --danger:      #e9624f;
-  --danger-soft: #2a1310;
-  --warn:        #d98a3c;
-  --success:     #9fb84a;
-
-  --focus-ring-color: var(--orange);
-  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--orange);
-
-  --m-paper:    #0e0f09;
-  --m-paper-2:  #0a0b06;
-  --m-road:     #26271c;
-  --m-road-art: #343626;
-  --m-road-art-edge: #3f4130;
-  --m-water:    #11201f;
-  --m-water-edge:#1a2e2a;
-  --m-park:     #1b2410;
-  --m-park-edge:#26321a;
-  --m-contour:  #1c1d12;
-  --m-label:    #6e6b55;
-  --m-build:    #1a1b12;
-
-  --route:      #ff6b1a;
-  --route-edge: #0b0c08;
-  --route-alt:  #9fb84a;
-
-  color-scheme: dark;
-}
+@import "tokens.css";
 
 /* ============================================================
    bikeroutes.org — COMPONENT STYLES
+   ------------------------------------------------------------
+   All design tokens (palette, type, space, radius, shadow,
+   motion, z-index) live in tokens.css — the single source of
+   truth. This file styles components by referencing tokens.
+   Accessibility states (focus / disabled / error / loading)
+   and the reduced-motion + mobile passes are at the bottom.
    ============================================================ */
 
 * { box-sizing: border-box; }
@@ -230,10 +37,6 @@ h1, h2, h3, h4,
 .map-layer { position: absolute; inset: 0; background: var(--m-paper); }
 .map-svg { width: 100%; height: 100%; display: block; }
 .route-line { transition: stroke-dashoffset .9s cubic-bezier(.22,.61,.36,1); }
-
-/* maplibre attribution tucked + themed */
-.maplibregl-ctrl-attrib { background: var(--panel) !important; color: var(--muted-txt) !important; font-size: 10px !important; border-radius: 8px !important; }
-.maplibregl-ctrl-attrib a { color: var(--ink-2) !important; }
 
 /* tactical grid texture — sits over empty surfaces, very low opacity */
 .app::before {
@@ -269,42 +72,6 @@ h1, h2, h3, h4,
 .brand .mark svg { width: 16px; height: 16px; }
 .brand .name { font-weight: 600; font-size: 15px; letter-spacing: -.01em; font-family: "Outfit", system-ui, sans-serif; }
 .brand .tag { font-size: 11px; color: var(--muted-txt); letter-spacing: .02em; }
-
-/* ---------- Brand lockup (Brand Marks — Final · v1.0) ----------
-   app-icon tile (b-wheel on green chip) + wordmark with Reki's
-   head as the dot on the "i" + release chip. */
-.brand .app-tile {
-  width: 30px; height: 30px; border-radius: 9px; flex: none;
-  background: var(--green); display: grid; place-items: center;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), var(--shadow-sm);
-}
-.brand .app-tile svg {
-  width: 21px; height: 21px;
-  color: var(--brand-cream-white);
-  --ac: var(--brand-blaze-orange);
-}
-.brand-txt { display: flex; flex-direction: column; gap: 1px; }
-
-.wordmark {
-  display: inline-flex; align-items: baseline;
-  font-family: var(--font-head); font-weight: var(--fw-bold);
-  letter-spacing: var(--track-tight); line-height: 1; color: var(--ink);
-  font-size: 16.5px;
-}
-.wordmark .tld { color: var(--muted-txt); font-weight: var(--fw-medium); }
-.wordmark .i-slot { position: relative; display: inline-block; width: .2em; height: .74em; vertical-align: baseline; }
-.wordmark .i-slot .stem { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: .135em; height: .5em; background: currentColor; border-radius: .05em; }
-.wordmark .i-slot .head { position: absolute; left: 50%; bottom: .6em; transform: translateX(-50%); line-height: 0; }
-.wordmark .i-slot .head svg { display: block; width: .68em; height: .68em; }
-
-.ver-chip {
-  align-self: center; margin-left: 2px;
-  font-size: 9.5px; font-weight: var(--fw-semibold); letter-spacing: .05em;
-  color: var(--orange); background: var(--orange-soft);
-  padding: 3px 7px; border-radius: var(--radius-pill);
-  border: 1px solid color-mix(in oklab, var(--orange) 34%, transparent);
-  white-space: nowrap;
-}
 
 .nav {
   display: flex; align-items: center; gap: 2px;
@@ -555,6 +322,9 @@ h1, h2, h3, h4,
    ACCESSIBILITY — focus, states, links
    ============================================================ */
 
+/* Visible keyboard focus everywhere. Pointer users never see it
+   (:focus-visible), keyboard users always do. Replaces the old
+   blanket outline:none on inputs. */
 :where(a, button, input, [role="button"], [role="tab"], .opt, .chip, .seg button, .modetabs button):focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
@@ -568,10 +338,12 @@ h1, h2, h3, h4,
   position: relative;
   z-index: 1;
 }
-.io-row input:focus-visible { outline: none; box-shadow: none; }
+.io-row input:focus-visible { outline: none; box-shadow: none; } /* ring sits on the row */
 
+/* links use the sky-blue brand token, AA-tuned per theme */
 a { color: var(--link); }
 
+/* Disabled — uniform, communicates "not now" without vanishing */
 button:disabled,
 button[aria-disabled="true"],
 .is-disabled,
@@ -583,6 +355,7 @@ input:disabled {
   filter: saturate(.6);
 }
 
+/* Error — inputs and rows. Pair with aria-invalid="true". */
 .io-row.is-error,
 input.is-error,
 [aria-invalid="true"] {
@@ -595,6 +368,7 @@ input.is-error,
   margin: 6px 2px 0; font-weight: var(--fw-medium);
 }
 
+/* Loading — skeleton shimmer + busy buttons */
 .is-loading { position: relative; color: transparent !important; pointer-events: none; }
 .is-loading::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit;
@@ -612,6 +386,7 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 @keyframes br-shimmer { to { background-position: -200% 0; } }
 @keyframes br-spin { to { transform: rotate(360deg); } }
 
+/* respect users who reduce motion — kill non-essential animation */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important;
@@ -623,9 +398,12 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 }
 
 /* ============================================================
-   RESPONSIVE
+   RESPONSIVE — mobile-first refinements
+   The app is laid out for desktop; these adapt it down. Touch
+   targets are floored at --touch-min (44px) on coarse pointers.
    ============================================================ */
 
+/* gloved / touch use — never let a control fall below 44px */
 @media (pointer: coarse) {
   .zoomstack button,
   .theme-toggle button,
@@ -636,6 +414,7 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .modetabs button { min-height: var(--touch-min); }
 }
 
+/* Tablet / large phone — panel becomes a bottom sheet */
 @media (max-width: 720px) {
   .topbar { padding: 12px 12px; gap: 10px; }
   .privacy, .nav, .readout { display: none; }
@@ -643,6 +422,7 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .pillbtn.solid .btn-label { display: none; }
   .pillbtn.solid svg { width: 18px; height: 18px; }
 
+  /* bottom sheet: anchored to the bottom, swipe/scroll its body */
   .panel {
     top: auto; bottom: 0; left: 0; right: 0; width: auto;
     max-height: 62vh;
@@ -659,37 +439,11 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .summary .dist { font-size: var(--text-2xl); }
 }
 
+/* Small phone */
 @media (max-width: 420px) {
   .brand .tag { display: none; }
-  .ver-chip { display: none; }
   .topbar { padding: 10px 8px; }
   .panel { max-height: 70vh; }
   .mapctl { bottom: calc(70vh + 12px); }
   .stat-grid { grid-template-columns: 1fr 1fr; }
 }
-
-/* ---------- Legacy UI classes (kept for compatibility) ---------- */
-.marker { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-sm); cursor: pointer; }
-.marker.start { background: var(--green); }
-.marker.dest { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-soft), var(--shadow); }
-
-.io-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 0 0 12px 12px; z-index: 100; box-shadow: var(--shadow); max-height: 240px; overflow-y: auto; }
-.io-item { padding: 10px 13px; cursor: pointer; }
-.io-item:hover { background: var(--paper-2); }
-.io-item .n { font-weight: 600; font-size: 14px; }
-.io-item .d { font-size: 12px; color: var(--muted-txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.prefs { display: flex; gap: 8px; margin-top: 16px; }
-.prefs button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink-2); font-size: 13px; font-weight: 500; cursor: pointer; }
-.prefs button.active { background: var(--orange); color: #fff; border-color: var(--orange); }
-
-/* Tentacles (Redesign Shell) */
-#tentacles { position: fixed; inset: 0; pointer-events: none; opacity: 0.15; overflow: hidden; z-index: -1; }
-.tentacle, .tentacle::before { position: absolute; border-radius: 999px; transform-origin: top center; animation: drift var(--dur) ease-in-out infinite alternate; }
-.tentacle { width: 1.5px; height: var(--len); left: var(--x); top: -8vh; background: linear-gradient(120deg, var(--green), transparent); filter: blur(0.2px); }
-.tentacle::before { content: ""; inset: 0; width: 17px; left: -4px; background: linear-gradient(120deg, var(--green), transparent); opacity: 0.5; }
-@keyframes drift {
-  from { transform: rotate(calc(var(--rot) * -2)) translateY(0); }
-  to { transform: rotate(var(--rot)) translateY(2vh); }
-}
-@media (prefers-reduced-motion: reduce) { .tentacle { animation: none; } }

@@ -1,8 +1,18 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
-import * as BR from './api';
-import './tokens.css';
-import './styles.css';
+/* ============================================================
+   live-app.jsx — functional BikeRoutes app
+   Real MapLibre basemap + live geocoding + live bike routing.
+   UI chrome reuses styles.css (Tactical Hi-Tech / MO Camo).
+   ------------------------------------------------------------
+   Re-integrated from the design mock + MVP spec:
+   R2 elevation scrub (tooltip + crosshair + synced map dot)
+   R3 difficulty rating + avg grade
+   R5 turn hover-to-locate on map
+   R6 scale bar + live coordinate readout
+   R7 place search (geocode-backed; NL/semantic via Vectorize later)
+   R8 KML export (alongside GPX)
+   R9 multi-waypoint routing + drag-to-adjust markers
+   ============================================================ */
+const { useState, useEffect, useRef, useCallback } = React;
 
 /* ---- icons ---- */
 const Ic = {
@@ -24,7 +34,7 @@ const Ic = {
 };
 const turnIcon = (t) => t === "left" ? Ic.left : t === "right" ? Ic.right : t === "arrive" ? Ic.flag : Ic.dot;
 
-/* ---- Reki mascot ---- */
+/* ---- Reki mascot (new flat-vector head — crisp at any size) ---- */
 function Reki({ size = 64, mood = "scout" }) {
   const lines = {
     scout: "Reki's scouting the route…",
@@ -101,7 +111,7 @@ function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, ca
   );
 }
 
-/* ---- place search: jump the map to a place ---- */
+/* ---- place search: jump the map to a place (R7) ---- */
 function PlaceSearch({ onJump }) {
   const [q, setQ] = useState("");
   const [list, setList] = useState([]);
@@ -144,7 +154,7 @@ function PlaceSearch({ onJump }) {
   );
 }
 
-/* ---- elevation chart with hover tooltip + crosshair ---- */
+/* ---- elevation chart with hover tooltip + crosshair, drives map scrub (R2) ---- */
 function ElevLive({ elev, dist, onScrub }) {
   const ref = useRef(null);
   const [tip, setTip] = useState(null);
@@ -163,6 +173,7 @@ function ElevLive({ elev, dist, onScrub }) {
   const move = (e) => {
     const rect = ref.current.getBoundingClientRect();
     const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    // nearest sample for the readout
     const dAt = frac * maxD;
     let near = elev[0];
     for (const p of elev) if (Math.abs(p.d - dAt) < Math.abs(near.d - dAt)) near = p;
@@ -199,10 +210,10 @@ function ElevLive({ elev, dist, onScrub }) {
 }
 
 /* ============================ APP ============================ */
-export default function LiveApp() {
+function LiveApp() {
   const [theme, setTheme] = useState(() => localStorage.getItem("br-theme") || "dark");
   const [pref, setPref] = useState("balanced");
-  const [wps, setWps] = useState([]);
+  const [wps, setWps] = useState([]);           // waypoints: [{lng,lat,label}]
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -211,13 +222,14 @@ export default function LiveApp() {
 
   const mapRef = useRef(null);
   const mapObj = useRef(null);
-  const wpMarkers = useRef([]);
-  const scrubMarker = useRef(null);
-  const turnMarker = useRef(null);
+  const wpMarkers = useRef([]);     // draggable waypoint markers
+  const scrubMarker = useRef(null); // elevation scrub dot
+  const turnMarker = useRef(null);  // turn hover dot
   const reqId = useRef(0);
   const wpsRef = useRef(wps);
   useEffect(() => { wpsRef.current = wps; }, [wps]);
 
+  /* ---- map style ---- */
   const tileArr = (th) => ["a", "b", "c"].map(s =>
     th === "dark"
       ? `https://${s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png`
@@ -240,10 +252,12 @@ export default function LiveApp() {
       layout: { "line-cap": "round", "line-join": "round" } });
   }, [theme]);
 
+  /* ---- scale bar computation (R6) ---- */
   const updateScale = useCallback(() => {
     const map = mapObj.current; if (!map) return;
     const c = map.getCenter();
     const mpp = 156543.03392 * Math.cos(c.lat * Math.PI / 180) / Math.pow(2, map.getZoom());
+    // pick a "nice" distance close to ~84px wide
     const targetM = mpp * 84;
     const pow = Math.pow(10, Math.floor(Math.log10(targetM)));
     const n = targetM / pow;
@@ -253,19 +267,9 @@ export default function LiveApp() {
     setReadout(r => ({ ...r, scale: { px, label } }));
   }, []);
 
-  /* ---- theme ---- */
+  /* ---- map init ---- */
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("br-theme", theme);
-    const map = mapObj.current;
-    if (!map) return;
-    map.setStyle(styleFor(theme));
-    map.once("styledata", () => { addRouteLayers(); pushRoute(result); });
-  }, [theme]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* ---- waypoint markers (draggable) — rebuild on change (R9) ---- */
-  useEffect(() => {
-    if (!mapRef.current || mapObj.current) return;
+    if (!window.maplibregl || mapObj.current) return;
     const map = new maplibregl.Map({
       container: mapRef.current, style: styleFor(theme),
       center: [BR.HOME.lng, BR.HOME.lat], zoom: BR.HOME.zoom, attributionControl: false,
@@ -281,60 +285,10 @@ export default function LiveApp() {
       const label = await BR.reverse(pt.lng, pt.lat);
       setWps(prev => prev.map(w => (w === pt ? { ...w, label } : w)));
     });
-    window.addEventListener("resize", () => map.resize());
     return () => { map.remove(); mapObj.current = null; };
   }, []);
 
-    wps.forEach((pt, i) => {
-      const isFirst = i === 0;
-      const isLast = i === wps.length - 1 && wps.length > 1;
-      const el = document.createElement("div");
-      let anchor = "center";
-      if (isLast) {
-        el.style.cssText = "cursor:grab;line-height:0;";
-        el.innerHTML = wingSVG(34);
-        anchor = "bottom";
-      } else {
-        const color = isFirst ? "#9fb84a" : "#d4a96a";
-        el.style.cssText =
-          `width:${isFirst ? 20 : 16}px;height:${isFirst ? 20 : 16}px;border-radius:50%;` +
-          `background:${color};border:3px solid ${edge};box-shadow:0 2px 6px rgba(0,0,0,.5);` +
-          `cursor:grab;display:grid;place-items:center;color:#0b0c08;` +
-          `font:700 9px/1 'IBM Plex Mono',monospace;`;
-        if (!isFirst) el.textContent = String(i);
-      }
-      const mk = new maplibregl.Marker({ element: el, draggable: true, anchor })
-        .setLngLat([pt.lng, pt.lat])
-        .addTo(map);
-      mk.on("dragstart", () => { el.style.cursor = "grabbing"; });
-      mk.on("dragend", async () => {
-        el.style.cursor = "grab";
-        const ll = mk.getLngLat();
-        const idx = i;
-        setWps(prev => prev.map((w, j) =>
-          j === idx ? { ...w, lng: ll.lng, lat: ll.lat, label: "Locating…" } : w
-        ));
-        const label = await BR.reverse(ll.lng, ll.lat);
-        setWps(prev => prev.map((w, j) => j === idx ? { ...w, label } : w));
-      });
-      wpMarkers.current.push(mk);
-    });
-  }, [wps, theme]);
-
-  /* ---- push route geometry to map ---- */
-  const pushRoute = (res) => {
-    const map = mapObj.current;
-    if (!map || !map.getSource) return;
-    const src = map.getSource("route");
-    if (!src) return;
-    src.setData(
-      res
-        ? { type: "Feature", geometry: { type: "LineString", coordinates: res.coords } }
-        : { type: "FeatureCollection", features: [] }
-    );
-  };
-
-  /* ---- compute route when waypoints / pref change ---- */
+  /* ---- theme ---- */
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("br-theme", theme);
@@ -343,6 +297,7 @@ export default function LiveApp() {
     map.once("styledata", () => { addRouteLayers(); pushRoute(result); });
   }, [theme]);
 
+  /* ---- waypoint markers (draggable) — rebuild on change (R9) ---- */
   useEffect(() => {
     const map = mapObj.current; if (!map) return;
     wpMarkers.current.forEach(m => m.remove());
@@ -354,6 +309,7 @@ export default function LiveApp() {
       const el = document.createElement("div");
       let anchor = "center";
       if (isLast) {
+        // destination → caduceus wing pin, anchored at the staff tip
         el.style.cssText = "cursor:grab;line-height:0;";
         el.innerHTML = wingSVG(34);
         anchor = "bottom";
@@ -376,12 +332,14 @@ export default function LiveApp() {
     });
   }, [wps, theme]);
 
+  /* ---- push route geometry to map ---- */
   const pushRoute = (res) => {
     const map = mapObj.current; if (!map || !map.getSource) return;
     const src = map.getSource("route"); if (!src) return;
     src.setData(res ? { type: "Feature", geometry: { type: "LineString", coordinates: res.coords } } : { type: "FeatureCollection", features: [] });
   };
 
+  /* ---- compute route when waypoints / pref change ---- */
   useEffect(() => {
     const valid = wps.filter(Boolean);
     if (valid.length < 2) { setResult(null); pushRoute(null); return; }
@@ -391,18 +349,15 @@ export default function LiveApp() {
       if (id !== reqId.current) return;
       setLoading(false); setResult(res); pushRoute(res);
       const map = mapObj.current;
-      if (map && res && res.coords && res.coords.length) {
+      if (map && res && res.coords.length) {
         const lngs = res.coords.map(c => c[0]), lats = res.coords.map(c => c[1]);
         map.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
           { padding: { top: 90, bottom: 90, left: 420, right: 90 }, duration: 700 });
       }
-    }).catch(e => {
-      if (id !== reqId.current) return;
-      setLoading(false);
-      console.error("Route error:", e);
     });
   }, [wps, pref]);
 
+  /* ---- elevation scrub → map dot (R2) ---- */
   const onScrub = useCallback((frac) => {
     const map = mapObj.current; if (!map) return;
     if (frac == null || !result) {
@@ -419,6 +374,7 @@ export default function LiveApp() {
     } else scrubMarker.current.setLngLat(pt);
   }, [result]);
 
+  /* ---- turn hover → map dot (R5) ---- */
   useEffect(() => {
     const map = mapObj.current; if (!map) return;
     if (hoverTurn == null || !result || !result.turns[hoverTurn]) {
@@ -433,6 +389,7 @@ export default function LiveApp() {
     } else turnMarker.current.setLngLat(at);
   }, [hoverTurn, result]);
 
+  /* ---- exports (R8) ---- */
   const download = (text, name, mime) => {
     const url = URL.createObjectURL(new Blob([text], { type: mime }));
     const a = document.createElement("a"); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
@@ -448,12 +405,14 @@ export default function LiveApp() {
     download(`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>BikeRoutes route</name><Placemark><name>Route</name><LineString><tessellate>1</tessellate><coordinates>${line}</coordinates></LineString></Placemark></Document></kml>`, "route.kml", "application/vnd.google-earth.kml+xml");
   };
 
+  /* ---- waypoint helpers ---- */
   const setWp = (i, d) => setWps(prev => prev.map((w, j) => (j === i ? { lng: d.lng, lat: d.lat, label: d.short } : w)));
   const appendWp = (d) => setWps(prev => [...prev, { lng: d.lng, lat: d.lat, label: d.short }]);
   const removeWp = (i) => setWps(prev => prev.filter((_, j) => j !== i));
   const reverseWps = () => setWps(prev => [...prev].reverse());
   const jumpTo = (d) => { const map = mapObj.current; if (map) map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 13), duration: 800 }); };
 
+  /* ---- derived stats (R3) ---- */
   const grade = result ? (result.ascend / Math.max(1, result.dist) * 100) : 0;
   const mPerKm = result ? result.ascend / Math.max(0.1, result.dist / 1000) : 0;
   const diff = !result ? 0 : mPerKm < 8 ? 1 : mPerKm < 18 ? 2 : 3;
@@ -462,9 +421,9 @@ export default function LiveApp() {
 
   const srcBadge = result && (
     <span className="mono" style={{ fontSize: 10.5, padding: "2px 7px", borderRadius: 5,
-      background: result.source === "valhalla" ? "var(--green-soft)" : "var(--orange-soft)",
-      color: result.source === "valhalla" ? "var(--green)" : "var(--orange)", fontWeight: 600 }}>
-      {result.source === "valhalla" ? "live · Valhalla" : result.source || "estimate"}
+      background: result.source === "brouter" ? "var(--green-soft)" : "var(--orange-soft)",
+      color: result.source === "brouter" ? "var(--green)" : "var(--orange)", fontWeight: 600 }}>
+      {result.source === "brouter" ? "live · BRouter" : "estimate"}
     </span>
   );
 
@@ -591,7 +550,7 @@ export default function LiveApp() {
                   <div key={i} className="turn" onMouseEnter={() => setHoverTurn(i)} onMouseLeave={() => setHoverTurn(null)}>
                     <div className="ic">{turnIcon(t.type)}</div>
                     <div className="body">
-                      <div className="road">{(t.type === "start" ? "Depart" : t.type === "arrive" ? "Arrive at destination" : t.type === "left" ? "Turn left" : t.type === "right" ? "Turn right" : "Continue") + ((t.road && t.type !== "start" && t.type !== "arrive" && !["Continue", "Start", "Arrive at destination"].includes(t.road)) ? ` onto ${t.road}` : "")}</div>
+                      <div className="road">{(t.type === "start" ? "Depart" : t.type === "arrive" ? "Arrive at destination" : t.type === "left" ? "Turn left" : "Turn right") + ((t.road && t.type !== "start" && t.type !== "arrive" && !["Continue", "Start", "Arrive at destination"].includes(t.road)) ? ` onto ${t.road}` : "")}</div>
                       {t.dist > 0 && <div className="meta mono">{(t.dist / 1000).toFixed(1)} km</div>}
                     </div>
                   </div>
@@ -610,7 +569,7 @@ export default function LiveApp() {
         </div>
       </div>
 
-      {/* SCALE + COORDS */}
+      {/* SCALE + COORDS (R6) */}
       <div className="readout">
         <div className="scalebar">
           <div className="bar" style={{ width: readout.scale ? readout.scale.px + "px" : "80px" }} />
@@ -621,3 +580,5 @@ export default function LiveApp() {
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")).render(<LiveApp />);

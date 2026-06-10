@@ -1,122 +1,91 @@
 /**
- * /api/geocode & /api/reverse — Nominatim proxy with KV caching
+ * /api/geocode  GET ?q=...         → [{label, short, kind, lng, lat}]
+ * /api/reverse  GET ?lng=&lat=     → "display string"
+ *
+ * Proxies Nominatim with a proper User-Agent (required by OSM policy).
+ * Results cached in GEO_CACHE KV — geocode TTL 30 days, reverse 7 days.
+ * All external calls are server-side only; never exposed to the client.
  */
 
 import { Hono } from "hono";
-import { logger } from "../lib/logger";
 
 export const geocodeRoutes = new Hono<{ Bindings: Env }>();
-export const reverseRoutes = new Hono<{ Bindings: Env }>();
 
-async function sha256Short(data: string): Promise<string> {
-	const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(data));
-	return Array.from(new Uint8Array(buf)).slice(0, 8)
-		.map(b => b.toString(16).padStart(2, "0")).join("");
+const NOMINATIM = "https://nominatim.openstreetmap.org";
+const UA = "bikeroutes.org/1.0 (contact@bikeroutes.org)";
+
+/* ── helpers ────────────────────────────────────────────────────────────── */
+
+function kvKey(prefix: string, val: string) {
+	// normalise: lowercase, collapse whitespace
+	return `${prefix}:${val.trim().toLowerCase().replace(/\s+/g, " ")}`;
 }
 
-/**
- * GET /api/geocode?q=query
- */
-geocodeRoutes.get("/", async (c) => {
-	const query = c.req.query("q");
-	if (!query || query.length < 2) {
-		return c.json({ error: "Query too short" }, 400);
-	}
+/* ── GET /api/geocode?q=... ─────────────────────────────────────────────── */
+geocodeRoutes.get("/geocode", async (c) => {
+	const q = (c.req.query("q") || "").trim();
+	if (q.length < 2) return c.json({ error: "Query too short" }, 400);
 
-	const cacheKey = `geo:${await sha256Short(query)}`;
-	const cached = await c.env.ROUTE_CACHE.get(cacheKey, "json");
+	const cacheKey = kvKey("geo", q);
+	const cached = await c.env.GEO_CACHE.get(cacheKey, "json");
 	if (cached) {
 		return c.json(cached, 200, { "X-Cache": "HIT" });
 	}
 
 	try {
-		const url = `https://nominatim.openstreetmap.org/search?${new URLSearchParams({
-			q: query,
-			format: "json",
-			limit: "5",
-			bounded: "1",
-			viewbox: "-102.0,40.6,-89.0,36.0",
-		})}`;
-		const resp = await fetch(url, {
-			headers: { "User-Agent": "BikeRoutes.org/1.0 (bikeroutes.org)" },
-		});
-		const data = await resp.json() as Array<{
-			place_id: number;
-			display_name: string;
-			lat: string;
-			lon: string;
-		}>;
+		const url = `${NOMINATIM}/search?format=jsonv2&limit=6&addressdetails=1&q=${encodeURIComponent(q)}`;
+		const res = await fetch(url, { headers: { "User-Agent": UA, "Accept": "application/json" } });
+		if (!res.ok) throw new Error(`Nominatim ${res.status}`);
+		const raw = await res.json() as any[];
 
-		const result = {
-			query,
-			results: data.map((item) => ({
-				id: item.place_id,
-				name: item.display_name.split(",")[0],
-				description: item.display_name,
-				coords: [parseFloat(item.lon), parseFloat(item.lat)],
-			})),
-			reki_says: data.length > 0
-				? `🦌 Reki scouted ${data.length} spots for you!`
-				: "🦌 Hmm, Reki hasn't explored that area yet. Try different words?",
-		};
+		const results = raw.map((d: any) => ({
+			label: d.display_name,
+			short: d.name || d.display_name.split(",")[0],
+			kind: d.type || d.category,
+			lng: parseFloat(d.lon),
+			lat: parseFloat(d.lat),
+		}));
 
+		// Cache 30 days
 		c.executionCtx.waitUntil(
-			c.env.ROUTE_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 86400 })
+			c.env.GEO_CACHE.put(cacheKey, JSON.stringify(results), { expirationTtl: 86400 * 30 })
 		);
 
-		return c.json(result, 200, { "X-Cache": "MISS" });
-	} catch (error) {
-		logger.error("Geocode proxy failed", error, "SEARCH");
-		return c.json({ error: "Geocode failed", message: "Reki got distracted by a butterfly. Try again. 🦋🦌" }, 500);
+		return c.json(results, 200, { "X-Cache": "MISS" });
+	} catch (e) {
+		console.error("geocode error:", e);
+		return c.json({ error: "Geocode failed", message: String(e) }, 502);
 	}
 });
 
-/**
- * GET /api/reverse?lat=...&lon=...
- */
-reverseRoutes.get("/", async (c) => {
-	const lat = parseFloat(c.req.query("lat") || "0");
-	const lon = parseFloat(c.req.query("lon") || "0");
+/* ── GET /api/reverse?lng=&lat= ─────────────────────────────────────────── */
+geocodeRoutes.get("/reverse", async (c) => {
+	const lng = parseFloat(c.req.query("lng") || "");
+	const lat = parseFloat(c.req.query("lat") || "");
+	if (!isFinite(lng) || !isFinite(lat)) return c.json({ error: "Invalid coordinates" }, 400);
 
-	if (!lat || !lon) {
-		return c.json({ error: "lat and lon are required" }, 400);
-	}
-
-	const cacheKey = `rev:${await sha256Short(`${lat.toFixed(4)},${lon.toFixed(4)}`)}`;
-	const cached = await c.env.ROUTE_CACHE.get(cacheKey, "json");
-	if (cached) {
-		return c.json(cached, 200, { "X-Cache": "HIT" });
-	}
+	// round to 4dp for cache key (~11m precision — good enough for reverse)
+	const cacheKey = `rev:${lat.toFixed(4)},${lng.toFixed(4)}`;
+	const cached = await c.env.GEO_CACHE.get(cacheKey);
+	if (cached) return c.json({ label: cached }, 200, { "X-Cache": "HIT" });
 
 	try {
-		const url = `https://nominatim.openstreetmap.org/reverse?${new URLSearchParams({
-			lat: lat.toString(),
-			lon: lon.toString(),
-			format: "json",
-		})}`;
-		const resp = await fetch(url, {
-			headers: { "User-Agent": "BikeRoutes.org/1.0 (bikeroutes.org)" },
-		});
-		const data = await resp.json() as {
-			display_name: string;
-			lat: string;
-			lon: string;
-		};
+		const url = `${NOMINATIM}/reverse?format=jsonv2&lon=${lng}&lat=${lat}`;
+		const res = await fetch(url, { headers: { "User-Agent": UA, "Accept": "application/json" } });
+		if (!res.ok) throw new Error(`Nominatim ${res.status}`);
+		const d = await res.json() as any;
+		const label: string = d.name || (d.display_name || "").split(",").slice(0, 2).join(", ")
+			|| `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
 
-		const result = {
-			name: data.display_name.split(",")[0],
-			description: data.display_name,
-			coords: [parseFloat(data.lon), parseFloat(data.lat)],
-			reki_says: "🦌 Found it!",
-		};
-
+		// Cache 7 days
 		c.executionCtx.waitUntil(
-			c.env.ROUTE_CACHE.put(cacheKey, JSON.stringify(result), { expirationTtl: 86400 })
+			c.env.GEO_CACHE.put(cacheKey, label, { expirationTtl: 86400 * 7 })
 		);
 
-		return c.json(result, 200, { "X-Cache": "MISS" });
-	} catch (error) {
-		logger.error("Reverse geocode proxy failed", error, "SEARCH");
-		return c.json({ error: "Reverse geocode failed", message: "Reki couldn't place that spot. Try again. 🦌" }, 500);
+		return c.json({ label }, 200, { "X-Cache": "MISS" });
+	} catch (e) {
+		console.error("reverse error:", e);
+		// graceful fallback — never leave the UI stranded
+		return c.json({ label: `${lat.toFixed(4)}, ${lng.toFixed(4)}` }, 200);
 	}
 });

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>bikeroutes.org — Design System</title>
+<link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
+<link href="https://fonts.bunny.net/css2?family=Outfit:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="tokens.css" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="design-system-page.css" />
+</head>
+<body>
+
+<!-- ===================== SVG SYMBOL LIBRARY ===================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- primary brand mark: the b-wheel (roundabout → b), take B -->
+  <symbol id="mark-b" viewBox="0 0 40 40">
+    <g fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12.5 7 L12.5 32"/>
+      <circle cx="21.5" cy="24.5" r="8"/>
+      <path d="M28 19 L33 13.5"/>
+    </g>
+    <circle cx="21.5" cy="24.5" r="1.9" fill="currentColor"/>
+    <circle cx="12.5" cy="7" r="2.6" fill="currentColor"/>
+    <circle cx="34" cy="12" r="2.7" fill="var(--ac, #FF6B1A)"/>
+  </symbol>
+
+  <!-- solid b-wheel (favicons / patches) -->
+  <symbol id="mark-b-solid" viewBox="0 0 40 40">
+    <rect x="9.6" y="6" width="5.6" height="28" rx="2.8" fill="currentColor"/>
+    <path fill="currentColor" fill-rule="evenodd"
+      d="M21 15.4 a9.3 9.3 0 1 1 0 18.6 a9.3 9.3 0 1 1 0-18.6 Z
+         M21 20.2 a4.5 4.5 0 1 0 0 9 a4.5 4.5 0 1 0 0-9 Z"/>
+    <circle cx="21" cy="24.7" r="2.4" fill="var(--ac, #FF6B1A)"/>
+  </symbol>
+
+  <!-- caduceus wing — map destination / "Reki Checkpoint" POI marker (utility mark, not a brand logo)
+       body = var(--body), outline = var(--edge), anchored at the staff tip (20,36). -->
+  <symbol id="pin-wing" viewBox="0 0 40 40">
+    <g fill="var(--body,#FF6B1A)" stroke="var(--edge,#0B0C08)" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round">
+      <ellipse cx="12.2" cy="12.4" rx="3.1" ry="9.8" transform="rotate(-63 12.2 12.4)"/>
+      <ellipse cx="14.4" cy="15.2" rx="3" ry="8.4" transform="rotate(-46 14.4 15.2)"/>
+      <ellipse cx="16.5" cy="17.8" rx="2.8" ry="7" transform="rotate(-30 16.5 17.8)"/>
+      <ellipse cx="27.8" cy="12.4" rx="3.1" ry="9.8" transform="rotate(63 27.8 12.4)"/>
+      <ellipse cx="25.6" cy="15.2" rx="3" ry="8.4" transform="rotate(46 25.6 15.2)"/>
+      <ellipse cx="23.5" cy="17.8" rx="2.8" ry="7" transform="rotate(30 23.5 17.8)"/>
+      <path d="M20 35.8 L19.1 33 L19.1 14 Q20 12 20.9 14 L20.9 33 Z"/>
+      <circle cx="20" cy="10.4" r="2.4"/>
+    </g>
+  </symbol>
+
+  <!-- Reki — flat-vector head/bust (favicon · avatar · app icon) -->
+  <symbol id="reki" viewBox="0 0 240 240">
+    <g stroke="#0B0C08" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+      <g fill="none" stroke="#0B0C08" stroke-width="13">
+        <path d="M101,82 Q86,54 82,32"/><path d="M90,58 Q77,51 68,45"/><path d="M84,40 Q73,37 64,36"/>
+        <path d="M139,82 Q154,54 158,32"/><path d="M150,58 Q163,51 172,45"/><path d="M156,40 Q167,37 176,36"/>
+      </g>
+      <g fill="none" stroke="#D4A96A" stroke-width="7">
+        <path d="M101,82 Q86,54 82,32"/><path d="M90,58 Q77,51 68,45"/><path d="M84,40 Q73,37 64,36"/>
+        <path d="M139,82 Q154,54 158,32"/><path d="M150,58 Q163,51 172,45"/><path d="M156,40 Q167,37 176,36"/>
+      </g>
+      <path d="M90,96 C72,84 54,86 45,99 C55,110 73,113 86,108 Z" fill="#C0763C"/>
+      <path d="M150,96 C168,84 186,86 195,99 C185,110 167,113 154,108 Z" fill="#C0763C"/>
+      <path d="M85,98 C72,90 60,92 53,100 C61,107 73,108 82,104 Z" fill="#F0D7B0" stroke-width="0"/>
+      <path d="M155,98 C168,90 180,92 187,100 C179,107 167,108 158,104 Z" fill="#F0D7B0" stroke-width="0"/>
+      <path d="M98,150 C92,176 88,198 88,240 L152,240 C152,198 148,176 142,150 C130,162 110,162 98,150 Z" fill="#C0763C"/>
+      <path d="M120,162 C112,184 110,210 112,240 L128,240 C130,210 128,184 120,162 Z" fill="#FFF5E6"/>
+      <path d="M101,168 L156,196 L151,208 L96,180 Z" fill="#4B5320"/>
+      <rect x="120" y="184" width="13" height="13" rx="2.5" fill="#FF6B1A" transform="rotate(27 126 190)"/>
+      <path d="M120,68 C95,68 80,89 80,114 C80,133 90,147 100,157 C107,164 112,170 120,173 C128,170 133,164 140,157 C150,147 160,133 160,114 C160,89 145,68 120,68 Z" fill="#C0763C"/>
+      <path d="M120,131 C135,131 145,142 145,153 C145,165 133,173 120,174 C107,173 95,165 95,153 C95,142 105,131 120,131 Z" fill="#FFF5E6"/>
+      <ellipse cx="96" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
+      <ellipse cx="144" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
+      <path d="M120,144 C129,144 134,150 131,155 C129,159 123,161 120,161 C117,161 111,159 109,155 C106,150 111,144 120,144 Z" fill="#241A12" stroke-width="3.5"/>
+      <ellipse cx="120" cy="149" rx="5" ry="3" fill="#3a2c1f" stroke-width="0"/>
+      <ellipse cx="101" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
+      <ellipse cx="139" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
+      <circle cx="101" cy="114" r="6.5" fill="#241A12" stroke-width="0"/>
+      <circle cx="139" cy="114" r="6.5" fill="#241A12" stroke-width="0"/>
+      <circle cx="99" cy="111" r="2.1" fill="#FFF5E6" stroke-width="0"/>
+      <circle cx="137" cy="111" r="2.1" fill="#FFF5E6" stroke-width="0"/>
+      <path d="M90,99 Q101,93 112,98" fill="none" stroke="#9E5E2C" stroke-width="4"/>
+      <path d="M128,98 Q139,93 150,99" fill="none" stroke="#9E5E2C" stroke-width="4"/>
+      <path d="M86,84 C84,60 101,48 120,48 C139,48 156,60 154,84 C130,77 110,77 86,84 Z" fill="#4B5320"/>
+      <path d="M88,82 C70,82 57,88 54,97 C61,99 73,97 84,91 C88,88 90,84 90,82 Z" fill="#39401A"/>
+      <path d="M120,48 L120,77" fill="none" stroke="#39401A" stroke-width="3"/>
+      <circle cx="120" cy="50" r="3.4" fill="#FF6B1A" stroke-width="2.5"/>
+      <!-- Mercury wink: winged cap emblem (nav chevron + god-of-roads wings) -->
+      <path d="M112,63.2 C105.5,61.6 99.5,62.8 95.5,66 C100.5,66 104.5,67 106.8,68.3 C101.5,68.9 97.5,70.2 95,72.2 C100.5,71.1 105.5,70.1 112,67.6 Z" fill="#FFF5E6" stroke-width="2.4"/>
+      <path d="M128,63.2 C134.5,61.6 140.5,62.8 144.5,66 C139.5,66 135.5,67 133.2,68.3 C138.5,68.9 142.5,70.2 145,72.2 C139.5,71.1 134.5,70.1 128,67.6 Z" fill="#FFF5E6" stroke-width="2.4"/>
+      <path d="M112,68 L120,60 L128,68 L123,68 L123,75 L117,75 L117,68 Z" fill="#FF6B1A" stroke-width="2.5"/>
+    </g>
+  </symbol>
+
+  <!-- Reki — HEAD ONLY, padded. For the wordmark "i" dot, avatars, badges.
+       viewBox frames antlers→snout with whitespace so nothing clips. No bust/bag. -->
+  <symbol id="reki-head" viewBox="34 20 172 172">
+    <g stroke="#0B0C08" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+      <g fill="none" stroke="#0B0C08" stroke-width="13">
+        <path d="M101,82 Q86,54 82,32"/><path d="M90,58 Q77,51 68,45"/><path d="M84,40 Q73,37 64,36"/>
+        <path d="M139,82 Q154,54 158,32"/><path d="M150,58 Q163,51 172,45"/><path d="M156,40 Q167,37 176,36"/>
+      </g>
+      <g fill="none" stroke="#D4A96A" stroke-width="7">
+        <path d="M101,82 Q86,54 82,32"/><path d="M90,58 Q77,51 68,45"/><path d="M84,40 Q73,37 64,36"/>
+        <path d="M139,82 Q154,54 158,32"/><path d="M150,58 Q163,51 172,45"/><path d="M156,40 Q167,37 176,36"/>
+      </g>
+      <path d="M90,96 C72,84 54,86 45,99 C55,110 73,113 86,108 Z" fill="#C0763C"/>
+      <path d="M150,96 C168,84 186,86 195,99 C185,110 167,113 154,108 Z" fill="#C0763C"/>
+      <path d="M85,98 C72,90 60,92 53,100 C61,107 73,108 82,104 Z" fill="#F0D7B0" stroke-width="0"/>
+      <path d="M155,98 C168,90 180,92 187,100 C179,107 167,108 158,104 Z" fill="#F0D7B0" stroke-width="0"/>
+      <path d="M120,68 C95,68 80,89 80,114 C80,133 90,147 100,157 C107,164 112,170 120,173 C128,170 133,164 140,157 C150,147 160,133 160,114 C160,89 145,68 120,68 Z" fill="#C0763C"/>
+      <path d="M120,131 C135,131 145,142 145,153 C145,165 133,173 120,174 C107,173 95,165 95,153 C95,142 105,131 120,131 Z" fill="#FFF5E6"/>
+      <ellipse cx="96" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
+      <ellipse cx="144" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
+      <path d="M120,144 C129,144 134,150 131,155 C129,159 123,161 120,161 C117,161 111,159 109,155 C106,150 111,144 120,144 Z" fill="#241A12" stroke-width="3.5"/>
+      <ellipse cx="120" cy="149" rx="5" ry="3" fill="#3a2c1f" stroke-width="0"/>
+      <ellipse cx="101" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
+      <ellipse cx="139" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
+      <circle cx="101" cy="114" r="6.5" fill="#241A12" stroke-width="0"/>
+      <circle cx="139" cy="114" r="6.5" fill="#241A12" stroke-width="0"/>
+      <circle cx="99" cy="111" r="2.1" fill="#FFF5E6" stroke-width="0"/>
+      <circle cx="137" cy="111" r="2.1" fill="#FFF5E6" stroke-width="0"/>
+      <path d="M90,99 Q101,93 112,98" fill="none" stroke="#9E5E2C" stroke-width="4"/>
+      <path d="M128,98 Q139,93 150,99" fill="none" stroke="#9E5E2C" stroke-width="4"/>
+      <path d="M86,84 C84,60 101,48 120,48 C139,48 156,60 154,84 C130,77 110,77 86,84 Z" fill="#4B5320"/>
+      <path d="M88,82 C70,82 57,88 54,97 C61,99 73,97 84,91 C88,88 90,84 90,82 Z" fill="#39401A"/>
+      <path d="M120,48 L120,77" fill="none" stroke="#39401A" stroke-width="3"/>
+      <circle cx="120" cy="50" r="3.4" fill="#FF6B1A" stroke-width="2.5"/>
+      <path d="M112,63.2 C105.5,61.6 99.5,62.8 95.5,66 C100.5,66 104.5,67 106.8,68.3 C101.5,68.9 97.5,70.2 95,72.2 C100.5,71.1 105.5,70.1 112,67.6 Z" fill="#FFF5E6" stroke-width="2.4"/>
+      <path d="M128,63.2 C134.5,61.6 140.5,62.8 144.5,66 C139.5,66 135.5,67 133.2,68.3 C138.5,68.9 142.5,70.2 145,72.2 C139.5,71.1 134.5,70.1 128,67.6 Z" fill="#FFF5E6" stroke-width="2.4"/>
+      <path d="M112,68 L120,60 L128,68 L123,68 L123,75 L117,75 L117,68 Z" fill="#FF6B1A" stroke-width="2.5"/>
+    </g>
+  </symbol>
+
+  <!-- Reki — side-profile SILHOUETTE, tail up (watermark · loading) -->
+  <symbol id="reki-sil" viewBox="0 0 120 120">
+    <g fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <!-- legs (mid-bound) -->
+      <g stroke-width="7" fill="none">
+        <path d="M44,66 L34,101"/>
+        <path d="M52,68 Q49,86 60,100"/>
+        <path d="M82,66 L92,101"/>
+        <path d="M74,68 Q72,86 64,100"/>
+      </g>
+      <!-- body -->
+      <ellipse cx="60" cy="58" rx="31" ry="17" transform="rotate(-7 60 58)"/>
+      <ellipse cx="40" cy="57" rx="16" ry="15"/>
+      <ellipse cx="80" cy="58" rx="14" ry="14"/>
+      <!-- tail, flagged up -->
+      <path d="M28,50 Q22,32 29,28 Q35,38 33,52 Z" stroke-width="1"/>
+      <!-- neck -->
+      <path d="M82,52 L92,30 L102,34 L92,60 Z" stroke-width="1"/>
+      <!-- head, muzzle up-right -->
+      <ellipse cx="101" cy="29" rx="13.5" ry="7.5" transform="rotate(-33 101 29)"/>
+      <!-- ear -->
+      <path d="M92,26 L86,15 L96,23 Z" stroke-width="1"/>
+      <!-- antlers -->
+      <g stroke-width="3.4" fill="none">
+        <path d="M100,20 Q98,9 105,5"/>
+        <path d="M101,16 Q108,11 113,11"/>
+        <path d="M104,11 Q110,7 115,6"/>
+      </g>
+    </g>
+  </symbol>
+</svg>
+
+<!-- ===================== TOP BAR ===================== -->
+<header class="ds-top">
+  <div class="id">
+    <span class="tile" style="--ac:var(--orange);color:var(--orange)"><svg viewBox="0 0 40 40"><use href="#mark-b"/></svg></span>
+    bikeroutes.org
+  </div>
+  <span class="ver">design system · v1.0</span>
+  <span class="sp"></span>
+  <div class="theme-toggle" role="group" aria-label="Theme">
+    <button id="t-dark" class="active" aria-label="Dark theme" title="Tactical (dark)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <button id="t-light" aria-label="Light theme" title="Daylight (light)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M5 5l1.7 1.7M17.3 17.3 19 19M19 5l-1.7 1.7M6.7 17.3 5 19"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="ds-wrap">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="ds-hero">
+    <div class="eyebrow">bikeroutes.org · brand & UI</div>
+    <h1>Tactical Hi-Tech<br>Design System</h1>
+    <p>The single source of truth for bikeroutes.org — a rugged, map-first tool for cyclists. Camo-inspired surfaces, blaze-orange focus, and Reki the deer for warmth. Every token here is defined once in <span class="mono">tokens.css</span> and consumed by the live product.</p>
+    <div class="meta">
+      <span>MO Camo Edition</span>
+      <span>Outfit · IBM Plex</span>
+      <span>Light + Dark</span>
+      <span>WCAG AA</span>
+      <span>Mobile-first</span>
+    </div>
+  </section>
+
+  <!-- ===================== COLOR ===================== -->
+  <section class="ds-sec" id="color">
+    <h2><span class="n">01</span> Color</h2>
+    <p class="lead">Eight fixed brand colors form the palette. The UI never references a raw hex — it uses theme-aware <b>semantic tokens</b> that map onto the brand colors, occasionally AA-tuned for contrast on a given surface.</p>
+
+    <div class="ds-sub">Brand palette · fixed</div>
+    <div class="sw-grid" id="brand-sw"></div>
+
+    <div class="ds-sub">Semantic tokens · current theme</div>
+    <p class="lead" style="margin-bottom:16px">Toggle the theme (top-right) to see these remap. Dark is the primary expression; light is "Daylight Trail Tan".</p>
+    <div class="tok-grid" id="sem-sw"></div>
+
+    <div class="ds-sub">Contrast — text on surface</div>
+    <div class="contrast-row" id="contrast"></div>
+  </section>
+
+  <!-- ===================== TYPE ===================== -->
+  <section class="ds-sec" id="type">
+    <h2><span class="n">02</span> Typography</h2>
+    <p class="lead">Two families do the work: <b>Outfit</b> (geometric, modern) for headers and the wordmark; <b>IBM Plex Sans</b> (highly legible) for UI and trail data. <b>IBM Plex Mono</b> carries coordinates, captions, and data readouts. No aggressive all-caps body — legibility wins on a glaring phone screen outdoors.</p>
+
+    <div class="ds-sub">Families</div>
+    <div class="font-card">
+      <div class="fc"><div class="big" style="font-family:var(--font-head)">Ag</div><div class="nm" style="font-family:var(--font-head)">Outfit</div><div class="lbl">--font-head · headers, wordmark · 400–700</div></div>
+      <div class="fc"><div class="big" style="font-family:var(--font-body)">Ag</div><div class="nm" style="font-family:var(--font-body)">IBM Plex Sans</div><div class="lbl">--font-body · UI, trail data · 400–700</div></div>
+      <div class="fc"><div class="big" style="font-family:var(--font-mono)">Ag</div><div class="nm" style="font-family:var(--font-mono)">IBM Plex Mono</div><div class="lbl">--font-mono · coords, captions · 400–600</div></div>
+    </div>
+
+    <div class="ds-sub">Type scale</div>
+    <div id="type-scale"></div>
+  </section>
+
+  <!-- ===================== SPACE / RADIUS / ELEVATION ===================== -->
+  <section class="ds-sec" id="space">
+    <h2><span class="n">03</span> Space, Radius &amp; Elevation</h2>
+    <p class="lead">A 4px base grid (the 24px tactical texture is 6 units). Radii step from nested controls up to floating panels. Elevation is a two-tier shadow system plus the blaze focus glow.</p>
+
+    <div class="ds-sub">Spacing · 4px base</div>
+    <div class="scale-list" id="space-scale"></div>
+
+    <div class="ds-sub">Radius</div>
+    <div class="scale-list" id="radius-scale"></div>
+
+    <div class="ds-sub">Elevation</div>
+    <div class="shadow-row">
+      <div class="sh" style="box-shadow:var(--shadow-sm)">--shadow-sm</div>
+      <div class="sh" style="box-shadow:var(--shadow)">--shadow</div>
+      <div class="sh" style="box-shadow:var(--accent-glow)">--accent-glow</div>
+    </div>
+  </section>
+
+  <!-- ===================== COMPONENTS ===================== -->
+  <section class="ds-sec" id="components">
+    <h2><span class="n">04</span> Components</h2>
+    <p class="lead">Rendered with the live classes from <span class="mono">styles.css</span> — what you see here is exactly what ships. Each shows its interactive and accessibility states.</p>
+
+    <div class="ds-sub">Buttons</div>
+    <div class="demo">
+      <span class="cap">pill buttons · default / solid / hover-glow / focus / disabled / busy</span>
+      <button class="pillbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> Add stop</button>
+      <button class="pillbtn solid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg> <span class="btn-label">Calculate route</span></button>
+      <button class="pillbtn solid" style="box-shadow:var(--accent-glow)"><span class="btn-label">Hover glow</span></button>
+      <button class="pillbtn" style="box-shadow:var(--focus-ring)">Focus ring</button>
+      <button class="pillbtn" disabled>Disabled</button>
+      <button class="pillbtn solid is-busy" style="min-width:120px">Loading</button>
+    </div>
+    <div class="demo">
+      <span class="cap">action row (in-panel)</span>
+      <div class="stk actions" style="max-width:420px">
+        <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Export GPX</button>
+        <button class="primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg> Start ride</button>
+      </div>
+    </div>
+
+    <div class="ds-sub">Segmented control &amp; tabs</div>
+    <div class="demo col">
+      <span class="cap">route preference · segmented</span>
+      <div class="stk seg" style="max-width:340px">
+        <button class="active">Balanced<span class="sub">recommended</span></button>
+        <button>Quiet<span class="sub">low traffic</span></button>
+        <button>Fast<span class="sub">direct</span></button>
+      </div>
+      <span class="cap" style="margin-top:8px">mode tabs</span>
+      <div class="stk modetabs" style="max-width:340px;border-bottom:1px solid var(--line)">
+        <button class="active">Route</button>
+        <button>Explore</button>
+        <button>Saved</button>
+      </div>
+    </div>
+
+    <div class="ds-sub">Toggles</div>
+    <div class="demo col">
+      <div class="stk opts" style="max-width:360px">
+        <div class="opt on"><span class="lbl">Avoid highways<span class="hint">Prefer separated bike infrastructure</span></span><span class="switch"></span></div>
+        <div class="opt"><span class="lbl">Prefer paved<span class="hint">Penalize gravel &amp; dirt</span></span><span class="switch"></span></div>
+        <div class="opt is-disabled"><span class="lbl">Offline tiles<span class="hint">Pro · unavailable</span></span><span class="switch"></span></div>
+      </div>
+    </div>
+
+    <div class="ds-sub">Inputs — default / focus / error</div>
+    <div class="demo col">
+      <div class="stk io" style="max-width:380px">
+        <div class="io-row"><span class="io-dot a"></span><input value="Loose Park, Kansas City" /></div>
+        <div class="io-row"><span class="io-dot b"></span><input placeholder="Destination" /></div>
+        <button class="io-swap" aria-label="Swap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 10l4-4 4 4M11 6v12"/></svg></button>
+      </div>
+      <div class="stk" style="max-width:380px;margin-top:6px">
+        <div class="io-row is-error" style="border-radius:12px"><span class="io-dot b"></span><input value="Nowheresville" aria-invalid="true" /></div>
+        <div class="field-error"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg> Reki couldn't find that place — try a nearby town.</div>
+      </div>
+    </div>
+
+    <div class="ds-sub">Chips</div>
+    <div class="demo">
+      <span class="chip active">All trails</span>
+      <span class="chip">Paved</span>
+      <span class="chip">Gravel</span>
+      <span class="chip">Scenic</span>
+      <span class="chip">Family</span>
+    </div>
+
+    <div class="ds-sub">Route summary &amp; data</div>
+    <div class="demo col">
+      <div class="stk summary" style="max-width:380px;margin:0">
+        <div class="summary-top">
+          <div class="dist">24.8<span>km</span></div>
+          <div class="time"><b>1h 32m</b> riding</div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat"><div class="k">Climb</div><div class="v">186<small> m</small></div></div>
+          <div class="stat"><div class="k">Descent</div><div class="v">204<small> m</small></div></div>
+        </div>
+        <div class="diffbar"><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="txt">Easy · gentle grades</span></div>
+        <div class="surface">
+          <div class="bar"><span class="paved" style="width:82%"></span><span class="gravel" style="width:18%"></span></div>
+          <div class="legend"><span><i class="pv"></i>Paved 82%</span><span><i class="gv"></i>Gravel 18%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ds-sub">Turn list &amp; privacy badge</div>
+    <div class="demo">
+      <div class="stk turns" style="max-width:360px;margin:0">
+        <div class="turns-head">Cue sheet</div>
+        <div class="turn"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/></svg></span><div class="body"><div class="road">Start · Loose Park</div><div class="meta">Head north on Wornall Rd</div></div><div class="d">0.0</div></div>
+        <div class="turn"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></span><div class="body"><div class="road">Left onto Cliff Dr</div><div class="meta">Continue 2.4 km</div></div><div class="d">240m</div></div>
+        <div class="turn"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span><div class="body"><div class="road">Right onto Riverfront Trail</div><div class="meta">Gravel begins</div></div><div class="d">1.1km</div></div>
+      </div>
+      <div class="privacy" style="position:static">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></svg></span>
+        <div class="txt"><b>No tracking.</b> Routes compute at the edge. <span class="mono">0 cookies</span></div>
+      </div>
+    </div>
+
+    <div class="ds-sub">Contribution badges — Reki earns gear as you level up</div>
+    <div class="badge-track">
+      <div class="badge"><div class="em">🦌</div><div class="lv">Level 0</div><div class="nm">New Rider</div><div class="un">Base Reki, no gear</div></div>
+      <div class="badge"><div class="em">📍</div><div class="lv">Level 1 · 5 edits</div><div class="nm">Trail Scout</div><div class="un">Reki gets his cap</div></div>
+      <div class="badge"><div class="em">🗺️</div><div class="lv">Level 2 · 25 edits</div><div class="nm">Pathfinder</div><div class="un">Reki gets a helmet</div></div>
+      <div class="badge"><div class="em">🛡️</div><div class="lv">Mod role</div><div class="nm">Trail Steward</div><div class="un">Reki gets a vest</div></div>
+      <div class="badge"><div class="em">💛</div><div class="lv">Sustainer</div><div class="nm">Monthly Herd</div><div class="un">Golden tail flag</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== LOGO ===================== -->
+  <section class="ds-sec" id="logo">
+    <h2><span class="n">05</span> Logo System</h2>
+    <p class="lead">The primary mark is the <b>b-wheel</b> — flip the navigation roundabout and the ring-plus-stem reads as a lowercase "b". The route enters the stem, circles the roundabout island, and exits to a blaze destination node. It doubles as the leading letter of the wordmark, so logo and monogram are one object.</p>
+
+    <div class="ds-sub">Primary mark · the b-wheel</div>
+    <div class="logo-stage">
+      <div class="stage-card"><div class="art dark"><svg width="74" height="74" viewBox="0 0 40 40" style="color:var(--brand-cream-white);--ac:var(--brand-blaze-orange)"><use href="#mark-b"/></svg></div><div class="cap"><div class="nm">On hoof</div><div class="ds">Cream stroke, blaze node — the default.</div></div></div>
+      <div class="stage-card"><div class="art olive"><svg width="74" height="74" viewBox="0 0 40 40" style="color:var(--brand-cream-white);--ac:var(--brand-blaze-orange)"><use href="#mark-b"/></svg></div><div class="cap"><div class="nm">On olive</div><div class="ds">Tactical tile / app surface.</div></div></div>
+      <div class="stage-card"><div class="art cream"><svg width="74" height="74" viewBox="0 0 40 40" style="color:var(--brand-dark-hoof);--ac:var(--brand-blaze-orange)"><use href="#mark-b"/></svg></div><div class="cap"><div class="nm">On cream</div><div class="ds">Light / print — ink stroke.</div></div></div>
+      <div class="stage-card"><div class="art paper"><svg width="74" height="74" viewBox="0 0 40 40" style="color:var(--ink);--ac:var(--ink)"><use href="#mark-b"/></svg></div><div class="cap"><div class="nm">Monochrome</div><div class="ds">Single-color · etch / emboss / 1-bit.</div></div></div>
+    </div>
+
+    <div class="ds-sub">Wordmark — Reki's head is the dot on the "i"</div>
+    <div class="demo col" style="gap:26px">
+      <span class="cap">primary lockup</span>
+      <div class="wordmark" style="font-size:46px">b<span class="i-slot"><span class="head"><svg width="30" height="30" viewBox="34 20 172 172"><use href="#reki-head"/></svg></span><span class="stem"></span></span>keroutes<span class="tld">.org</span></div>
+      <div class="wordmark" style="font-size:30px;color:var(--ink)">b<span class="i-slot"><span class="head"><svg width="20" height="20" viewBox="34 20 172 172"><use href="#reki-head"/></svg></span><span class="stem"></span></span>keroutes<span class="tld">.org</span></div>
+    </div>
+
+    <div class="ds-sub">App icon &amp; favicon scaling</div>
+    <div class="fav-row" id="favrow"></div>
+    <p class="lead" style="margin-top:18px">At ≤16px the stroked mark thickens into the <b>solid b-wheel</b> so it never breaks up.</p>
+
+    <div class="ds-sub">Mascot lockup — the full Reki</div>
+    <div class="logo-stage">
+      <div class="stage-card"><div class="art dark"><svg width="120" height="120" viewBox="0 0 240 240"><use href="#reki"/></svg></div><div class="cap"><div class="nm">Full mascot · on hoof</div><div class="ds">Cap + scout bag bust. Hero, about, merch, empty states.</div></div></div>
+      <div class="stage-card"><div class="art cream"><svg width="120" height="120" viewBox="0 0 240 240"><use href="#reki"/></svg></div><div class="cap"><div class="nm">Full mascot · on light</div><div class="ds">Holds up on the Daylight theme &amp; in print.</div></div></div>
+    </div>
+
+    <div class="ds-sub">Map marker — the caduceus wing <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted-txt)">· utility mark, not a brand logo</span></div>
+    <p class="lead" style="margin-bottom:16px">The destination marker is <b>Mercury's wing</b> — the god of roads, travelers &amp; messengers, the patron of everyone moving between places (the same wink as Reki's winged cap). Paired feathers on a slim staff, anchored at the tip where the route lands. Solid blaze body for hunter-safety visibility; the outline flips by theme so it always separates from the tiles. The orb lights up when a marker is <b>selected</b>.</p>
+    <div class="demo">
+      <span class="cap">on dark tiles · default &amp; selected · small sizes</span>
+      <svg width="50" height="50" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:rgba(255,245,230,.85)"><use href="#pin-wing"/></svg>
+      <span class="pin-sel" style="display:inline-grid;place-items:center"><svg width="56" height="56" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:rgba(255,245,230,.95)"><use href="#pin-wing"/></svg></span>
+      <svg width="34" height="34" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:rgba(255,245,230,.85)"><use href="#pin-wing"/></svg>
+      <svg width="24" height="24" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:rgba(255,245,230,.85)"><use href="#pin-wing"/></svg>
+      <svg width="18" height="18" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:rgba(255,245,230,.85)"><use href="#pin-wing"/></svg>
+    </div>
+    <div class="demo" style="background:
+        linear-gradient(rgba(75,83,32,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(75,83,32,.06) 1px, transparent 1px) #efe8d8;
+        background-size: 24px 24px;">
+      <span class="cap" style="color:#7a7461">on light tiles · outline flips to dark-hoof</span>
+      <svg width="50" height="50" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:var(--brand-dark-hoof)"><use href="#pin-wing"/></svg>
+      <svg width="34" height="34" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:var(--brand-dark-hoof)"><use href="#pin-wing"/></svg>
+      <svg width="24" height="24" viewBox="0 0 40 40" style="--body:var(--brand-blaze-orange);--edge:var(--brand-dark-hoof)"><use href="#pin-wing"/></svg>
+      <span style="width:54px;height:54px;border-radius:var(--radius-md);background:var(--brand-camo-olive);display:grid;place-items:center"><svg width="34" height="34" viewBox="0 0 40 40" style="--body:var(--brand-trail-tan);--edge:var(--brand-dark-hoof)"><use href="#pin-wing"/></svg></span>
+    </div>
+  </section>
+
+  <!-- ===================== MASCOT ===================== -->
+  <section class="ds-sec" id="mascot">
+    <h2><span class="n">06</span> Reki — Voice &amp; Usage</h2>
+    <p class="lead">Reki is a yearling white-tailed buck — curious, adventurous, friendly. He's a tool for empathy and brand warmth, never condescending. Use him for the human moments; keep him out of the core routing workflow.</p>
+
+    <div class="voice" style="border-left-color:var(--orange);margin-bottom:8px;max-width:760px">
+      <div class="ctx">Brand wink · why the winged cap</div>
+      <div class="ln" style="color:var(--ink-2)">Reki nods to <b style="color:var(--ink)">Mercury</b> (Greek <b style="color:var(--ink)">Hermes</b>) — the wing-capped god of <b style="color:var(--ink)">roads, travelers, and messengers</b>, the patron of everyone moving between places. His petasos wings flank the cap's navigation chevron, so the emblem reads two ways at once: a <b style="color:var(--ink)">heading arrow</b> and the <b style="color:var(--ink)">god of the road</b>. Antlers say deer; wings say <i>go</i>.</div>
+    </div>
+
+    <div class="use-grid">
+      <div class="use-card do">
+        <span class="tag"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6 9 17l-5-5"/></svg> Use Reki for</span>
+        <ul><li>Empty states &amp; no-results</li><li>404 / error pages</li><li>Loading screens</li><li>Milestones &amp; donation appeals</li></ul>
+      </div>
+      <div class="use-card dont">
+        <span class="tag"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M18 6 6 18M6 6l12 12"/></svg> Never</span>
+        <ul><li>Interrupt the active route flow</li><li>Block a CTA or critical control</li><li>Use the concept-art PNG in product UI</li><li>Redraw him off-palette</li></ul>
+      </div>
+    </div>
+
+    <div class="ds-sub">Voice — example copy</div>
+    <div class="voice-grid">
+      <div class="voice"><div class="ctx">No results</div><div class="ln">"Hmm, Reki hasn't explored that area yet. Try a nearby region?"</div></div>
+      <div class="voice"><div class="ctx">Error</div><div class="ln">"Whoa — Reki tripped on a root. Try again in a sec."</div></div>
+      <div class="voice"><div class="ctx">Export done</div><div class="ln">"GPX downloaded! Reki'll meet you at the trailhead."</div></div>
+      <div class="voice"><div class="ctx">Donation thanks</div><div class="ln">"You're the best. Reki's doing a happy tail-wag right now."</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== ACCESSIBILITY ===================== -->
+  <section class="ds-sec" id="a11y" style="border-bottom:0">
+    <h2><span class="n">07</span> Accessibility</h2>
+    <p class="lead">Built for one-handed, gloved, glaring-sun use on a trail. The system bakes these in so screens inherit them by default.</p>
+    <div class="check">
+      <div class="item"><span class="mk">✓</span><span class="tx"><b>Visible focus.</b> <span>Every interactive element shows a 2px blaze <span class="mono">--focus-ring</span> on keyboard focus (:focus-visible) — never <span class="mono">outline:none</span> with no replacement.</span></span></div>
+      <div class="item"><span class="mk">✓</span><span class="tx"><b>Touch floors.</b> <span>Controls are ≥44px on coarse pointers (<span class="mono">--touch-min</span>).</span></span></div>
+      <div class="item"><span class="mk">✓</span><span class="tx"><b>AA contrast.</b> <span>Body text and accents tuned per theme to clear 4.5:1 on their surface.</span></span></div>
+      <div class="item"><span class="mk">✓</span><span class="tx"><b>Reduced motion.</b> <span>All non-essential animation collapses under <span class="mono">prefers-reduced-motion</span>.</span></span></div>
+      <div class="item"><span class="mk">✓</span><span class="tx"><b>State, not just color.</b> <span>Errors pair <span class="mono">aria-invalid</span> + an icon + text, not red alone.</span></span></div>
+      <div class="item"><span class="mk">✓</span><span class="tx"><b>Color-scheme aware.</b> <span>Native controls follow the theme via <span class="mono">color-scheme</span>.</span></span></div>
+    </div>
+  </section>
+
+  <footer style="padding:40px 0;color:var(--muted-txt);font-size:var(--text-xs);font-family:var(--font-mono)">
+    bikeroutes.org · Tactical Hi-Tech · tokens.css is the source of truth · MO Camo Edition
+  </footer>
+</div>
+
+<script src="design-system-page.js"></script>
+</body>
+</html>
