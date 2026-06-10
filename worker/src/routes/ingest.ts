@@ -113,20 +113,42 @@ ingestRoutes.post("/", async (c) => {
 
 	// ── Source: OSM Overpass ─────────────────────
 	if (source === "osm") {
-		const bbox = url.searchParams.get("bbox") || "38.8,-95.0,39.4,-94.2"; // KC metro default
-		logger.info("Fetching OSM trails", { bbox }, "ADMIN");
+		const bbox = url.searchParams.get("bbox") || "38.8,-95.0,39.4,-94.2";
+		const osmTypes = url.searchParams.get("types") || "trail"; // trail, rail, or both comma-sep
+		logger.info("Fetching OSM features", { bbox, types: osmTypes }, "ADMIN");
 
-		const query = `
-[out:json][timeout:60];
-(
+		const queries: string[] = [];
+		const types = osmTypes.split(",").map(s => s.trim());
+
+		if (types.includes("trail")) {
+			queries.push(`
   way["highway"="cycleway"](${bbox});
   way["highway"="path"]["bicycle"="yes"](${bbox});
   way["highway"="path"]["route"="bicycle"](${bbox});
   way["highway"="track"]["bicycle"="yes"](${bbox});
   relation["route"="bicycle"](${bbox});
-);
-out center tags 50;
-`;
+`);
+		}
+		if (types.includes("rail")) {
+			queries.push(`
+  way["railway"="rail"](${bbox});
+  way["railway"="disused"](${bbox});
+  way["railway"="abandoned"](${bbox});
+  way["railway"="light_rail"](${bbox});
+  way["railway"="tram"](${bbox});
+  way["railway"="rail"]["usage"="main"](${bbox});
+  way["railway"="rail"]["usage"="branch"](${bbox});
+  node["railway"="station"](${bbox});
+  node["railway"="halt"](${bbox});
+  node["railway"="junction"](${bbox});
+`);
+		}
+
+		if (!queries.length) {
+			return c.json({ error: "No valid types specified. Use 'trail', 'rail', or both." }, 400);
+		}
+
+		const query = `[out:json][timeout:90];(${queries.join("")});out geom center tags 50;`;
 
 		const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
 			method: "POST",
@@ -141,26 +163,51 @@ out center tags 50;
 		const overpassData = await overpassRes.json() as { elements?: any[] };
 		const elements = (overpassData.elements || []).filter((e: any) => e.tags?.name);
 
-		// Deduplicate by name + lat/lon rounded to 3 decimals
+		// Deduplicate by source type + id
 		const seen = new Set<string>();
 		const unique: any[] = [];
 		for (const e of elements) {
 			const lat = e.center?.lat ?? e.lat;
 			const lon = e.center?.lon ?? e.lon;
 			if (!lat || !lon) continue;
-			const key = `${e.tags.name}|${lat.toFixed(3)}|${lon.toFixed(3)}`;
+			const key = `${e.type}:${e.id}`;
 			if (!seen.has(key)) { seen.add(key); unique.push(e); }
 		}
 
 		if (!unique.length) {
-			return c.json({ message: "No named trails found in OSM bbox", bbox }, 200);
+			return c.json({ message: "No named features found in OSM bbox", bbox, types: osmTypes }, 200);
 		}
 
-		// Build docs
+		// Build GeoJSON geometry from OSM element
+		function buildGeom(e: any): { geom: any; category: string } {
+			const t = e.tags;
+			let category = "trail";
+			if (t.railway) {
+				if (t.railway === "station" || t.railway === "halt" || t.railway === "junction") category = t.railway;
+				else category = "railway";
+			} else if (e.type === "relation") category = "route";
+			else category = t.highway || "trail";
+
+			if (e.type === "node") {
+				return { geom: { type: "Point", coordinates: [e.lon, e.lat] }, category };
+			}
+			// way or relation — build LineString from geometry nodes
+			if (e.geometry && Array.isArray(e.geometry) && e.geometry.length >= 2) {
+				const coords = e.geometry.map((n: any) => [n.lon, n.lat]);
+				return { geom: { type: "LineString", coordinates: coords }, category };
+			}
+			// fallback: point geometry from center
+			const lat = e.center?.lat ?? e.lat;
+			const lon = e.center?.lon ?? e.lon;
+			return { geom: { type: "Point", coordinates: [lon, lat] }, category };
+		}
+
+		// Build docs for Vectorize + D1
 		const docs = unique.map((e) => {
 			const t = e.tags;
 			const lat = e.center?.lat ?? e.lat;
 			const lon = e.center?.lon ?? e.lon;
+			const { geom, category } = buildGeom(e);
 			const surface = t.surface || t.tracktype || "";
 			const length = t.length || t.distance || "";
 			const difficulty = t.mtb_scale || t.sac_scale || t.trail_visibility || "";
@@ -169,9 +216,10 @@ out center tags 50;
 			return {
 				id,
 				text,
+				geom: JSON.stringify(geom),
 				meta: {
 					name: t.name,
-					category: e.type === "relation" ? "route" : (t.highway || "trail"),
+					category,
 					lat,
 					lon,
 					description: t.description || "",
@@ -183,7 +231,7 @@ out center tags 50;
 			};
 		});
 
-		// Batch embed + upsert
+		// Batch embed + upsert to Vectorize
 		const BATCH_AI = 100;
 		const BATCH_VX = 100;
 		let totalEmbedded = 0;
@@ -206,25 +254,46 @@ out center tags 50;
 			totalEmbedded += vectors.length;
 		}
 
-		// Insert into D1 (skip duplicates)
+		// Insert into trails table + pois table (skip duplicates)
+		const insertTrail = c.env.DB.prepare(
+			"INSERT OR IGNORE INTO trails (id, source, source_type, source_id, name, category, geom, lat, lon, surface, length_m, difficulty, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		);
+		const insertPoi = c.env.DB.prepare(
+			"INSERT OR IGNORE INTO pois (id, name, category, lat, lon, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+		);
+
+		const now = new Date().toISOString();
 		for (const d of docs) {
 			try {
-				await c.env.DB.prepare(
-					"INSERT INTO pois (id, name, category, lat, lon, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-				).bind(d.id, d.meta.name, d.meta.category, d.meta.lat, d.meta.lon, d.meta.description, "indexed", new Date().toISOString()).run();
+				await insertTrail.bind(
+					d.id, "osm", d.meta.source, String(unique[docs.indexOf(d)].id),
+					d.meta.name, d.meta.category, d.geom,
+					d.meta.lat, d.meta.lon,
+					d.meta.surface, d.meta.length_m, d.meta.difficulty,
+					d.meta.description, "approved", now
+				).run();
 				insertedD1++;
-			} catch {
+			} catch (e) {
 				// duplicate id, ignore
 			}
+			// Also insert into pois for backward compatibility (point-based search)
+			try {
+				await insertPoi.bind(
+					d.id, d.meta.name, d.meta.category,
+					d.meta.lat, d.meta.lon, d.meta.description,
+					"indexed", now
+				).run();
+			} catch { /* ignore dupes */ }
 		}
 
 		return c.json({
-			message: `OSM ingestion complete 🦌`,
+			message: `OSM ${osmTypes} ingestion complete 🦌`,
 			found: elements.length,
 			deduplicated: unique.length,
 			indexed: totalEmbedded,
 			insertedToD1: insertedD1,
 			bbox,
+			types: osmTypes,
 		});
 	}
 

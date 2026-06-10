@@ -230,6 +230,7 @@ export default function LiveApp() {
   const [exploreResults, setExploreResults] = useState([]);
   const [exploreBusy, setExploreBusy] = useState(false);
   const [trailsOverlay, setTrailsOverlay] = useState(() => localStorage.getItem("br-trails") !== "off");
+  const [railOverlay, setRailOverlay] = useState(() => localStorage.getItem("br-rail") === "on");
 
   const mapRef = useRef(null);
   const mapObj = useRef(null);
@@ -270,6 +271,53 @@ export default function LiveApp() {
       layout: { visibility: trailsOverlay ? "visible" : "none" } }, "route-casing");
   }, [trailsOverlay]);
 
+  const addRailLayer = useCallback(() => {
+    const map = mapObj.current; if (!map) return;
+    if (map.getSource("rail")) return;
+    map.addSource("rail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+    map.addLayer({
+      id: "rail-lines",
+      type: "line",
+      source: "rail",
+      filter: ["!=", ["get", "category"], "station"],
+      paint: {
+        "line-color": ["match", ["get", "category"],
+          "disused", "#999", "abandoned", "#bbb",
+          "light_rail", "#e67e22", "tram", "#e67e22",
+          "#555"],
+        "line-width": ["match", ["get", "category"],
+          "disused", 1.5, "abandoned", 1,
+          2.5],
+        "line-opacity": ["match", ["get", "category"],
+          "disused", 0.5, "abandoned", 0.3,
+          0.8],
+        "line-dasharray": ["match", ["get", "category"],
+          "disused", [4, 3], "abandoned", [2, 4],
+          [1, 0]],
+      },
+      layout: { visibility: railOverlay ? "visible" : "none" },
+    }, "route-casing");
+    map.addLayer({
+      id: "rail-stations",
+      type: "circle",
+      source: "rail",
+      filter: ["in", ["get", "category"], ["literal", ["station", "halt", "junction"]]],
+      paint: {
+        "circle-radius": 6,
+        "circle-color": "#e67e22",
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#fff",
+        "circle-opacity": 0.9,
+      },
+      layout: { visibility: railOverlay ? "visible" : "none" },
+    }, "route-casing");
+    // Fetch rail data
+    fetch("/api/features?type=rail").then(r => r.json()).then(data => {
+      const src = map.getSource("rail");
+      if (src) src.setData(data);
+    }).catch(() => {});
+  }, [railOverlay]);
+
   const updateScale = useCallback(() => {
     const map = mapObj.current; if (!map) return;
     const c = map.getCenter();
@@ -292,7 +340,7 @@ export default function LiveApp() {
     });
     mapObj.current = map;
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-    map.on("load", () => { addRouteLayers(); addTrailsOverlay(); updateScale(); });
+    map.on("load", () => { addRouteLayers(); addTrailsOverlay(); addRailLayer(); updateScale(); });
     map.on("move", updateScale);
     map.on("mousemove", (e) => setReadout(r => ({ ...r, coords: `${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}` })));
     map.on("click", async (e) => {
@@ -324,7 +372,7 @@ export default function LiveApp() {
     localStorage.setItem("br-theme", theme);
     const map = mapObj.current; if (!map) return;
     map.setStyle(styleFor(theme));
-    map.once("styledata", () => { addRouteLayers(); addTrailsOverlay(); pushRoute(result); });
+    map.once("styledata", () => { addRouteLayers(); addTrailsOverlay(); addRailLayer(); pushRoute(result); });
   }, [theme]);
 
   useEffect(() => {
@@ -454,6 +502,18 @@ export default function LiveApp() {
     setTrailsOverlay(next);
     localStorage.setItem("br-trails", next ? "on" : "off");
     if (map && map.getLayer("trails")) map.setLayoutProperty("trails", "visibility", next ? "visible" : "none");
+  };
+
+  const toggleRail = () => {
+    const map = mapObj.current;
+    const next = !railOverlay;
+    setRailOverlay(next);
+    localStorage.setItem("br-rail", next ? "on" : "off");
+    if (map) {
+      ["rail-lines", "rail-stations"].forEach(id => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", next ? "visible" : "none");
+      });
+    }
   };
 
   const grade = result ? (result.ascend / Math.max(1, result.dist) * 100) : 0;
@@ -639,7 +699,8 @@ export default function LiveApp() {
           <button title="Zoom in" aria-label="Zoom in" onClick={() => mapObj.current && mapObj.current.zoomIn()}>+</button>
           <button title="Zoom out" aria-label="Zoom out" onClick={() => mapObj.current && mapObj.current.zoomOut()}>−</button>
         </div>
-        <button className={"ctlbtn" + (trailsOverlay ? " active" : "")} onClick={toggleTrails} title={trailsOverlay ? "Hide trails overlay" : "Show trails overlay"}>{Ic.layers}</button>
+        <button className={"ctlbtn" + (trailsOverlay ? " active" : "")} onClick={toggleTrails} title={trailsOverlay ? "Hide trails" : "Show trails"}>{Ic.layers}<span className="ctl-label">Trails</span></button>
+        <button className={"ctlbtn" + (railOverlay ? " active" : "")} onClick={toggleRail} title={railOverlay ? "Hide railways" : "Show railways"}>{Ic.layers}<span className="ctl-label">Rail</span></button>
       </div>
 
       {/* SCALE + COORDS */}
