@@ -253,17 +253,7 @@ export default function LiveApp() {
     setReadout(r => ({ ...r, scale: { px, label } }));
   }, []);
 
-  /* ---- theme ---- */
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("br-theme", theme);
-    const map = mapObj.current;
-    if (!map) return;
-    map.setStyle(styleFor(theme));
-    map.once("styledata", () => { addRouteLayers(); pushRoute(result); });
-  }, [theme]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /* ---- waypoint markers (draggable) — rebuild on change (R9) ---- */
+  /* ---- initialise map ---- */
   useEffect(() => {
     if (!mapRef.current || mapObj.current) return;
     const map = new maplibregl.Map({
@@ -284,42 +274,6 @@ export default function LiveApp() {
     window.addEventListener("resize", () => map.resize());
     return () => { map.remove(); mapObj.current = null; };
   }, []);
-
-    wps.forEach((pt, i) => {
-      const isFirst = i === 0;
-      const isLast = i === wps.length - 1 && wps.length > 1;
-      const el = document.createElement("div");
-      let anchor = "center";
-      if (isLast) {
-        el.style.cssText = "cursor:grab;line-height:0;";
-        el.innerHTML = wingSVG(34);
-        anchor = "bottom";
-      } else {
-        const color = isFirst ? "#9fb84a" : "#d4a96a";
-        el.style.cssText =
-          `width:${isFirst ? 20 : 16}px;height:${isFirst ? 20 : 16}px;border-radius:50%;` +
-          `background:${color};border:3px solid ${edge};box-shadow:0 2px 6px rgba(0,0,0,.5);` +
-          `cursor:grab;display:grid;place-items:center;color:#0b0c08;` +
-          `font:700 9px/1 'IBM Plex Mono',monospace;`;
-        if (!isFirst) el.textContent = String(i);
-      }
-      const mk = new maplibregl.Marker({ element: el, draggable: true, anchor })
-        .setLngLat([pt.lng, pt.lat])
-        .addTo(map);
-      mk.on("dragstart", () => { el.style.cursor = "grabbing"; });
-      mk.on("dragend", async () => {
-        el.style.cursor = "grab";
-        const ll = mk.getLngLat();
-        const idx = i;
-        setWps(prev => prev.map((w, j) =>
-          j === idx ? { ...w, lng: ll.lng, lat: ll.lat, label: "Locating…" } : w
-        ));
-        const label = await BR.reverse(ll.lng, ll.lat);
-        setWps(prev => prev.map((w, j) => j === idx ? { ...w, label } : w));
-      });
-      wpMarkers.current.push(mk);
-    });
-  }, [wps, theme]);
 
   /* ---- push route geometry to map ---- */
   const pushRoute = (res) => {
@@ -376,12 +330,7 @@ export default function LiveApp() {
     });
   }, [wps, theme]);
 
-  const pushRoute = (res) => {
-    const map = mapObj.current; if (!map || !map.getSource) return;
-    const src = map.getSource("route"); if (!src) return;
-    src.setData(res ? { type: "Feature", geometry: { type: "LineString", coordinates: res.coords } } : { type: "FeatureCollection", features: [] });
-  };
-
+  /* ---- compute route when waypoints / pref change ---- */
   useEffect(() => {
     const valid = wps.filter(Boolean);
     if (valid.length < 2) { setResult(null); pushRoute(null); return; }
