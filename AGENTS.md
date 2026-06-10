@@ -30,30 +30,71 @@ cd worker && npx wrangler deploy --containers-rollout=none
 cd worker && wrangler tail
 ```
 
-## Git State & Conflicts
+## Git State & Workflow
+- **Commit often, push often** — regressions from lost work kill progress. Every meaningful change gets committed and pushed immediately.
 - `origin/main` often has merged PRs that delete V3 files. **Always merge with `-X ours`** to preserve local redesign.
-- Detached commits (`9a57fbc`, `2e2ac96`) exist from earlier redesign attempts. They are NOT on any branch. Use `git log --all --graph` to see them.
+- Detached commits (`9a57fbc`, `2e2ac96`) exist from earlier redesign attempts. They are NOT on any branch.
 - `design_handoff_backend/` is the **V3 aesthetic source of truth**. Port from it; do not ship it directly.
 
 ## Environment & Secrets
 - **`worker/.dev.vars`** = local-only. **Never deployed.**
-- **Production secrets** via `wrangler secret put NAME`. Required for donations: `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`.
+- **Production secrets** via `wrangler secret put NAME`. Current secrets: `ADMIN_SECRET`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`.
 - **D1 migrations** live in `worker/migrations/`. `predeploy` applies them remotely. If code references new tables, **create a migration first** or production throws "table not found".
+- `ADMIN_SECRET` = `2GxyyUw9mCW1/6MWu7/P0GyjjzV9J0nIPh+qMhN9vVE=` (set as production secret, also in `.dev.vars`).
 
 ## Routing & API Contract
-Per `design_handoff_backend/README.md` and specs:
-- `/api/geocode?q=` — Nominatim proxy (not `/api/search/geocode`)
-- `/api/reverse?lat=&lon=` — reverse geocode proxy
-- `/api/route` — Valhalla (edge container) → FOSSGIS fallback
+- `/api/geocode?q=` — Nominatim proxy (cached via KV)
+- `/api/reverse?lat=&lon=` — reverse geocode proxy (cached via KV)
+- `/api/route` — Valhalla container → FOSSGIS → BRouter fallback chain
 - `/api/search?q=` — semantic search via Vectorize + Workers AI
 - `/api/tiles/*.pmtiles` — PMTiles range proxy from R2
+- `/api/admin/ingest` — OSM Overpass or D1→Vectorize seeding (admin-protected)
+- `/api/admin/sync-gis` — MARC ArcGIS POI sync (admin-protected)
+- `/api/poi/categories` — POI category list
+
+## Frontend: Panel Views
+The UI has two panel modes controlled by `view` state:
+
+### Plan (`view === "plan"`)
+- GeoInput waypoints with autocomplete (/api/geocode)
+- Route preference segmented control (balanced/quiet/fast)
+- Route summary, elevation chart, turn-by-turn directions, export (GPX/KML)
+- Map click to add waypoints, drag markers, reverse waypoints
+
+### Explore (`view === "explore"`)
+- Search bar calls `/api/search` for semantic POI search (Vectorize + Workers AI)
+- Results show name, category, match %
+- Click a result → map flies to that POI
+- Separate `ExploreView` component in `App.jsx`
+
+## Data Stores: Current State
+All seeded and live for KC metro area:
+
+| Store | Contents | Source |
+|-------|----------|--------|
+| D1 `pois` table | 28 OSM trails + MARC POIs (restrooms, bike hubs, food, stadiums) | Overpass API + MARC ArcGIS |
+| Vectorize `bikeroutes-trails` | AI embeddings of all POIs | OSM ingest + MARC sync |
+| KV `ROUTE_CACHE` | Cached route responses | /api/route |
+| KV `RATE_LIMITS` | Per-IP rate limit counters | middleware |
+
+## Brand / UI Decisions (implemented)
+- **No always-visible nav bar** — placeholder nav links and privacy badge removed from desktop. Single info button (ℹ️) opens a modal with: wordmark, nav links (Plan/Explore/Map data/About), privacy notice, version chip, tagline.
+- **Wordmark** is clickable → opens info modal.
+- **Reki deer head** SVG in wordmark "i" dot uses viewBox `0 -3 172 172` (centered, no antler clipping). Same viewBox in the mascot component.
+- **Modal wordmark** rendered at 28px via `.modal .wordmark { font-size: 28px; display: flex; justify-content: center; }`.
+- **Typography**: Outfit heading font, IBM Plex Sans body.
+- **Theme toggle**: sun/moon buttons, persisted in localStorage `br-theme`.
 
 ## Known Gotchas
-- **Valhalla container** is alpha (`@cloudflare/containers` v0.1.0). Docker must be running locally for `wrangler deploy` to build it. Use `--containers-rollout=none` to skip; routing falls back to FOSSGIS.
-- **Frontend geocoding** currently calls Nominatim directly in `App.jsx`. Must be wired to `/api/geocode` for CORS + caching.
-- **Tiles 404** means no `.pmtiles` file exists in R2 yet. This is a data ingestion issue, not a code bug.
+- **Valhalla container** is alpha (`@cloudflare/containers` v0.1.0). Docker must be running locally for `wrangler deploy` to build it. Use `--containers-rollout=none` to skip; routing falls back to FOSSGIS then BRouter.
+- **BRouter fallback** converts GeoJSON to synthetic Valhalla trip format so frontend parsing code works unchanged.
+- **Frontend geocoding** goes through `/api/geocode` proxy (KV-cached), not directly to Nominatim.
+- **Tiles 404** means no `.pmtiles` file exists in R2 yet. Data ingestion issue, not a code bug.
 - **Workers AI model names** (`@cf/baai/bge-base-en-v1.5`) can change. Verify in Cloudflare dashboard if `/api/search` throws model-not-found.
 - **`worker-configuration.d.ts`** is auto-generated by `wrangler types`. Regenerate after changing `wrangler.jsonc` bindings.
+- **OSM Overpass** requires `User-Agent` header; missing header causes 406 errors.
+- **Ingest deduplication** uses `INSERT OR IGNORE` by name+coords to avoid duplicates.
+- **CSP** must allow `static.cloudflareinsights.com` (script-src) and `cloudflareinsights.com` (connect-src) for Cloudflare Web Analytics. Both `frontend/public/_headers` and `worker/public/_headers` must stay in sync.
 
 ## Testing Production
 ```bash
@@ -68,7 +109,15 @@ curl https://bikeroutes.org/api/donate/stats
 curl https://bikeroutes.org/api/poi/categories
 ```
 
+## Next Steps (proposed)
+1. Make remaining nav links functional: "Map data" (tile attribution / data sources), "About" (project info)
+2. Wire tile hosting from R2 bucket to replace CARTO tile dependency
+3. Build "Saved routes" feature (D1-backed)
+4. Add POI markers on map for explore results
+5. Donate flow: PayPal integration behind `/api/donate`
+
 ## Style
 - Hono routers in `worker/src/routes/`. Use `logger` from `../lib/logger` for structured JSON logs.
-- Frontend: CSS Modules (`*.module.css`), global tokens in `frontend/src/index.css`.
+- Frontend: no CSS Modules — plain CSS files (`styles.css`, `index.css`).
 - Mascot voice: friendly, deer/nature puns, ends with 🦌.
+- Commit format: `type: description` (e.g. `feat:`, `fix:`, `chore:`).
