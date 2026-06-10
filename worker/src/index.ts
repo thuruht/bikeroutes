@@ -63,7 +63,8 @@ app.post("/api/admin/sync-gis", async (c) => {
 	}
 	try {
 		await syncGisData(c.env);
-		return c.json({ message: "MARC GIS sync complete 🦌" });
+		const result = await syncMarcBikeways(c.env);
+		return c.json({ message: "MARC GIS sync complete 🦌", ...result });
 	} catch (e) {
 		return c.json({ error: "Sync failed", message: String(e) }, 500);
 	}
@@ -93,16 +94,18 @@ app.onError((err, c) => {
 // ─── Scheduled (cron) handler ─────────────────────────
 import { syncGisData } from "./tasks/sync-gis";
 import { syncOsmData } from "./tasks/sync-osm";
+import { syncMarcBikeways } from "./tasks/sync-marc-bikeways";
 
 const scheduled: ExportedHandlerScheduledHandler<Env> = async (event, env, ctx) => {
 	logger.info("Scheduled event triggered", { cron: event.cron, time: new Date().toISOString() }, "CRON");
 
-	try {
-		// Run MARC GIS sync (daily)
-		await syncGisData(env);
+		try {
+			// Run MARC GIS sync (daily) — POIs + bikeways + metrogreen
+			await syncGisData(env);
+			await syncMarcBikeways(env);
 
-		// Run OSM data sync (daily) — catches new trails, bridges, rail, construction
-		await syncOsmData(env, "trail,rail");
+			// Run OSM data sync (daily) — catches new trails, bridges, rail, construction
+			await syncOsmData(env, "trail,rail");
 
 		// Record heartbeat
 		await env.ROUTE_CACHE.put("LAST_CRON_TRIGGER", new Date().toISOString(), {

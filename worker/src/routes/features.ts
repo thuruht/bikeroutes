@@ -18,7 +18,7 @@ featuresRoutes.get("/", async (c) => {
 	const type = c.req.query("type") || "";
 	const bbox = c.req.query("bbox") || "";
 
-	let where = "WHERE status = 'approved'";
+	let where = "WHERE status IN ('approved','existing')";
 	const params: any[] = [];
 
 	if (category) {
@@ -28,8 +28,8 @@ featuresRoutes.get("/", async (c) => {
 			params.push(...cats);
 		}
 	} else if (type === "trail") {
-		where += " AND category IN (?,?,?)";
-		params.push("cycleway", "route", "path");
+		where += " AND category IN (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+		params.push("cycleway", "route", "path", "shared_use_path", "bike_lane", "separated_bike_lane", "paved_shoulder", "marked_bike_route", "walking_trail", "mountain_bike", "equestrian_trail", "national_historic_trail", "share_the_road", "metro_green", "bikeway", "bridge", "construction");
 	} else if (type === "rail") {
 		where += " AND category IN (?,?,?,?,?)";
 		params.push("railway", "station", "halt", "light_rail", "tram");
@@ -45,14 +45,14 @@ featuresRoutes.get("/", async (c) => {
 	}
 
 	const { results } = await c.env.DB.prepare(
-		`SELECT id, name, category, source, source_type, source_id, geom, lat, lon, surface, length_m, difficulty, description FROM trails ${where} LIMIT 5000`
+		`SELECT id, name, category, source, source_type, source_id, geom, lat, lon, surface, length_m, difficulty, description, status FROM trails ${where} LIMIT 5000`
 	).bind(...params).all();
 
 	const rows = (results || []) as Array<{
 		id: string; name: string; category: string;
 		source: string; source_type: string; source_id: string;
 		geom: string | null; lat: number; lon: number;
-		surface: string; length_m: number | null; difficulty: string; description: string;
+		surface: string; length_m: number | null; difficulty: string; description: string; status: string;
 	}>;
 
 	const features = rows.map(r => {
@@ -75,6 +75,7 @@ featuresRoutes.get("/", async (c) => {
 				length_m: r.length_m,
 				difficulty: r.difficulty,
 				description: r.description,
+				status: r.status,
 			},
 		};
 	});

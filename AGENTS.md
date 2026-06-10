@@ -48,7 +48,7 @@ cd worker && wrangler tail
 - `/api/route` — Valhalla container → FOSSGIS → BRouter fallback chain
 - `/api/search?q=` — semantic search via Vectorize + Workers AI
 - `/api/tiles/*.pmtiles` — PMTiles range proxy from R2
-- `/api/features?category=|type=` — GeoJSON from `trails` D1 table (type=trail or rail)
+- `/api/features?category=|type=` — GeoJSON from `trails` D1 table. `type=trail` includes all OSM + MARC bikeway categories; `type=rail` covers railway, station, halt, light_rail, tram. Optional `?bbox=south,west,north,east`
 - `/api/admin/ingest` — OSM Overpass or D1→Vectorize seeding (admin-protected). Supports `?types=trail,rail` param
 - `/api/admin/sync-gis` — MARC ArcGIS POI sync (admin-protected)
 - `/api/poi/categories` — POI category list
@@ -73,11 +73,38 @@ All seeded and live for KC metro area:
 
 | Store | Contents | Source |
 |-------|----------|--------|
-| D1 `pois` table | OSM trails + MARC POIs (restrooms, bike hubs, food, stadiums) | Overpass API + MARC ArcGIS |
-| D1 `trails` table | Full GeoJSON geometries for trails + railways + stations | Overpass API (`out geom`) |
-| Vectorize `bikeroutes-trails` | AI embeddings of all POIs | OSM ingest + MARC sync |
+| D1 `pois` table | OSM trails + MARC POIs (restrooms, bike hubs, food, stadiums, trail access points) | Overpass API + MARC ArcGIS |
+| D1 `trails` table | Full GeoJSON geometries for trails, bikeways (11 facility types), MetroGreen corridors, railways, stations | Overpass API (`out center 500`) + MARC ArcGIS |
+| Vectorize `bikeroutes-trails` | AI embeddings of all POIs + trail features | OSM ingest + MARC sync |
 | KV `ROUTE_CACHE` | Cached route responses | /api/route |
 | KV `RATE_LIMITS` | Per-IP rate limit counters | middleware |
+
+Production counts as of June 2026:
+- **Bikeways (MARC ArcGIS)**: ~4,600 features across shared_use_path (1,577), bike_lane (358), separated_bike_lane (34), marked_bike_route (748), mountain_bike (263), equestrian_trail (140), paved_shoulder (44), walking_trail (550), bikeway fallback (495)
+- **MetroGreen corridors**: 705 existing segments (of 1,662 total including planned)
+- **Trail access points**: 1,062 (in `pois` table)
+- **OSM cycleways**: 774 + **OSM paths**: 8
+- **Railway lines**: 1,099 + **Junctions**: 59 + **Stations**: 4
+- **MARC POIs**: restrooms, bike hubs, BBQ/food, stadiums
+
+## MARC ArcGIS Sources
+All endpoints on `gis2.marc2.org` support `f=geojson&outSR=4326` for WGS84 output:
+
+| Service | Layer | Features | Map |
+|---------|-------|----------|-----|
+| BikewaysAndTrails | 10 (combined) | 4,605 | `shared_use_path`, `bike_lane`, `separated_bike_lane`, `paved_shoulder`, `marked_bike_route`, `walking_trail`, `mountain_bike`, `equestrian_trail`, `national_historic_trail`, `share_the_road` |
+| Metrogreen_Corridors | 0 | 1,662 | MetroGreen regional trail plan (Existing/Planned) |
+| Trail_Address | 0 | 1,062 | Trailhead access points |
+| PublicRestrooms | 0 | — | Park restrooms (in existing sync-gis) |
+| RideKCBikehubs | 0 | — | Bike share hubs (in existing sync-gis) |
+| WorldCup | 1, 4 | — | BBQ/food + stadiums (in existing sync-gis) |
+
+### MARC Ingestion
+- Sync module: `worker/src/tasks/sync-marc-bikeways.ts`
+- Handles pagination via `resultOffset` (maxRecordCount per layer varies: 1000-5000)
+- Dedup via `INSERT OR IGNORE` with `marc:bikeway:`, `marc:metrogreen:`, `marc:trail_access:` ID prefixes
+- Vectorize embedding batches at 100, upsert batches at 100
+- Trigger: `POST /api/admin/sync-gis` (X-Admin-Secret) or daily cron
 
 ## Brand / UI Decisions (implemented)
 - **No always-visible nav bar** — placeholder nav links and privacy badge removed from desktop. Single info button (ℹ️) opens a modal with: wordmark, nav links (Plan/Explore/Map data/About), privacy notice, version chip, tagline.
