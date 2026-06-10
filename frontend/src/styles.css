@@ -283,6 +283,15 @@ h1, h2, h3, h4,
 .zoomstack button { width: 38px; height: 38px; border: 0; background: transparent; cursor: pointer; color: var(--ink-2); display: grid; place-items: center; font-size: 18px; }
 .zoomstack button:hover { background: var(--paper-2); color: var(--ink); }
 .zoomstack button:first-child { border-bottom: 1px solid var(--line); }
+.ctlbtn {
+  width: 38px; height: 38px; border: 0; border-radius: 11px;
+  background: var(--panel); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); cursor: pointer; color: var(--ink-2);
+  display: grid; place-items: center; box-shadow: var(--shadow-sm);
+}
+.ctlbtn:hover { background: var(--paper-2); color: var(--ink); }
+.ctlbtn.active { background: var(--green-soft); color: var(--green); border-color: var(--green); }
+.ctlbtn svg { width: 16px; height: 16px; }
 
 /* scale + coords readout */
 .readout { position: absolute; left: 20px; bottom: 18px; z-index: 25; display: flex; align-items: center; gap: 14px; pointer-events: none; }
@@ -427,6 +436,7 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 @media (pointer: coarse) {
   .zoomstack button,
   .theme-toggle button,
+  .ctlbtn,
   .io-swap { min-width: var(--touch-min); min-height: var(--touch-min); }
   .actions button,
   .seg button,

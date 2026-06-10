@@ -93,7 +93,9 @@ function valhallaManeuverToTurn(m, coords) {
 export const TILES = {
   dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
   light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-  attribution: '© OpenStreetMap · © CARTO',
+  attribution: "© OpenStreetMap · © CARTO",
+  trailsOverlay: "https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png",
+  trailsAttribution: "© waymarkedtrails.org, OpenStreetMap",
 };
 
 export const HOME = { lng: -94.5786, lat: 39.0997, zoom: 12 };

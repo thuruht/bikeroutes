@@ -606,6 +606,7 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 @media (pointer: coarse) {
   .zoomstack button,
   .theme-toggle button,
+  .ctlbtn,
   .io-swap { min-width: var(--touch-min); min-height: var(--touch-min); }
   .actions button,
   .seg button,

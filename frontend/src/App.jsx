@@ -21,6 +21,8 @@ const Ic = {
   dot: <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>,
   plus: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>,
   x: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>,
+  info: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h0"/></svg>,
+  layers: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
 };
 const turnIcon = (t) => t === "left" ? Ic.left : t === "right" ? Ic.right : t === "arrive" ? Ic.flag : Ic.dot;
 
@@ -227,6 +229,7 @@ export default function LiveApp() {
   const [exploreQuery, setExploreQuery] = useState("");
   const [exploreResults, setExploreResults] = useState([]);
   const [exploreBusy, setExploreBusy] = useState(false);
+  const [trailsOverlay, setTrailsOverlay] = useState(() => localStorage.getItem("br-trails") !== "off");
 
   const mapRef = useRef(null);
   const mapObj = useRef(null);
@@ -259,6 +262,14 @@ export default function LiveApp() {
       layout: { "line-cap": "round", "line-join": "round" } });
   }, [theme]);
 
+  const addTrailsOverlay = useCallback(() => {
+    const map = mapObj.current; if (!map) return;
+    if (map.getSource("trails")) return;
+    map.addSource("trails", { type: "raster", tiles: [BR.TILES.trailsOverlay], tileSize: 256, attribution: BR.TILES.trailsAttribution });
+    map.addLayer({ id: "trails", type: "raster", source: "trails",
+      layout: { visibility: trailsOverlay ? "visible" : "none" } }, "route-casing");
+  }, [trailsOverlay]);
+
   const updateScale = useCallback(() => {
     const map = mapObj.current; if (!map) return;
     const c = map.getCenter();
@@ -281,7 +292,7 @@ export default function LiveApp() {
     });
     mapObj.current = map;
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-    map.on("load", () => { addRouteLayers(); updateScale(); });
+    map.on("load", () => { addRouteLayers(); addTrailsOverlay(); updateScale(); });
     map.on("move", updateScale);
     map.on("mousemove", (e) => setReadout(r => ({ ...r, coords: `${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}` })));
     map.on("click", async (e) => {
@@ -313,7 +324,7 @@ export default function LiveApp() {
     localStorage.setItem("br-theme", theme);
     const map = mapObj.current; if (!map) return;
     map.setStyle(styleFor(theme));
-    map.once("styledata", () => { addRouteLayers(); pushRoute(result); });
+    map.once("styledata", () => { addRouteLayers(); addTrailsOverlay(); pushRoute(result); });
   }, [theme]);
 
   useEffect(() => {
@@ -435,6 +446,14 @@ export default function LiveApp() {
       () => { done(); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  };
+
+  const toggleTrails = () => {
+    const map = mapObj.current;
+    const next = !trailsOverlay;
+    setTrailsOverlay(next);
+    localStorage.setItem("br-trails", next ? "on" : "off");
+    if (map && map.getLayer("trails")) map.setLayoutProperty("trails", "visibility", next ? "visible" : "none");
   };
 
   const grade = result ? (result.ascend / Math.max(1, result.dist) * 100) : 0;
@@ -620,6 +639,7 @@ export default function LiveApp() {
           <button title="Zoom in" aria-label="Zoom in" onClick={() => mapObj.current && mapObj.current.zoomIn()}>+</button>
           <button title="Zoom out" aria-label="Zoom out" onClick={() => mapObj.current && mapObj.current.zoomOut()}>−</button>
         </div>
+        <button className={"ctlbtn" + (trailsOverlay ? " active" : "")} onClick={toggleTrails} title={trailsOverlay ? "Hide trails overlay" : "Show trails overlay"}>{Ic.layers}</button>
       </div>
 
       {/* SCALE + COORDS */}
