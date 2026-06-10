@@ -48,11 +48,12 @@ function Reki({ size = 64, mood = "scout" }) {
 }
 
 /* ---- geocoding input with live autocomplete ---- */
-function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, canClear }) {
+function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, canClear, showLocate, onLocate }) {
   const [q, setQ] = useState(value || "");
   const [list, setList] = useState([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [locating, setLocating] = useState(false);
   const tRef = useRef(null);
   useEffect(() => { setQ(value || ""); }, [value]);
 
@@ -74,6 +75,14 @@ function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, ca
           onFocus={() => list.length && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 160)} />
         {busy && <span className="mono" style={{ fontSize: 10, color: "var(--muted-txt)" }}>···</span>}
+        {showLocate && !busy && !locating && (
+          <button className="io-clear" title="Use my current location" aria-label="Use my current location"
+            onClick={() => { setLocating(true); onLocate && onLocate(() => setLocating(false)); }}
+            style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--green)", display: "grid", placeItems: "center", width: 22, height: 22, flex: "none", borderRadius: 6 }}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          </button>
+        )}
+        {locating && <span className="mono" style={{ fontSize: 10, color: "var(--green)" }}>locating…</span>}
         {canClear && !busy && (
           <button className="io-clear" title="Remove stop" aria-label="Remove stop"
             onMouseDown={(e) => { e.preventDefault(); onClear && onClear(); }}
@@ -101,48 +110,7 @@ function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, ca
   );
 }
 
-/* ---- place search: jump the map to a place ---- */
-function PlaceSearch({ onJump }) {
-  const [q, setQ] = useState("");
-  const [list, setList] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const tRef = useRef(null);
-  const run = (text) => {
-    clearTimeout(tRef.current);
-    if (!text.trim()) { setList([]); setOpen(false); return; }
-    tRef.current = setTimeout(async () => {
-      setBusy(true); const r = await BR.geocode(text); setBusy(false); setList(r); setOpen(true);
-    }, 350);
-  };
-  return (
-    <div style={{ position: "relative", marginBottom: 14 }}>
-      <div className="io-row" style={{ borderRadius: 12, background: "var(--paper-2)" }}>
-        <span style={{ width: 16, height: 16, color: "var(--muted-txt)", flex: "none" }}>{Ic.search}</span>
-        <input value={q} placeholder="Search places — jump the map"
-          onChange={(e) => { setQ(e.target.value); run(e.target.value); }}
-          onFocus={() => list.length && setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 160)} />
-        {busy && <span className="mono" style={{ fontSize: 10, color: "var(--muted-txt)" }}>···</span>}
-      </div>
-      {open && list.length > 0 && (
-        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 55,
-          background: "var(--panel-solid)", border: "1px solid var(--line)", borderRadius: 12,
-          boxShadow: "var(--shadow)", overflow: "hidden", maxHeight: 220, overflowY: "auto" }}>
-          {list.map((d, i) => (
-            <div key={i} onMouseDown={() => { onJump(d); setQ(d.short); setOpen(false); }}
-              style={{ padding: "9px 13px", cursor: "pointer", borderBottom: i < list.length - 1 ? "1px solid var(--line)" : 0 }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "var(--paper-2)"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{d.short}</div>
-              <div className="mono" style={{ fontSize: 10.5, color: "var(--muted-txt)", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.label}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+
 
 /* ---- elevation chart with hover tooltip + crosshair ---- */
 function ElevLive({ elev, dist, onScrub }) {
@@ -401,7 +369,22 @@ export default function LiveApp() {
   const appendWp = (d) => setWps(prev => [...prev, { lng: d.lng, lat: d.lat, label: d.short }]);
   const removeWp = (i) => setWps(prev => prev.filter((_, j) => j !== i));
   const reverseWps = () => setWps(prev => [...prev].reverse());
-  const jumpTo = (d) => { const map = mapObj.current; if (map) map.flyTo({ center: [d.lng, d.lat], zoom: Math.max(map.getZoom(), 13), duration: 800 }); };
+  const locateMe = (done) => {
+    if (!navigator.geolocation) { done(); return; }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const pt = { lng: pos.coords.longitude, lat: pos.coords.latitude, label: "Locating…" };
+        setWps(prev => prev.length === 0 ? [pt] : [{ ...prev[0], lng: pt.lng, lat: pt.lat, label: "Locating…" }, ...prev.slice(1)]);
+        const label = await BR.reverse(pt.lng, pt.lat);
+        setWps(prev => [{ ...prev[0], label }, ...prev.slice(1)]);
+        done();
+        const map = mapObj.current;
+        if (map) map.flyTo({ center: [pt.lng, pt.lat], zoom: Math.max(map.getZoom(), 14), duration: 800 });
+      },
+      () => { done(); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const grade = result ? (result.ascend / Math.max(1, result.dist) * 100) : 0;
   const mPerKm = result ? result.ascend / Math.max(0.1, result.dist / 1000) : 0;
@@ -467,7 +450,9 @@ export default function LiveApp() {
       <div className="panel">
         <div className="modetabs"><button className="active">Plan a route</button></div>
         <div className="panel-scroll">
-          <PlaceSearch onJump={jumpTo} />
+          <div style={{ marginBottom: 14, fontSize: 12.5, color: "var(--muted-txt)", lineHeight: 1.4 }}>
+            Type a start and destination below, or click the map to set waypoints.
+          </div>
 
           {/* waypoint inputs */}
           <div className="io" style={{ position: "relative", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -475,7 +460,8 @@ export default function LiveApp() {
               <GeoInput key={i} dotClass={i === 0 ? "a" : i === wps.length - 1 ? "b" : "via"}
                 dotNumber={i !== 0 && i !== wps.length - 1 ? i : null}
                 value={w.label} placeholder={i === 0 ? "Start" : "Stop"}
-                onPick={(d) => setWp(i, d)} canClear onClear={() => removeWp(i)} />
+                onPick={(d) => setWp(i, d)} canClear onClear={() => removeWp(i)}
+                showLocate={i === 0} onLocate={locateMe} />
             ))}
             <GeoInput dotClass={wps.length === 0 ? "a" : "add"} value=""
               placeholder={wps.length === 0 ? "Choose start — or click the map" : wps.length === 1 ? "Choose destination" : "Add another stop"}
