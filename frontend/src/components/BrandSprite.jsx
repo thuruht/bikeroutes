@@ -39,7 +39,7 @@ const SPRITE = `
     <circle cx="21" cy="24.7" r="2.4" fill="#FF6B1A"/>
   </symbol>
   <symbol id="pin-wing" viewBox="0 0 40 40">
-    <g fill="#FF6B1A" stroke="#0B0C08" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round">
+    <g fill="var(--body,#FF6B1A)" stroke="var(--edge,#0B0C08)" stroke-width="1.1" stroke-linejoin="round" stroke-linecap="round">
       <ellipse cx="12.2" cy="12.4" rx="3.1" ry="9.8" transform="rotate(-63 12.2 12.4)"/>
       <ellipse cx="14.4" cy="15.2" rx="3" ry="8.4" transform="rotate(-46 14.4 15.2)"/>
       <ellipse cx="16.5" cy="17.8" rx="2.8" ry="7" transform="rotate(-30 16.5 17.8)"/>
