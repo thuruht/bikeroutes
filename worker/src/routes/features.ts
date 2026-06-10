@@ -45,7 +45,7 @@ featuresRoutes.get("/", async (c) => {
 	}
 
 	const { results } = await c.env.DB.prepare(
-		`SELECT id, name, category, source, source_type, source_id, geom, lat, lon, surface, length_m, difficulty, description, status FROM trails ${where} LIMIT 5000`
+		`SELECT id, name, category, source, source_type, source_id, geom, lat, lon, surface, length_m, difficulty, description, status FROM trails ${where} LIMIT 10000`
 	).bind(...params).all();
 
 	const rows = (results || []) as Array<{
