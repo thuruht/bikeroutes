@@ -8,4 +8,6 @@
 
 [DONE] v1.0 brand system (Brand_Marks Final + Design System) was never integrated — now in: header lockup (b-wheel app-tile + wordmark w/ Reki-head i-dot + v1.0 chip), docs served at /design/ and /design/brand-marks.html, favicon on forest-green tile, themed maplibre attribution. NOTE: diamond helmet badge is canonical (per Brand Marks Final); the arrow variant in the Design System page sprite was superseded and has been corrected to the diamond. - CLAUDE JUNE 09 2026
 
+[FIXED] PRODUCTION BLANK PAGE: root wrangler.jsonc was deploying raw frontend/ source as an assets-only worker over bikeroutes.org (killed UI + /api/*). Root config deleted; root npm scripts now build SPA + deploy via worker/wrangler.jsonc (see HANDOFF.md). Needs merge to main to take effect. - CLAUDE JUNE 10 2026
+
  LLMs: *if you fix a todo or add to the list, notate it non-destructively, and change the date in the filename*

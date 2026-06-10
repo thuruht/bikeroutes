@@ -94,6 +94,21 @@ The **v1.0 brand package** (Brand Marks — Final, "Approved · v1.0" + Design S
 - MapLibre attribution themed via `.maplibregl-ctrl-attrib` in `index.css`.
 - **Canon note:** Reki's cap badge is the **diamond** (`M120,59.5 L127.5,68 L120,76.5 L112.5,68 Z`). The arrow variant found in some exploration-board files is superseded — don't "fix" the diamond.
 
+## ⚠ Production incident + deploy fix — June 10 2026 (`claude/dreamy-brown-i56fmh`)
+
+**Symptom:** bikeroutes.org serves a blank page. Console: `/src/main.jsx` blocked (MIME `text/jsx`), `favicon.svg`/`reki_icon.png` 404. `/api/*` also dead.
+
+**Cause:** the root `wrangler.jsonc` (added by the workers-autoconfig PR #13) deployed an **assets-only** worker under the same name `bikeroutes-api` with `assets.directory: "frontend"` — i.e. the **raw un-built source** — overwriting the real worker (Hono API + built SPA from `worker/public/`) on every Workers Builds run. Unrelated to the v1.0 brand commit, which never reached main.
+
+**Fix (this branch):**
+- Deleted root `wrangler.jsonc`. `worker/wrangler.jsonc` is the ONLY worker config. Never re-add a root config with `assets: "frontend"`.
+- Root `package.json` scripts are now the Workers Builds contract:
+  - `build` → `cd frontend && npm ci && npm run build && cd ../worker && npm ci` (builds SPA into `worker/public/`, installs worker deps so wrangler can bundle `hono` etc. — this was the old "broken worker import")
+  - `deploy` → `wrangler deploy --config worker/wrangler.jsonc --containers-rollout=none` (paths in that config resolve relative to it; containers skipped because CI has no Docker — remove the flag when shipping Valhalla)
+- Verified: `npm ci` (worker) + dry-run deploy from repo root bundles successfully, reads 20 asset files from `worker/public`, all bindings (D1/KV×3/R2×2/Vectorize/AI/DO×3/containers) resolve.
+
+**To restore production:** merge this branch to main (Workers Builds redeploys correctly), or deploy manually with CF creds: `npm run build && npm run deploy` from repo root. If Workers Builds errors "Could not read wrangler config" after merge, set its deploy command to `npm run deploy` in the dashboard.
+
 ## Dev setup
 ```bash
 cd frontend && npm install && npm run dev   # Vite on :5173
