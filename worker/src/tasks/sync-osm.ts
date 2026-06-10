@@ -24,7 +24,6 @@ const TRAIL_QUERIES = `
   way["highway"="construction"]["construction"="cycleway"](${BBOX});
   way["highway"="construction"]["construction"="path"](${BBOX});
   way["highway"="construction"]["construction"="footbridge"](${BBOX});
-  way["highway"="construction"]["construction"="cycleway"](${BBOX});
   relation["route"="bicycle"](${BBOX});
 `;
 
@@ -34,8 +33,6 @@ const RAIL_QUERIES = `
   way["railway"="abandoned"](${BBOX});
   way["railway"="light_rail"](${BBOX});
   way["railway"="tram"](${BBOX});
-  way["railway"="rail"]["usage"="main"](${BBOX});
-  way["railway"="rail"]["usage"="branch"](${BBOX});
   node["railway"="station"](${BBOX});
   node["railway"="halt"](${BBOX});
   node["railway"="junction"](${BBOX});
@@ -76,7 +73,7 @@ export async function syncOsmData(env: Env, types = "trail,rail") {
 		return;
 	}
 
-	const query = `[out:json][timeout:90];(${queries.join("")});out geom center tags 50;`;
+	const query = `[out:json][timeout:120];(${queries.join("")});out center 500;`;
 	const res = await fetch(OVERPASS_URL, {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
@@ -89,7 +86,15 @@ export async function syncOsmData(env: Env, types = "trail,rail") {
 	}
 
 	const overpassData = await res.json() as { elements?: any[] };
-	const elements = (overpassData.elements || []).filter((e: any) => e.tags?.name);
+	const allElements = (overpassData.elements || []);
+
+	// Rail features rarely have name tags — use fallback display names.
+	// Trail features must have a name to be useful.
+	const elements = allElements.filter((e: any) => {
+		const t = e.tags || {};
+		if (t.railway) return true;
+		return !!t.name;
+	});
 
 	const seen = new Set<string>();
 	const unique: any[] = [];
@@ -115,14 +120,16 @@ export async function syncOsmData(env: Env, types = "trail,rail") {
 		const surface = t.surface || t.tracktype || "";
 		const length = t.length || t.distance || "";
 		const difficulty = t.mtb_scale || t.sac_scale || t.trail_visibility || "";
-		const text = `${t.name}. ${surface ? `Surface: ${surface}.` : ""} ${length ? `Length: ${length}.` : ""} ${difficulty ? `Difficulty: ${difficulty}.` : ""} ${t.description || ""}`.trim().slice(0, 512);
+		const fallbackName = t.name || t.ref || t.operator || `${t.railway || t.highway || ""} line`.trim();
+		const name = fallbackName || "unnamed";
+		const text = `${name}. ${surface ? `Surface: ${surface}.` : ""} ${length ? `Length: ${length}.` : ""} ${difficulty ? `Difficulty: ${difficulty}.` : ""} ${t.description || ""}`.trim().slice(0, 512);
 		const id = `osm:${e.type}:${e.id}`;
 		return {
 			id,
 			text,
 			geom: JSON.stringify(geom),
 			meta: {
-				name: t.name,
+				name,
 				category,
 				lat,
 				lon,

@@ -136,8 +136,6 @@ ingestRoutes.post("/", async (c) => {
   way["railway"="abandoned"](${bbox});
   way["railway"="light_rail"](${bbox});
   way["railway"="tram"](${bbox});
-  way["railway"="rail"]["usage"="main"](${bbox});
-  way["railway"="rail"]["usage"="branch"](${bbox});
   node["railway"="station"](${bbox});
   node["railway"="halt"](${bbox});
   node["railway"="junction"](${bbox});
@@ -148,7 +146,7 @@ ingestRoutes.post("/", async (c) => {
 			return c.json({ error: "No valid types specified. Use 'trail', 'rail', or both." }, 400);
 		}
 
-		const query = `[out:json][timeout:90];(${queries.join("")});out geom center tags 50;`;
+		const query = `[out:json][timeout:120];(${queries.join("")});out center 500;`;
 
 		const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
 			method: "POST",
@@ -161,7 +159,15 @@ ingestRoutes.post("/", async (c) => {
 		}
 
 		const overpassData = await overpassRes.json() as { elements?: any[] };
-		const elements = (overpassData.elements || []).filter((e: any) => e.tags?.name);
+		const allElements = (overpassData.elements || []);
+
+		// Rail features rarely have name tags — use fallback display names.
+		// Trail features must have a name to be useful.
+		const elements = allElements.filter((e: any) => {
+			const t = e.tags || {};
+			if (t.railway) return true; // include all rail features
+			return !!t.name;
+		});
 
 		// Deduplicate by source type + id
 		const seen = new Set<string>();
@@ -175,7 +181,7 @@ ingestRoutes.post("/", async (c) => {
 		}
 
 		if (!unique.length) {
-			return c.json({ message: "No named features found in OSM bbox", bbox, types: osmTypes }, 200);
+			return c.json({ message: "No features found in OSM bbox", bbox, types: osmTypes }, 200);
 		}
 
 		// Build GeoJSON geometry from OSM element
@@ -211,14 +217,16 @@ ingestRoutes.post("/", async (c) => {
 			const surface = t.surface || t.tracktype || "";
 			const length = t.length || t.distance || "";
 			const difficulty = t.mtb_scale || t.sac_scale || t.trail_visibility || "";
-			const text = `${t.name}. ${surface ? `Surface: ${surface}.` : ""} ${length ? `Length: ${length}.` : ""} ${difficulty ? `Difficulty: ${difficulty}.` : ""} ${t.description || ""}`.trim().slice(0, 512);
+			const fallbackName = t.name || t.ref || t.operator || `${t.railway || t.highway || ""} line`.trim();
+			const name = fallbackName || "unnamed";
+			const text = `${name}. ${surface ? `Surface: ${surface}.` : ""} ${length ? `Length: ${length}.` : ""} ${difficulty ? `Difficulty: ${difficulty}.` : ""} ${t.description || ""}`.trim().slice(0, 512);
 			const id = `osm:${e.type}:${e.id}`;
 			return {
 				id,
 				text,
 				geom: JSON.stringify(geom),
 				meta: {
-					name: t.name,
+					name,
 					category,
 					lat,
 					lon,
@@ -264,9 +272,10 @@ ingestRoutes.post("/", async (c) => {
 
 		const now = new Date().toISOString();
 		for (const d of docs) {
+			const osmId = d.id.split(":").pop() || "";
 			try {
 				await insertTrail.bind(
-					d.id, "osm", d.meta.source, String(unique[docs.indexOf(d)].id),
+					d.id, "osm", d.meta.source, osmId,
 					d.meta.name, d.meta.category, d.geom,
 					d.meta.lat, d.meta.lon,
 					d.meta.surface, d.meta.length_m, d.meta.difficulty,
