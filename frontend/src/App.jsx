@@ -57,7 +57,6 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
   const searchTimer = useRef(null);
 
   const doSearch = useCallback(async (q, cats) => {
-    setQuery(q);
     if (!q.trim()) { setResults([]); clearExploreMarkers(); return; }
     const id = ++searchReqId.current;
     setBusy(true);
@@ -69,12 +68,16 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
       if (id === searchReqId.current) setResults(d.results || []);
     } catch { if (id === searchReqId.current) setResults([]); }
     if (id === searchReqId.current) setBusy(false);
-  }, [setQuery, setResults, setBusy, clearExploreMarkers]);
+  }, [setResults, setBusy, clearExploreMarkers]);
 
   const queueSearch = useCallback((q, cats) => {
+    setQuery(q);
     clearTimeout(searchTimer.current);
+    if (!q.trim()) { setResults([]); clearExploreMarkers(); setBusy(false); return; }
+    setResults([]);
+    setBusy(true);
     searchTimer.current = setTimeout(() => doSearch(q, cats), 280);
-  }, [doSearch]);
+  }, [setQuery, doSearch, setResults, clearExploreMarkers, setBusy]);
 
   const onChipClick = (id) => {
     const next = selectedCats.includes(id)
