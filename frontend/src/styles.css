@@ -71,7 +71,7 @@ h1, h2, h3, h4,
 }
 .brand .mark svg { width: 16px; height: 16px; }
 .brand .name { font-weight: 600; font-size: 15px; letter-spacing: -.01em; font-family: "Outfit", system-ui, sans-serif; }
-.brand .tag { font-size: 11px; color: var(--muted-txt); letter-spacing: .02em; }
+.brand .tag { font-size: 13px; color: var(--muted-txt); letter-spacing: .02em; }
 .ver-chip {
   align-self: center; margin-left: 2px;
   font-size: 9.5px; font-weight: 600; letter-spacing: .05em;
@@ -110,8 +110,8 @@ h1, h2, h3, h4,
 
 /* ---------- Left panel ---------- */
 .panel {
-  position: absolute; top: 78px; left: 20px; z-index: 30;
-  width: 372px; max-height: calc(100vh - 140px);
+  position: absolute; top: 92px; left: 20px; z-index: 30;
+  width: 372px; max-height: calc(100vh - 154px);
   display: flex; flex-direction: column;
   background: var(--panel); backdrop-filter: blur(14px);
   border: 1px solid var(--line); border-radius: 18px;
@@ -176,6 +176,7 @@ h1, h2, h3, h4,
 .io-row input {
   border: 0; background: transparent; font-family: inherit; font-size: 14px;
   color: var(--ink); width: 100%; outline: none; font-weight: 500;
+  text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
 }
 .io-row input::placeholder { color: var(--muted-txt); font-weight: 400; }
 .io-swap {
@@ -284,6 +285,42 @@ h1, h2, h3, h4,
 .actions button.primary { background: var(--orange); color: #fff; border-color: transparent; }
 .actions button.primary:hover { background: var(--orange); box-shadow: var(--accent-glow); }
 .actions button.primary svg { opacity: 1; }
+
+/* route error card */
+.route-error {
+  margin: 18px 0 0; padding: 18px; border-radius: 14px;
+  background: var(--danger-soft); border: 1px solid var(--danger);
+  text-align: center;
+}
+.route-error .msg { font-size: 13px; color: var(--ink-2); margin-bottom: 12px; }
+.route-error .msg strong { color: var(--danger); }
+.route-error button {
+  border: 0; background: var(--danger); color: #fff; cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 9px 18px; border-radius: 10px;
+}
+.route-error button:hover { opacity: .9; }
+
+/* skeleton loader for route computation */
+.route-skelly {
+  margin: 18px 0 0; padding: 15px; border-radius: 14px;
+  background: var(--panel-solid); border: 1px solid var(--line);
+}
+.route-skelly .row { display: flex; gap: 10px; margin-bottom: 14px; }
+.route-skelly .sk-blk {
+  height: 14px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--paper-2) 0%, var(--line) 50%, var(--paper-2) 100%);
+  background-size: 200% 100%; animation: br-shimmer 1.1s var(--ease-in-out) infinite;
+}
+.route-skelly .big { height: 34px; width: 40%; }
+.route-skelly .med { width: 25%; }
+.route-skelly .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.route-skelly .cell { height: 52px; border-radius: 10px; background: var(--paper-2); }
+.route-skelly .bar { height: 9px; border-radius: 6px; margin-top: 14px; background: var(--line); }
+
+/* fade-in for new results */
+.fade-in { animation: br-fadeIn .2s ease; }
+@keyframes br-fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ---------- Explore mode ---------- */
 .explore-head { padding: 2px 2px 4px; }

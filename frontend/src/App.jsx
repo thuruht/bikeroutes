@@ -55,18 +55,20 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
   clearExploreMarkers, addExploreMarker }) {
   const searchReqId = useRef(0);
   const searchTimer = useRef(null);
+  const [exploreErr, setExploreErr] = useState(false);
 
   const doSearch = useCallback(async (q, cats) => {
     if (!q.trim()) { setResults([]); clearExploreMarkers(); return; }
     const id = ++searchReqId.current;
     setBusy(true);
+    setExploreErr(false);
     clearExploreMarkers();
     try {
       const catParam = cats.length > 0 ? "&category=" + cats.join(",") : "";
       const r = await fetch("/api/search?q=" + encodeURIComponent(q) + catParam);
       const d = await r.json();
       if (id === searchReqId.current) setResults(d.results || []);
-    } catch { if (id === searchReqId.current) setResults([]); }
+    } catch { if (id === searchReqId.current) { setResults([]); setExploreErr(true); } }
     if (id === searchReqId.current) setBusy(false);
   }, [setResults, setBusy, clearExploreMarkers]);
 
@@ -76,6 +78,7 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
     if (!q.trim()) { setResults([]); clearExploreMarkers(); setBusy(false); return; }
     setResults([]);
     setBusy(true);
+    setExploreErr(false);
     searchTimer.current = setTimeout(() => doSearch(q, cats), 280);
   }, [setQuery, doSearch, setResults, clearExploreMarkers, setBusy]);
 
@@ -96,17 +99,24 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
   };
   let body;
   if (results.length > 0) {
-    body = <div>{results.map((r) => (
-      <div key={r.id} className="turn" style={{ cursor: "pointer" }} onClick={() => go(r)}>
-        <div className="ic">{Ic.search}</div>
-        <div className="body">
-          <div className="road">{r.metadata?.name || r.id}</div>
-          <div className="meta mono">{r.metadata?.category || ""} &middot; {(r.score * 100).toFixed(0)}% match</div>
+    body = <div className="fade-in">{results.map((r) => (
+      <div key={r.id} className="trail" style={{ cursor: "pointer" }} onClick={() => go(r)}>
+        <div className="spark" style={{ display: "grid", placeItems: "center", background: "var(--green-soft)" }}>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--green)" }}>
+            <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/>
+          </svg>
+        </div>
+        <div className="info">
+          <div className="nm">{r.metadata?.name || r.id}</div>
+          <div className="sub">{r.metadata?.category || ""}</div>
+          <div className="tags"><span className="g">{(r.score * 100).toFixed(0)}% match</span></div>
         </div>
       </div>
     ))}</div>;
+  } else if (query.trim() && !busy && exploreErr) {
+    body = <div className="mono" style={{ padding: "20px 0", textAlign: "center", color: "var(--muted-txt)" }}>Search failed &mdash; check connection</div>;
   } else if (query.trim() && !busy) {
-    body = <div className="mono" style={{ padding: "20px 0", textAlign: "center", color: "var(--muted-txt)" }}>No results found</div>;
+    body = <div className="mono fade-in" style={{ padding: "20px 0", textAlign: "center", color: "var(--muted-txt)" }}>No results found</div>;
   } else body = null;
   return (
     <div>
@@ -159,21 +169,27 @@ function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, ca
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [geocodeErr, setGeocodeErr] = useState(false);
   const tRef = useRef(null);
   useEffect(() => { setQ(value || ""); }, [value]);
 
   const search = (text) => {
     clearTimeout(tRef.current);
-    if (!text.trim()) { setList([]); return; }
+    if (!text.trim()) { setList([]); setGeocodeErr(false); return; }
     tRef.current = setTimeout(async () => {
       setBusy(true);
-      const r = await BR.geocode(text);
-      setBusy(false); setList(r); setOpen(true);
+      setGeocodeErr(false);
+      try {
+        const r = await BR.geocode(text);
+        setBusy(false); setList(r); setOpen(true);
+      } catch {
+        setBusy(false); setGeocodeErr(true);
+      }
     }, 350);
   };
   return (
     <div style={{ position: "relative" }}>
-      <div className="io-row" style={{ borderRadius: 12 }}>
+      <div className={"io-row" + (geocodeErr ? " is-error" : "")} style={{ borderRadius: 12 }} aria-invalid={geocodeErr || undefined}>
         <span className={"io-dot " + dotClass} style={dotNumber ? { display: "grid", placeItems: "center", width: 16, height: 16, fontSize: 9, fontWeight: 700, color: "#fff" } : null}>{dotNumber || ""}</span>
         <input value={q} placeholder={placeholder}
           onChange={(e) => { setQ(e.target.value); search(e.target.value); }}
@@ -196,6 +212,7 @@ function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, ca
           </button>
         )}
       </div>
+      {geocodeErr && <div className="field-error">Couldn&rsquo;t reach geocoder</div>}
       {open && list.length > 0 && (
         <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 50,
           background: "var(--panel-solid)", border: "1px solid var(--line)", borderRadius: 12,
@@ -278,6 +295,8 @@ export default function LiveApp() {
   const [wps, setWps] = useState([]);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [routeError, setRouteError] = useState(null);
+  const [retryKey, setRetryKey] = useState(0);
   const [saved, setSaved] = useState(false);
   const [hoverTurn, setHoverTurn] = useState(null);
   const [readout, setReadout] = useState({ scale: null, coords: null });
@@ -501,15 +520,17 @@ export default function LiveApp() {
     exploreMarkers.current.push(mk);
   }, [clearExploreMarkers]);
 
-  /* ---- compute route when waypoints / pref change ---- */
+  /* ---- compute route when waypoints / pref / retry change ---- */
   useEffect(() => {
     const valid = wps.filter(Boolean);
-    if (valid.length < 2) { setResult(null); pushRoute(null); return; }
+    if (valid.length < 2) { setResult(null); setRouteError(null); pushRoute(null); return; }
     const id = ++reqId.current;
     setLoading(true);
+    setRouteError(null);
     BR.route(valid, pref).then(res => {
       if (id !== reqId.current) return;
       setLoading(false); setResult(res); pushRoute(res);
+      panelScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       const map = mapObj.current;
       if (map && res && res.coords && res.coords.length) {
         const lngs = res.coords.map(c => c[0]), lats = res.coords.map(c => c[1]);
@@ -518,10 +539,10 @@ export default function LiveApp() {
       }
     }).catch(e => {
       if (id !== reqId.current) return;
-      setLoading(false);
+      setLoading(false); setRouteError(e); setResult(null); pushRoute(null);
       console.error("Route error:", e);
     });
-  }, [wps, pref]);
+  }, [wps, pref, retryKey]);
 
   const onScrub = useCallback((frac) => {
     const map = mapObj.current; if (!map) return;
@@ -764,9 +785,27 @@ export default function LiveApp() {
           {valid.length < 2 ? (
             <div style={{ marginTop: 16 }}><Reki mood="empty" /></div>
           ) : loading ? (
-            <div style={{ marginTop: 16 }}><Reki mood="scout" /></div>
+            <div style={{ marginTop: 16 }}>
+              <div className="route-skelly fade-in">
+                <div className="row">
+                  <div className="sk-blk big" />
+                  <div className="sk-blk med" style={{ marginLeft: "auto" }} />
+                </div>
+                <div className="grid">
+                  <div className="cell" />
+                  <div className="cell" />
+                </div>
+                <div className="bar" />
+              </div>
+              <div style={{ marginTop: 10 }}><Reki mood="scout" /></div>
+            </div>
+          ) : routeError ? (
+            <div className="route-error fade-in">
+              <div className="msg">Couldn&rsquo;t find a route &mdash; <strong>tap to retry</strong></div>
+              <button onClick={() => setRetryKey(k => k + 1)}>Retry</button>
+            </div>
           ) : result ? (
-            <>
+            <div className="fade-in">
               <div className="summary">
                 <div className="summary-top">
                   <div className="dist mono">{BR.fmtKm(result.dist)}<span>km</span></div>
@@ -814,7 +853,7 @@ export default function LiveApp() {
                   </div>
                 ))}
               </div>
-            </>
+            </div>
           ) : null}
           </>}
           {view === "explore" && <ExploreView
