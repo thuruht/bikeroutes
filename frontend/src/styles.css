@@ -416,6 +416,35 @@ h1, h2, h3, h4,
 
 .modal .wordmark { font-size: 28px; display: flex; justify-content: center; }
 
+/* Reki head — interactive subtle pulse */
+.wordmark .i-slot .head {
+  cursor: pointer;
+  animation: reki-pulse 3s ease-in-out infinite;
+}
+.wordmark .i-slot .head:hover { animation: none; filter: brightness(1.2); }
+@keyframes reki-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.12); }
+}
+/* Reki modal */
+.reki-modal-body {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  text-align: center; padding: 8px 0 4px;
+}
+.reki-modal-body .avatar {
+  width: 80px; height: 80px; border-radius: 18px;
+  background: var(--green-soft); border: 2px solid var(--green);
+  display: grid; place-items: center; overflow: hidden;
+}
+.reki-modal-body .avatar svg { width: 64px; height: 64px; display: block; }
+.reki-modal-body .name { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--ink); }
+.reki-modal-body .bio { font-size: 13px; line-height: 1.55; color: var(--ink-2); max-width: 260px; }
+.reki-modal-body .quip {
+  font-size: 12px; font-style: italic; color: var(--muted-txt);
+  background: var(--paper-2); padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--line); max-width: 260px;
+}
+
 /* moving map dot for elevation scrub */
 .scrub-dot { pointer-events: none; }
 
@@ -520,6 +549,7 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .topbar { padding: 12px 12px; gap: 8px; }
   .brand { padding: 7px 10px 7px 8px; }
   .brand .name { font-size: 13px; }
+  .brand .tag { display: none; }
   .ver-chip { display: none; }
   .theme-toggle { gap: 1px; }
   .theme-toggle button { width: 28px; height: 26px; }

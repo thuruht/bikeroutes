@@ -311,8 +311,10 @@ export default function LiveApp() {
   const [railOverlay, setRailOverlay] = useState(() => localStorage.getItem("br-rail") === "on");
   const [modalSection, setModalSection] = useState(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
+  const [rekiOpen, setRekiOpen] = useState(false);
 
   const mapRef = useRef(null);
+  const longPressRef = useRef(null);
   const mapObj = useRef(null);
   const wpMarkers = useRef([]);
   const exploreMarkers = useRef([]);
@@ -671,7 +673,7 @@ export default function LiveApp() {
           </span>
           <div className="brand-txt">
             <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
-              b<span className="i-slot"><span className="head"><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+              b<span className="i-slot"><span className="head" onClick={(e) => { e.stopPropagation(); setRekiOpen(true); }}><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
             </div>
             <div className="tag mono">open cycling maps · midwest</div>
           </div>
@@ -683,7 +685,28 @@ export default function LiveApp() {
           <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} title="Tactical dark" aria-label="Dark theme">{Ic.moon}</button>
         </div>
         <button className="pillbtn" onClick={() => setInfoOpen(true)} title="Info" style={{ padding: "9px 11px" }}>{Ic.info}</button>
-        <button className="pillbtn solid" onClick={() => { if (view === "explore") { setView("plan"); } setWps([]); }} title={view === "explore" ? "Switch to plan" : "Clear route"}>{Ic.plus}<span className="btn-label"> {view === "explore" ? "Plan route" : "New route"}</span></button>
+        <button className="pillbtn solid" style={{ userSelect: "none" }}
+          title={wps.length > 0 ? "Click remove last stop · Long-press clear route" : (view === "explore" ? "Switch to plan" : "New route")}
+          onMouseDown={() => {
+            if (wps.length === 0) return;
+            longPressRef.current = setTimeout(() => { longPressRef.current = null; setWps([]); }, 700);
+          }}
+          onMouseUp={() => {
+            if (wps.length === 0) { if (view === "explore") setView("plan"); return; }
+            if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; setWps(prev => prev.slice(0, -1)); }
+          }}
+          onMouseLeave={() => { if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; } }}
+          onTouchStart={(e) => {
+            if (wps.length === 0) return;
+            longPressRef.current = setTimeout(() => { longPressRef.current = null; setWps([]); }, 700);
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            if (wps.length === 0) { if (view === "explore") setView("plan"); return; }
+            if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; setWps(prev => prev.slice(0, -1)); }
+          }}
+          onTouchMove={() => { if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; } }}>
+          {wps.length > 0 ? Ic.x : Ic.plus}<span className="btn-label"> {wps.length > 0 ? "Remove" : (view === "explore" ? "Plan route" : "New route")}</span></button>
       </div>
 
       {/* INFO MODAL */}
@@ -738,6 +761,33 @@ export default function LiveApp() {
               </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* REKI MODAL */}
+      {rekiOpen && (
+        <div className="modal-overlay" onClick={() => setRekiOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setRekiOpen(false)}>{Ic.x}</button>
+            <div className="reki-modal-body">
+              <div className="avatar">
+                <svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg>
+              </div>
+              <div className="name">Reki</div>
+              <div className="bio">
+                Trail scout &amp; bike route optimizer. Reki&rsquo;s been tracking
+                every path, pavement crack, and gravel shortcut across the
+                Midwest since&hellip; well, since someone wrote the code.
+              </div>
+              <div className="quip">
+                &ldquo;Four hooves beat two wheels if you&rsquo;re after
+                shortcuts. But I&rsquo;m partial to asphalt.&rdquo;
+              </div>
+              <div className="bio" style={{ fontSize: 11.5, color: "var(--muted-txt)" }}>
+                Ask me about trails, water stations, or where the hills bite.
+              </div>
+            </div>
           </div>
         </div>
       )}
