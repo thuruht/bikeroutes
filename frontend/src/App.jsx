@@ -50,25 +50,50 @@ function Reki({ size = 64, mood = "scout" }) {
 }
 
 /* ---- Explore view ---- */
-function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBusy }) {
-  const search = async (q) => {
+function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBusy,
+  categories, selectedCats, onToggleCat, trailsOverlay, railOverlay, toggleTrails, toggleRail,
+  clearExploreMarkers, addExploreMarker }) {
+  const searchReqId = useRef(0);
+  const searchTimer = useRef(null);
+
+  const doSearch = useCallback(async (q, cats) => {
     setQuery(q);
-    if (!q.trim()) { setResults([]); return; }
+    if (!q.trim()) { setResults([]); clearExploreMarkers(); return; }
+    const id = ++searchReqId.current;
     setBusy(true);
+    clearExploreMarkers();
     try {
-      const r = await fetch("/api/search?q=" + encodeURIComponent(q));
+      const catParam = cats.length > 0 ? "&category=" + cats.join(",") : "";
+      const r = await fetch("/api/search?q=" + encodeURIComponent(q) + catParam);
       const d = await r.json();
-      setResults(d.results || []);
-    } catch (_) { setResults([]); }
-    setBusy(false);
+      if (id === searchReqId.current) setResults(d.results || []);
+    } catch { if (id === searchReqId.current) setResults([]); }
+    if (id === searchReqId.current) setBusy(false);
+  }, [setQuery, setResults, setBusy, clearExploreMarkers]);
+
+  const queueSearch = useCallback((q, cats) => {
+    clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => doSearch(q, cats), 280);
+  }, [doSearch]);
+
+  const onChipClick = (id) => {
+    const next = selectedCats.includes(id)
+      ? selectedCats.filter(c => c !== id)
+      : [...selectedCats, id];
+    onToggleCat(id);
+    if (query.trim()) queueSearch(query, next);
   };
+
   const go = (r) => {
     const m = mapObj.current;
-    if (m && r.metadata) m.flyTo({ center: [r.metadata.lon, r.metadata.lat], zoom: 15, duration: 800 });
+    if (m && r.metadata) {
+      m.flyTo({ center: [r.metadata.lon, r.metadata.lat], zoom: 15, duration: 800 });
+      addExploreMarker(r.metadata.lon, r.metadata.lat, r.metadata?.name);
+    }
   };
   let body;
   if (results.length > 0) {
-    body = <div>{results.map((r, i) => (
+    body = <div>{results.map((r) => (
       <div key={r.id} className="turn" style={{ cursor: "pointer" }} onClick={() => go(r)}>
         <div className="ic">{Ic.search}</div>
         <div className="body">
@@ -85,11 +110,40 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
       <div style={{ marginBottom: 14, fontSize: 12.5, color: "var(--muted-txt)", lineHeight: 1.4 }}>
         Search for trails, bike shops, water stations, and more.
       </div>
-      <div className="io-row" style={{ borderRadius: 12, marginBottom: 12 }}>
+      <div className="io-row" style={{ borderRadius: 12, marginBottom: 8 }}>
         <input value={query} placeholder="Search trails, POIs..."
-          onChange={e => search(e.target.value)} />
+          onChange={e => queueSearch(e.target.value, selectedCats)} />
         {busy && <span className="mono" style={{ fontSize: 10, color: "var(--muted-txt)", padding: "0 10px" }}>...</span>}
       </div>
+
+      {/* Category filter chips */}
+      {categories.length > 0 && (
+        <div className="chips">
+          {categories.map(c => (
+            <span key={c.id}
+              className={"chip" + (selectedCats.includes(c.id) ? " active" : "")}
+              onClick={() => onChipClick(c.id)}>
+              {c.label}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Map overlays toggles */}
+      <div style={{ marginTop: 14, padding: "10px 12px", background: "var(--paper-2)", borderRadius: 12, border: "1px solid var(--line)" }}>
+        <div className="mono" style={{ fontSize: 10, color: "var(--muted-txt)", letterSpacing: ".04em", textTransform: "uppercase", marginBottom: 8 }}>Map overlays</div>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "var(--ink)", padding: "4px 0" }}>
+          <input type="checkbox" checked={trailsOverlay} onChange={toggleTrails}
+            style={{ accentColor: "var(--green)" }} />
+          Waymarked Trails
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13, color: "var(--ink)", padding: "4px 0" }}>
+          <input type="checkbox" checked={railOverlay} onChange={toggleRail}
+            style={{ accentColor: "var(--green)" }} />
+          Railways & stations
+        </label>
+      </div>
+
       {body}
     </div>
   );
@@ -229,20 +283,37 @@ export default function LiveApp() {
   const [exploreQuery, setExploreQuery] = useState("");
   const [exploreResults, setExploreResults] = useState([]);
   const [exploreBusy, setExploreBusy] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [selectedCats, setSelectedCats] = useState([]);
   const [trailsOverlay, setTrailsOverlay] = useState(() => localStorage.getItem("br-trails") !== "off");
   const [railOverlay, setRailOverlay] = useState(() => localStorage.getItem("br-rail") === "on");
+  const [modalSection, setModalSection] = useState(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
 
   const mapRef = useRef(null);
   const mapObj = useRef(null);
   const wpMarkers = useRef([]);
+  const exploreMarkers = useRef([]);
   const scrubMarker = useRef(null);
   const turnMarker = useRef(null);
   const reqId = useRef(0);
   const wpsRef = useRef(wps);
   const panelScrollRef = useRef(null);
+  const scrollSentinelRef = useRef(null);
   useEffect(() => { wpsRef.current = wps; }, [wps]);
 
   useEffect(() => { if (panelScrollRef.current) panelScrollRef.current.scrollTop = 0; }, [view]);
+
+  useEffect(() => {
+    const el = scrollSentinelRef.current;
+    const p = panelScrollRef.current;
+    if (!el || !p) return;
+    const io = new IntersectionObserver(([e]) => {
+      setShowScrollHint(!e.isIntersecting);
+    }, { root: p, threshold: 0 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [view]);
 
   const tileArr = (th) => ["a", "b", "c"].map(s =>
     th === "dark"
@@ -295,8 +366,8 @@ export default function LiveApp() {
           "disused", 0.5, "abandoned", 0.3,
           0.8],
         "line-dasharray": ["match", ["get", "category"],
-          "disused", [4, 3], "abandoned", [2, 4],
-          [1, 0]],
+          "disused", ["literal", [4, 3]], "abandoned", ["literal", [2, 4]],
+          ["literal", [1, 0]]],
       },
       layout: { visibility: railOverlay ? "visible" : "none" },
     }, "route-casing");
@@ -411,6 +482,22 @@ export default function LiveApp() {
     });
   }, [wps, theme]);
 
+  const clearExploreMarkers = useCallback(() => {
+    exploreMarkers.current.forEach(m => m.remove());
+    exploreMarkers.current = [];
+  }, []);
+
+  const addExploreMarker = useCallback((lng, lat, name) => {
+    clearExploreMarkers();
+    const map = mapObj.current;
+    if (!map) return;
+    const el = document.createElement("div");
+    el.style.cssText = "width:20px;height:20px;border-radius:50%;background:var(--orange);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;";
+    el.title = name || "Explore result";
+    const mk = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+    exploreMarkers.current.push(mk);
+  }, [clearExploreMarkers]);
+
   /* ---- compute route when waypoints / pref change ---- */
   useEffect(() => {
     const valid = wps.filter(Boolean);
@@ -519,6 +606,16 @@ export default function LiveApp() {
     }
   };
 
+  const onToggleCat = (id) => {
+    setSelectedCats(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]);
+  };
+
+  useEffect(() => {
+    fetch("/api/poi/categories").then(r => r.json()).then(d => {
+      if (d.categories) setCategories(d.categories);
+    }).catch(() => {});
+  }, []);
+
   const grade = result ? (result.ascend / Math.max(1, result.dist) * 100) : 0;
   const mPerKm = result ? result.ascend / Math.max(0.1, result.dist / 1000) : 0;
   const diff = !result ? 0 : mPerKm < 8 ? 1 : mPerKm < 18 ? 2 : 3;
@@ -574,24 +671,49 @@ export default function LiveApp() {
               b<span className="i-slot"><span className="head"><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
             </div>
             <div className="modal-nav">
-              <a href="#" className={view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setView("plan"); setInfoOpen(false); }}>Plan</a>
-              <a href="#" className={view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setView("explore"); setInfoOpen(false); }}>Explore</a>
-              <a href="#">Map data</a>
-              <a href="#">About</a>
+              <a href="#" className={(modalSection === null || modalSection === "main") && view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("plan"); setInfoOpen(false); }}>Plan</a>
+              <a href="#" className={(modalSection === null || modalSection === "main") && view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("explore"); setInfoOpen(false); }}>Explore</a>
+              <a href="#" className={modalSection === "map-data" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "map-data" ? null : "map-data"); }}>Map data</a>
+              <a href="#" className={modalSection === "about" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "about" ? null : "about"); }}>About</a>
             </div>
-            <div className="modal-section">
-              <div className="modal-privacy">
-                <span className="modal-icon">{Ic.lock}</span>
-                <div>
-                  <b>No tracking, no ads.</b><br />
-                  <span className="mono">Open source · OSM / ODbL</span>
+            {modalSection === "map-data" ? (
+              <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
+                <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>Map data sources</div>
+                <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />CARTO Voyager / Dark Matter tiles</div>
+                  <div><b style={{ color: "var(--ink)" }}>Cycling overlay</b><br />Waymarked Trails cycling map &mdash; &copy; waymarkedtrails.org</div>
+                  <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors</div>
+                  <div><b style={{ color: "var(--ink)" }}>Geocoding</b><br />OpenStreetMap Nominatim</div>
+                  <div><b style={{ color: "var(--ink)" }}>Routing</b><br />Valhalla (bicycle profile) with FOSSGIS &amp; BRouter fallback</div>
                 </div>
               </div>
-            </div>
-            <div className="modal-section mono" style={{ fontSize: 11.5, color: "var(--muted-txt)" }}>
-              bikeroutes.org · v0.9 RC<br />
-              open cycling maps · midwest
-            </div>
+            ) : modalSection === "about" ? (
+              <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
+                <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>About BikeRoutes.org</div>
+                <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div>Open cycling route planner and trail explorer for the Kansas City metro and Midwest.</div>
+                  <div>Built with MapLibre GL JS, Cloudflare Workers, D1, and Vectorize. No tracking, no ads, no accounts required.</div>
+                  <div>Source code available on GitHub. Contributions welcome.</div>
+                  <div className="mono" style={{ fontSize: 10.5, color: "var(--muted-txt)" }}>v0.9 RC &middot; open cycling maps &middot; midwest</div>
+                </div>
+              </div>
+            ) : (
+              <>
+              <div className="modal-section">
+                <div className="modal-privacy">
+                  <span className="modal-icon">{Ic.lock}</span>
+                  <div>
+                    <b>No tracking, no ads.</b><br />
+                    <span className="mono">Open source &middot; OSM / ODbL</span>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-section mono" style={{ fontSize: 11.5, color: "var(--muted-txt)" }}>
+                bikeroutes.org &middot; v0.9 RC<br />
+                open cycling maps &middot; midwest
+              </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -621,7 +743,10 @@ export default function LiveApp() {
               placeholder={wps.length === 0 ? "Choose start — or click the map" : wps.length === 1 ? "Choose destination" : "Add another stop"}
               onPick={appendWp} />
             {valid.length >= 2 && (
-              <button className="pillbtn" onClick={reverseWps} style={{ alignSelf: "flex-start", padding: "7px 11px", fontSize: 12 }}>{Ic.swap} Reverse</button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, alignSelf: "flex-start" }}>
+                <button className="pillbtn" onClick={reverseWps} style={{ padding: "7px 11px", fontSize: 12 }}>{Ic.swap} Reverse</button>
+                {loading && <span className="spin" />}
+              </div>
             )}
           </div>
 
@@ -692,7 +817,15 @@ export default function LiveApp() {
           {view === "explore" && <ExploreView
             mapObj={mapObj} query={exploreQuery} setQuery={setExploreQuery}
             results={exploreResults} setResults={setExploreResults}
-            busy={exploreBusy} setBusy={setExploreBusy} />}
+            busy={exploreBusy} setBusy={setExploreBusy}
+            categories={categories} selectedCats={selectedCats} onToggleCat={onToggleCat}
+            trailsOverlay={trailsOverlay} railOverlay={railOverlay}
+            toggleTrails={toggleTrails} toggleRail={toggleRail}
+            clearExploreMarkers={clearExploreMarkers} addExploreMarker={addExploreMarker} />}
+          <div ref={scrollSentinelRef} style={{ height: 1 }} />
+          <div className={"panel-fade" + (showScrollHint ? " show" : "")}>
+            <span className="scroll-arrow">&darr; more</span>
+          </div>
         </div>
       </div>
 

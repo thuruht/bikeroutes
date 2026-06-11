@@ -44,13 +44,14 @@ cd worker && wrangler tail
 
 ## Routing & API Contract
 - `/api/geocode?q=` — Nominatim proxy (cached via KV)
-- `/api/reverse?lat=&lon=` — reverse geocode proxy (cached via KV)
+- `/api/reverse?lng=&lat=` — reverse geocode proxy (cached via KV)
 - `/api/route` — Valhalla container → FOSSGIS → BRouter fallback chain
 - `/api/search?q=` — semantic search via Vectorize + Workers AI
 - `/api/tiles/*.pmtiles` — PMTiles range proxy from R2
 - `/api/features?category=|type=` — GeoJSON from `trails` D1 table. `type=trail` includes all OSM + MARC bikeway categories; `type=rail` covers railway, station, halt, light_rail, tram. Optional `?bbox=south,west,north,east`. Pagination via `?offset=0&limit=5000` (default offset=0, limit=5000, max=10000). Response includes `total`, `offset`, `limit` for client-side paging.
 - `/api/admin/ingest` — OSM Overpass or D1→Vectorize seeding (admin-protected). Supports `?types=trail,rail` param
 - `/api/admin/sync-gis` — MARC ArcGIS POI sync (admin-protected)
+- `/api/donate/stats` — public donation stats (donors count, total raised)
 - `/api/poi/categories` — POI category list
 
 ## Frontend: Panel Views
@@ -76,8 +77,9 @@ All seeded and live for KC metro area:
 | D1 `pois` table | OSM trails + MARC POIs (restrooms, bike hubs, food, stadiums, trail access points) | Overpass API + MARC ArcGIS |
 | D1 `trails` table | Full GeoJSON geometries for trails, bikeways (11 facility types), MetroGreen corridors, railways, stations | Overpass API (`out center 500`) + MARC ArcGIS |
 | Vectorize `bikeroutes-trails` | AI embeddings of all POIs + trail features | OSM ingest + MARC sync |
-| KV `ROUTE_CACHE` | Cached route responses | /api/route |
+| KV `ROUTE_CACHE` | Cached route responses + geocode/reverse | /api/route, /api/geocode |
 | KV `RATE_LIMITS` | Per-IP rate limit counters | middleware |
+| KV `SESSIONS` | Session tokens, magic-link codes, merch claims | /api/auth, /api/donate |
 
 Production counts as of June 2026:
 - **I-70 construction projects (KML)**: 18 features spanning 2025-2028, including bridge replacements, pedestrian bridge changes, and full I-70 closure Feb-Nov 2027
@@ -133,7 +135,7 @@ All endpoints on `gis2.marc2.org` support `f=geojson&outSR=4326` for WGS84 outpu
 ```bash
 curl https://bikeroutes.org/api/health          # D1/KV/R2 checks
 curl "https://bikeroutes.org/api/geocode?q=test" # Nominatim proxy
-curl "https://bikeroutes.org/api/reverse?lat=39&lon=-94"
+curl "https://bikeroutes.org/api/reverse?lng=-94&lat=39"
 curl -X POST https://bikeroutes.org/api/route \
   -H "Content-Type: application/json" \
   -d '{"locations":[{"lat":39.1,"lon":-94.6},{"lat":39.0,"lon":-94.5}],"costing":"bicycle"}'

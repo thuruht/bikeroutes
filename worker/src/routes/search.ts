@@ -59,6 +59,7 @@ interface ChatResponse {
  */
 searchRoutes.get("/", async (c) => {
 	const query = c.req.query("q");
+	const categoryFilter = c.req.query("category") || "";
 	if (!query || query.length < 3) {
 		return c.json({
 			error: "Search query too short",
@@ -79,25 +80,40 @@ searchRoutes.get("/", async (c) => {
 		});
 	}
 
+	// Parse category filter
+	const filterCats = categoryFilter
+		? categoryFilter.split(",").map(s => s.trim().toLowerCase()).filter(Boolean)
+		: [];
+
 	try {
 		// Generate embedding using Cloudflare Workers AI
 		const embedResponse = await c.env.AI.run("@cf/baai/bge-base-en-v1.5", {
 			text: [query]
 		}) as EmbedResponse;
-		// The model returns an array of vectors (one for each input string)
 		const queryVector = embedResponse.data[0];
 
-		// Query Vectorize
+		// Query Vectorize — increase topK when filtering by category
+		const topK = filterCats.length > 0 ? 20 : 5;
 		const results = await c.env.TRAIL_SEARCH.query(queryVector, {
-			topK: 5,
+			topK,
 			returnValues: false,
 			returnMetadata: "all",
 		});
 
+		// Apply category filter client-side on Vectorize results
+		let matches = results.matches;
+		if (filterCats.length > 0) {
+			matches = matches.filter(m => {
+				const meta = m.metadata || {};
+				const cat = typeof meta.category === "string" ? meta.category.toLowerCase() : "";
+				return filterCats.includes(cat);
+			});
+		}
+
 		let rekiResponse = "🦌 Hmm, Reki hasn't explored that area yet. Try different words?";
 
-		if (results.matches.length > 0) {
-			const contextText = results.matches.map((m, i) => {
+		if (matches.length > 0) {
+			const contextText = matches.map((m, i) => {
 				const meta = m.metadata || {};
 				return `[${i+1}] ${meta.name || 'Unknown Location'} - ${meta.description || ''}`;
 			}).join("\n");
@@ -130,7 +146,7 @@ ${contextText}`;
 				"INSERT INTO search_logs (query, result_count, ip_hash, created_at) VALUES (?, ?, ?, ?)"
 			).bind(
 				query,
-				results.matches.length,
+				matches.length,
 				await sha256Short(ip),
 				new Date().toISOString()
 			).run()
@@ -138,7 +154,8 @@ ${contextText}`;
 
 		return c.json({
 			query,
-			results: results.matches.map((m) => ({
+			category: filterCats.length > 0 ? filterCats : undefined,
+			results: matches.map((m) => ({
 				id: m.id,
 				score: m.score,
 				metadata: m.metadata,

@@ -72,6 +72,14 @@ h1, h2, h3, h4,
 .brand .mark svg { width: 16px; height: 16px; }
 .brand .name { font-weight: 600; font-size: 15px; letter-spacing: -.01em; font-family: "Outfit", system-ui, sans-serif; }
 .brand .tag { font-size: 11px; color: var(--muted-txt); letter-spacing: .02em; }
+.ver-chip {
+  align-self: center; margin-left: 2px;
+  font-size: 9.5px; font-weight: 600; letter-spacing: .05em;
+  color: var(--orange); background: var(--orange-soft);
+  padding: 3px 7px; border-radius: 99px;
+  border: 1px solid color-mix(in oklab, var(--orange) 34%, transparent);
+  white-space: nowrap;
+}
 
 .spacer { flex: 1; }
 
@@ -124,9 +132,31 @@ h1, h2, h3, h4,
 }
 .modetabs { border-bottom: 1px solid var(--line); }
 
-.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
+.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; position: relative; }
 .panel-scroll::-webkit-scrollbar { width: 8px; }
 .panel-scroll::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+
+/* gradient fade at bottom of panel to signal scrollable content */
+.panel-fade {
+  position: sticky; bottom: 0; left: 0; right: 0; height: 48px;
+  pointer-events: none; z-index: 2;
+  background: linear-gradient(to top, var(--panel) 20%, transparent);
+  display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px;
+  opacity: 0; transition: opacity .25s;
+}
+.panel-fade.show { opacity: 1; }
+.panel-fade .scroll-arrow {
+  font-size: 12px; color: var(--muted-txt); opacity: .7;
+  animation: br-bounce-down 1.6s ease-in-out infinite;
+}
+@keyframes br-bounce-down { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+/* loading spinner for inline use */
+.spin {
+  display: inline-block; width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--line-2); border-top-color: var(--green);
+  animation: br-spin .7s linear infinite; vertical-align: middle;
+}
 
 /* route inputs */
 .io { position: relative; display: flex; flex-direction: column; gap: 0; }
@@ -276,6 +306,9 @@ h1, h2, h3, h4,
 .trail .info .tags { display: flex; gap: 6px; margin-top: 7px; }
 .trail .info .tags span { font-size: 10.5px; padding: 2px 7px; border-radius: 5px; background: var(--paper-2); color: var(--ink-2); font-weight: 500; }
 .trail .info .tags span.g { background: var(--green-soft); color: var(--green); }
+
+/* maplibregl attribution — move out of readout path */
+.maplibregl-ctrl-bottom-left { bottom: 48px !important; left: 16px !important; }
 
 /* ---------- Map controls (bottom right) ---------- */
 .mapctl { position: absolute; right: 20px; bottom: 20px; z-index: 30; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
@@ -447,11 +480,17 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 
 /* Tablet / large phone — panel becomes a bottom sheet */
 @media (max-width: 720px) {
-  .topbar { padding: 12px 12px; gap: 10px; }
-  .readout { display: none; }
-  .pillbtn.solid { padding: 9px; }
+  .topbar { padding: 12px 12px; gap: 8px; }
+  .brand { padding: 7px 10px 7px 8px; }
+  .brand .name { font-size: 13px; }
+  .ver-chip { display: none; }
+  .theme-toggle { gap: 1px; }
+  .theme-toggle button { width: 28px; height: 26px; }
+  .pillbtn { padding: 7px 10px; font-size: 12px; }
+  .pillbtn.solid { padding: 7px; }
   .pillbtn.solid .btn-label { display: none; }
   .pillbtn.solid svg { width: 18px; height: 18px; }
+  .readout { display: none; }
 
   /* bottom sheet: anchored to the bottom, swipe/scroll its body */
   .panel {
@@ -466,7 +505,8 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
     margin: 8px auto 2px;
   }
   .panel-scroll { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
-  .mapctl { bottom: calc(50vh + 14px); gap: 6px; }
+  .maplibregl-ctrl-bottom-left { bottom: 8px !important; left: 8px !important; }
+  .mapctl { bottom: calc(50vh + 14px); right: 10px; gap: 6px; }
   .mapctl .zoomstack button { width: 34px; height: 34px; font-size: 16px; }
   .mapctl .ctlbtn { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
   .mapctl .ctlbtn svg { width: 14px; height: 14px; }
