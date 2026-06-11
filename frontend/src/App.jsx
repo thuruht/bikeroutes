@@ -218,7 +218,7 @@ function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, ca
           background: "var(--panel-solid)", border: "1px solid var(--line)", borderRadius: 12,
           boxShadow: "var(--shadow)", overflow: "hidden", maxHeight: 240, overflowY: "auto" }}>
           {list.map((d, i) => (
-            <div key={i} onMouseDown={() => { onPick(d); setQ(d.short); setOpen(false); }}
+            <div key={i} onMouseDown={() => { onPick(d); setQ(value ? d.short : ""); setOpen(false); }}
               style={{ padding: "10px 13px", cursor: "pointer", borderBottom: i < list.length - 1 ? "1px solid var(--line)" : 0 }}
               onMouseEnter={(e) => e.currentTarget.style.background = "var(--paper-2)"}
               onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
