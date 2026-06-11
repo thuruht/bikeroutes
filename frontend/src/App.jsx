@@ -27,7 +27,7 @@ const Ic = {
 const turnIcon = (t) => t === "left" ? Ic.left : t === "right" ? Ic.right : t === "arrive" ? Ic.flag : Ic.dot;
 
 /* ---- Reki mascot ---- */
-function Reki({ size = 64, mood = "scout" }) {
+function Reki({ size = 64, mood = "scout", onRekiClick }) {
   const lines = {
     scout: "Reki's scouting the route…",
     empty: "Pick a start and a destination — or click the map. I'll find the bikeable way.",
@@ -36,9 +36,9 @@ function Reki({ size = 64, mood = "scout" }) {
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "center", padding: "14px 12px",
       background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 12 }}>
-      <span style={{ flex: "none", width: size, height: size, borderRadius: 12,
+      <span onClick={onRekiClick} style={{ flex: "none", width: size, height: size, borderRadius: 12,
         background: "var(--green-soft)", border: "1px solid var(--line)",
-        display: "grid", placeItems: "center", overflow: "hidden" }}>
+        display: "grid", placeItems: "center", overflow: "hidden", cursor: onRekiClick ? "pointer" : "default" }}>
         <svg viewBox="0 -3 172 172" width={size - 10} height={size - 10}
           role="img" aria-label="Reki the deer" style={{ display: "block" }}>
           <use href="#reki-head" x="0" y="-3" width="172" height="172" />
@@ -833,7 +833,7 @@ export default function LiveApp() {
 
           {/* states */}
           {valid.length < 2 ? (
-            <div style={{ marginTop: 16 }}><Reki mood="empty" /></div>
+            <div style={{ marginTop: 16 }}><Reki mood="empty" onRekiClick={() => setRekiOpen(true)} /></div>
           ) : loading ? (
             <div style={{ marginTop: 16 }}>
               <div className="route-skelly fade-in">
@@ -847,7 +847,7 @@ export default function LiveApp() {
                 </div>
                 <div className="bar" />
               </div>
-              <div style={{ marginTop: 10 }}><Reki mood="scout" /></div>
+              <div style={{ marginTop: 10 }}><Reki mood="scout" onRekiClick={() => setRekiOpen(true)} /></div>
             </div>
           ) : routeError ? (
             <div className="route-error fade-in">
@@ -889,7 +889,7 @@ export default function LiveApp() {
                 <button onClick={exportKML}>{Ic.gpx} KML</button>
               </div>
 
-              {result.source === "estimated" && <div style={{ marginTop: 14 }}><Reki mood="estimate" /></div>}
+              {result.source === "estimated" && <div style={{ marginTop: 14 }}><Reki mood="estimate" onRekiClick={() => setRekiOpen(true)} /></div>}
 
               <div className="turns">
                 <div className="turns-head">Directions · {result.turns.length} steps</div>
