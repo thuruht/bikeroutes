@@ -162,6 +162,97 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
   );
 }
 
+/* ---- Curated (JKCBIKEMAP) view: list-first, no marker dump ---- */
+function CuratedView({ mapObj, onBack }) {
+  const [busy, setBusy] = useState(false);
+  const [features, setFeatures] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [error, setError] = useState(false);
+  const [cats, setCats] = useState([]);
+  const [activeCat, setActiveCat] = useState("All");
+  const markerRef = useRef(null);
+
+  const clearMarker = () => { if (markerRef.current) { markerRef.current.remove(); markerRef.current = null; } };
+
+  const centerOf = (geom) => {
+    if (!geom) return null;
+    if (geom.type === "Point") return geom.coordinates;
+    if (geom.type === "LineString") {
+      const [lon, lat] = geom.coordinates.reduce(([sx, sy], [x, y]) => [sx + x, sy + y], [0, 0]);
+      return [lon / geom.coordinates.length, lat / geom.coordinates.length];
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    clearMarker();
+    setBusy(true);
+    setError(false);
+    fetch("/api/curated-features?limit=500")
+      .then(r => r.json())
+      .then(d => {
+        const list = d.features || [];
+        setFeatures(list);
+        const categories = ["All", ...Array.from(new Set(list.map(f => f.properties?.category).filter(Boolean)))];
+        setCats(categories);
+      })
+      .catch(() => setError(true))
+      .finally(() => setBusy(false));
+    return clearMarker;
+  }, []);
+
+  const selectFeature = (f) => {
+    setSelected(f);
+    const map = mapObj.current;
+    const center = centerOf(f.geometry);
+    if (map && center) {
+      map.flyTo({ center, zoom: Math.max(map.getZoom(), 14), duration: 800 });
+      clearMarker();
+      const el = document.createElement("div");
+      el.style.cssText = "width:18px;height:18px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 0 4px rgba(159,184,74,.35);";
+      markerRef.current = new maplibregl.Marker({ element: el }).setLngLat(center).addTo(map);
+    }
+  };
+
+  const filtered = activeCat === "All" ? features : features.filter(f => f.properties?.category === activeCat);
+
+  return (
+    <div className="fade-in">
+      <div style={{ marginBottom: 14, fontSize: 12.5, color: "var(--muted-txt)", lineHeight: 1.4 }}>
+        Hand-curated ride anchors, neighborhoods, trail spines, and planned connectors for KC.
+      </div>
+      {cats.length > 1 && (
+        <div className="chips" style={{ marginBottom: 12 }}>
+          {cats.map(c => (
+            <span key={c} className={"chip" + (activeCat === c ? " active" : "")} onClick={() => setActiveCat(c)}>{c}</span>
+          ))}
+        </div>
+      )}
+      {busy && <div className="mono" style={{ color: "var(--muted-txt)", fontSize: 12, padding: "10px 0" }}>Loading curated features…</div>}
+      {error && <div className="mono" style={{ color: "var(--red)", fontSize: 12, padding: "10px 0" }}>Failed to load curated features.</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filtered.map(f => (
+          <div key={f.id} className={"trail" + (selected?.id === f.id ? " active" : "")} style={{ cursor: "pointer" }} onClick={() => selectFeature(f)}>
+            <div className="spark" style={{ display: "grid", placeItems: "center", background: f.properties?.feature_type === "line" ? "var(--green-soft)" : "var(--orange-soft)" }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: f.properties?.feature_type === "line" ? "var(--green)" : "var(--orange)" }}>
+                {f.properties?.feature_type === "line"
+                  ? <><path d="M22 12H2" /><path d="M5 8l-4 4 4 4" /><path d="M19 16l4-4-4-4" /></>
+                  : <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2" /></>}
+              </svg>
+            </div>
+            <div className="info">
+              <div className="nm">{f.properties?.name || f.id}</div>
+              <div className="sub">{f.properties?.category || ""} · {f.properties?.feature_type || ""}</div>
+              {f.properties?.public_description && <div className="sub" style={{ marginTop: 4, opacity: 0.85 }}>{f.properties.public_description}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+      {filtered.length === 0 && !busy && <div className="mono fade-in" style={{ padding: "20px 0", textAlign: "center", color: "var(--muted-txt)" }}>No curated features in this category.</div>}
+    </div>
+  );
+}
+
 /* ---- geocoding input with live autocomplete ---- */
 function GeoInput({ dotClass, dotNumber, value, placeholder, onPick, onClear, canClear, showLocate, onLocate }) {
   const [q, setQ] = useState(value || "");
@@ -686,13 +777,13 @@ export default function LiveApp() {
         </div>
         <button className="pillbtn" onClick={() => setInfoOpen(true)} title="Info" style={{ padding: "9px 11px" }}>{Ic.info}</button>
         <button className="pillbtn solid" style={{ userSelect: "none" }}
-          title={wps.length > 0 ? "Click remove last stop · Long-press clear route" : (view === "explore" ? "Switch to plan" : "New route")}
+          title={wps.length > 0 ? "Click remove last stop · Long-press clear route" : (view !== "plan" ? "Switch to plan" : "New route")}
           onMouseDown={() => {
             if (wps.length === 0) return;
             longPressRef.current = setTimeout(() => { longPressRef.current = null; setWps([]); }, 700);
           }}
           onMouseUp={() => {
-            if (wps.length === 0) { if (view === "explore") setView("plan"); return; }
+            if (wps.length === 0) { if (view !== "plan") setView("plan"); return; }
             if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; setWps(prev => prev.slice(0, -1)); }
           }}
           onMouseLeave={() => { if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; } }}
@@ -702,11 +793,11 @@ export default function LiveApp() {
           }}
           onTouchEnd={(e) => {
             e.preventDefault();
-            if (wps.length === 0) { if (view === "explore") setView("plan"); return; }
+            if (wps.length === 0) { if (view !== "plan") setView("plan"); return; }
             if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; setWps(prev => prev.slice(0, -1)); }
           }}
           onTouchMove={() => { if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; } }}>
-          {wps.length > 0 ? Ic.x : Ic.plus}<span className="btn-label"> {wps.length > 0 ? "Remove" : (view === "explore" ? "Plan route" : "New route")}</span></button>
+          {wps.length > 0 ? Ic.x : Ic.plus}<span className="btn-label"> {wps.length > 0 ? "Remove" : (view !== "plan" ? "Plan route" : "New route")}</span></button>
       </div>
 
       {/* INFO MODAL */}
@@ -720,6 +811,7 @@ export default function LiveApp() {
             <div className="modal-nav">
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("plan"); setInfoOpen(false); }}>Plan</a>
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("explore"); setInfoOpen(false); }}>Explore</a>
+              <a href="#" className={(modalSection === null || modalSection === "main") && view === "curated" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("curated"); setInfoOpen(false); }}>Curated</a>
               <a href="#" className={modalSection === "map-data" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "map-data" ? null : "map-data"); }}>Map data</a>
               <a href="#" className={modalSection === "about" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "about" ? null : "about"); }}>About</a>
             </div>
@@ -797,6 +889,7 @@ export default function LiveApp() {
         <div className="modetabs">
           <button className={view === "plan" ? "active" : ""} onClick={() => setView("plan")}>Plan a route</button>
           <button className={view === "explore" ? "active" : ""} onClick={() => setView("explore")}>Explore</button>
+          <button className={view === "curated" ? "active" : ""} onClick={() => setView("curated")}>Curated</button>
         </div>
         <div className="panel-scroll" ref={panelScrollRef}>
           {view === "plan" && <>
@@ -914,6 +1007,7 @@ export default function LiveApp() {
             trailsOverlay={trailsOverlay} railOverlay={railOverlay}
             toggleTrails={toggleTrails} toggleRail={toggleRail}
             clearExploreMarkers={clearExploreMarkers} addExploreMarker={addExploreMarker} />}
+          {view === "curated" && <CuratedView mapObj={mapObj} />}
           <div ref={scrollSentinelRef} style={{ height: 1 }} />
           <div className={"panel-fade" + (showScrollHint ? " show" : "")}>
             <span className="scroll-arrow">&darr; more</span>

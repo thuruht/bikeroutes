@@ -19,6 +19,7 @@ import { authRoutes } from "./routes/auth";
 import { reportRoutes } from "./routes/reports";
 import { ingestRoutes } from "./routes/ingest";
 import { featuresRoutes } from "./routes/features";
+import { curatedFeatureRoutes } from "./routes/curated-features";
 
 // Re-export Durable Objects & Containers so Wrangler can find them
 export { POIStore } from "./durable-objects/POIStore";
@@ -47,6 +48,7 @@ app.route("/api/auth", authRoutes);
 app.route("/api/reports", reportRoutes);
 app.route("/api/admin/ingest", ingestRoutes);
 app.route("/api/features", featuresRoutes);
+app.route("/api/curated-features", curatedFeatureRoutes);
 
 // ─── Legacy redirect: old seed endpoint → new ingest endpoint ───
 app.get("/api/admin/seed-trails", async (c) => {
