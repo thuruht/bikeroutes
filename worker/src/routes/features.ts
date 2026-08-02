@@ -21,7 +21,7 @@ featuresRoutes.get("/", async (c) => {
 	const offset = Math.max(0, parseInt(c.req.query("offset") || "0", 10));
 	const limit = Math.min(10000, Math.max(1, parseInt(c.req.query("limit") || "5000", 10)));
 
-	let where = "WHERE (status IN ('approved','existing') OR status LIKE 'construction_%')";
+	let where = "WHERE (status IN ('approved','existing') OR status LIKE 'construction_%') AND (visibility IS NULL OR visibility IN ('public','informal'))";
 	const params: any[] = [];
 	const countParams: any[] = [];
 

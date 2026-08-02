@@ -30,10 +30,14 @@ authRoutes.post("/request", async (c) => {
 	// In a real app, send an email here using Cloudflare Email Routing or SendGrid
 	// console.log(`Sending code ${code} to ${email}`);
 
-	return c.json({ 
-		message: "Code generated. Check your email (or dev console).",
-		dev_code: code // For development purposes only
-	});
+	const isLocalDev = c.req.header('origin')?.includes('localhost') ?? false;
+	const response: { message: string; dev_code?: string } = {
+		message: "Code generated. Check your email (or dev console)."
+	};
+	if (isLocalDev) {
+		response.dev_code = code; // only exposed for local development
+	}
+	return c.json(response);
 });
 
 // ─── Verify Magic Code ────────────────────────────────────────────
