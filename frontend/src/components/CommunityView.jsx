@@ -293,14 +293,18 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460, maxHeight: '85vh', overflow: 'auto' }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(92vw, 460px)', maxHeight: 'min(90vh, 720px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <button className="modal-close" onClick={onClose}>{Ic.x}</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flex: 'none' }}>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden' }}>
             {p.author?.avatarUrl ? <img src={p.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : Ic.user}
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>{p.author?.displayName ?? p.author?.username ?? 'Anonymous'}</div>
+            <button
+              onClick={() => p.author?.username && onShowProfile?.(p.author.username)}
+              style={{ display: 'block', fontWeight: 700, fontSize: 13, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+            >{p.author?.displayName ?? p.author?.username ?? 'Anonymous'}</button>
             <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)' }}>{timeAgo(p.createdAt)} ago · {CATEGORIES.find((c) => c.id === p.category)?.label ?? p.category}</div>
           </div>
           {p.lat != null && (
@@ -308,40 +312,42 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile }) {
           )}
         </div>
 
-        {p.title && <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: 8 }}>{p.title}</div>}
-        <div style={{ fontSize: 13.5, lineHeight: 1.5, color: 'var(--ink-2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{p.body}</div>
+        <div style={{ overflowY: 'auto', paddingRight: 6, flex: 1, minHeight: 0 }}>
+          {p.title && <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: 8 }}>{p.title}</div>}
+          <div style={{ fontSize: 13.5, lineHeight: 1.5, color: 'var(--ink-2)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{p.body}</div>
 
-        {p.media?.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
-            {p.media.map((m) => (
-              <div key={m.key} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)', background: 'var(--paper-2)' }}>
-                {m.contentType?.startsWith('image') ? <img src={m.url} alt="" style={{ width: '100%', display: 'block' }} /> : <div className="mono" style={{ padding: 12, fontSize: 11 }}>{m.fileName}</div>}
+          {p.media?.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
+              {p.media.map((m) => (
+                <div key={m.key} style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid var(--line)', background: 'var(--paper-2)' }}>
+                  {m.contentType?.startsWith('image') ? <img src={m.url} alt="" style={{ width: '100%', display: 'block' }} /> : <div className="mono" style={{ padding: 12, fontSize: 11 }}>{m.fileName}</div>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ borderTop: '1px solid var(--line)', margin: '16px 0 12px', paddingTop: 12 }}>
+            <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)', marginBottom: 8 }}>{p.commentCount} comment{p.commentCount !== 1 ? 's' : ''}</div>
+            {data.comments.map((c) => (
+              <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+                <button
+                  className="text-btn"
+                  onClick={() => c.author?.username && onShowProfile?.(c.author.username)}
+                  style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}
+                >{c.author?.displayName ?? 'Anonymous'}</button>
+                <div style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{c.body}</div>
+                <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginTop: 2 }}>{timeAgo(c.createdAt)} ago</div>
               </div>
             ))}
           </div>
-        )}
 
-        <div style={{ borderTop: '1px solid var(--line)', margin: '16px 0 12px', paddingTop: 12 }}>
-          <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)', marginBottom: 8 }}>{p.commentCount} comment{p.commentCount !== 1 ? 's' : ''}</div>
-          {data.comments.map((c) => (
-            <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-              <button
-                className="text-btn"
-                onClick={() => c.author?.username && onShowProfile?.(c.author.username)}
-                style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}
-              >{c.author?.displayName ?? 'Anonymous'}</button>
-              <div style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{c.body}</div>
-              <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginTop: 2 }}>{timeAgo(c.createdAt)} ago</div>
-            </div>
-          ))}
+          {me ? (
+            <form onSubmit={submitComment}>
+              <textarea placeholder="Add a comment…" value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
+              <button type="submit" className="primary" style={{ marginTop: 8, width: '100%' }} disabled={posting || !comment.trim()}>{posting ? <span className="spin">{Ic.spinner}</span> : 'Comment'}</button>
+            </form>
+          ) : <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)' }}>Sign in to comment.</div>}
         </div>
-
-        {me ? (
-          <form onSubmit={submitComment}>
-            <textarea placeholder="Add a comment…" value={comment} onChange={(e) => setComment(e.target.value)} rows={3} />
-            <button type="submit" className="primary" style={{ marginTop: 8, width: '100%' }} disabled={posting || !comment.trim()}>{posting ? <span className="spin">{Ic.spinner}</span> : 'Comment'}</button>
-          </form>
-        ) : <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)' }}>Sign in to comment.</div>}
       </div>
     </div>
   );
