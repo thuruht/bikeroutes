@@ -21,6 +21,7 @@ import { ingestRoutes } from "./routes/ingest";
 import { featuresRoutes } from "./routes/features";
 import { curatedFeatureRoutes } from "./routes/curated-features";
 import { legendRoutes } from "./routes/legend";
+import { communityRoutes } from "./routes/community";
 
 // Re-export Durable Objects & Containers so Wrangler can find them
 export { POIStore } from "./durable-objects/POIStore";
@@ -40,7 +41,7 @@ app.use("*", cors({
 // ─── Domain redirect: JKCBIKEMAP → bikeroutes.org ──────
 app.use("*", async (c, next) => {
 	const host = c.req.header("host");
-	if (host === "jojomap.kcmo.xyz") {
+	if (host === "jojomap.kcmo.xyz" || host === "www.jojomap.kcmo.xyz") {
 		const url = new URL(c.req.url);
 		url.hostname = "bikeroutes.org";
 		url.protocol = "https:";
@@ -63,6 +64,7 @@ app.route("/api/admin/ingest", ingestRoutes);
 app.route("/api/features", featuresRoutes);
 app.route("/api/curated-features", curatedFeatureRoutes);
 app.route("/api/trail-overlay-legend", legendRoutes);
+app.route("/api/community", communityRoutes);
 
 // ─── Legacy redirect: old seed endpoint → new ingest endpoint ───
 app.get("/api/admin/seed-trails", async (c) => {

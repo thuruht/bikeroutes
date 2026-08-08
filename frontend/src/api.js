@@ -242,3 +242,89 @@ export const fmtTime = (s) => {
   const m = Math.round(s / 60);
   return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h ${m % 60}m`;
 };
+
+// ---- auth helpers -------------------------------------------
+function authHeaders() {
+  const token = localStorage.getItem("br-session");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function requestCode(email) {
+  const r = await fetch("/api/auth/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+  if (!r.ok) throw new Error("request failed " + r.status);
+  return r.json();
+}
+
+export async function verifyCode(email, code) {
+  const r = await fetch("/api/auth/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, code }) });
+  if (!r.ok) throw new Error("invalid code " + r.status);
+  const data = await r.json();
+  if (data.session_token) localStorage.setItem("br-session", data.session_token);
+  return data;
+}
+
+export async function fetchMe() {
+  const r = await fetch("/api/auth/me", { headers: authHeaders() });
+  if (!r.ok) return null;
+  const data = await r.json();
+  return data.user || null;
+}
+
+// ---- community API ------------------------------------------
+export async function fetchPosts(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.offset) qs.set("offset", String(params.offset));
+  if (params.category) qs.set("category", params.category);
+  if (params.userId) qs.set("userId", params.userId);
+  if (params.q) qs.set("q", params.q);
+  const r = await fetch(`/api/community/posts?${qs.toString()}`);
+  if (!r.ok) throw new Error("posts " + r.status);
+  return r.json();
+}
+
+export async function fetchPost(id) {
+  const r = await fetch(`/api/community/posts/${id}`);
+  if (!r.ok) throw new Error("post " + r.status);
+  return r.json();
+}
+
+export async function createPost(body) {
+  const r = await fetch("/api/community/posts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error("create " + r.status);
+  return r.json();
+}
+
+export async function uploadMedia(file) {
+  const form = new FormData();
+  form.append("file", file);
+  const r = await fetch("/api/community/media", { method: "POST", headers: authHeaders(), body: form });
+  if (!r.ok) throw new Error("upload " + r.status);
+  return r.json();
+}
+
+export async function likePost(id, like = true) {
+  const r = await fetch(`/api/community/posts/${id}/${like ? "like" : "unlike"}`, { method: "POST", headers: authHeaders() });
+  if (!r.ok) throw new Error("like " + r.status);
+  return r.json();
+}
+
+export async function commentPost(id, body) {
+  const r = await fetch(`/api/community/posts/${id}/comment`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ body }),
+  });
+  if (!r.ok) throw new Error("comment " + r.status);
+  return r.json();
+}
+
+export async function deletePost(id) {
+  const r = await fetch(`/api/community/posts/${id}`, { method: "DELETE", headers: authHeaders() });
+  if (!r.ok) throw new Error("delete " + r.status);
+  return r.json();
+}

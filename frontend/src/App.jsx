@@ -6,6 +6,7 @@ import './styles.css';
 import MapView from './components/MapView';
 import DonatePanel from './components/DonatePanel';
 import TrailLegend from './components/TrailLegend';
+import CommunityView from './components/CommunityView';
 
 /* ---- icons ---- */
 const Ic = {
@@ -732,8 +733,9 @@ export default function LiveApp() {
             </div>
             <div className="modal-nav">
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("plan"); setInfoOpen(false); }}>Plan</a>
-              <a href="#" className={(modalSection === null || modalSection === "main") && view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("explore"); setInfoOpen(false); }}>Explore</a>
-              <a href="#" className={(modalSection === null || modalSection === "main") && view === "map" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("map"); setInfoOpen(false); }}>Map</a>
+          <a href="#" className={(modalSection === null || modalSection === "main") && view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("explore"); setInfoOpen(false); }}>Explore</a>
+          <a href="#" className={(modalSection === null || modalSection === "main") && view === "map" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("map"); setInfoOpen(false); }}>Map</a>
+          <a href="#" className={(modalSection === null || modalSection === "main") && view === "community" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("community"); setInfoOpen(false); }}>Community</a>
               <a href="#" className={modalSection === "map-data" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "map-data" ? null : "map-data"); }}>Map data</a>
               <a href="#" className={modalSection === "donate" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "donate" ? null : "donate"); }}>Donate</a>
               <a href="#" className={modalSection === "about" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "about" ? null : "about"); }}>About</a>
@@ -795,6 +797,7 @@ export default function LiveApp() {
           <button className={view === "plan" ? "active" : ""} onClick={() => setView("plan")}>Plan a route</button>
           <button className={view === "explore" ? "active" : ""} onClick={() => setView("explore")}>Explore</button>
           <button className={view === "map" ? "active" : ""} onClick={() => setView("map")}>Map</button>
+          <button className={view === "community" ? "active" : ""} onClick={() => setView("community")}>Community</button>
         </div>
         <div className="panel-scroll" ref={panelScrollRef}>
           {view === "plan" && <>
@@ -919,6 +922,7 @@ export default function LiveApp() {
             toggleTrails={toggleTrails} toggleRail={toggleRail}
             clearExploreMarkers={clearExploreMarkers} setExploreMarkers={setExploreMarkers} />}
           {view === "map" && mapReady && <MapView mapObj={mapObj} />}
+          {view === "community" && <CommunityView mapObj={mapObj} />}
           <div ref={scrollSentinelRef} style={{ height: 1 }} />
           <div className={"panel-fade" + (showScrollHint ? " show" : "")}>
             <span className="scroll-arrow">&darr; more</span>
