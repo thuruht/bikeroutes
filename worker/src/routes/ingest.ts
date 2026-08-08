@@ -146,20 +146,26 @@ ingestRoutes.post("/", async (c) => {
 			return c.json({ error: "No valid types specified. Use 'trail', 'rail', or both." }, 400);
 		}
 
-		const query = `[out:json][timeout:120];(${queries.join("")});out center 500;`;
+		// Trails use center points to keep response small; rails need full LineString geometry.
+		const fetchOverpass = async (q: string, output: string) => {
+			const query = `[out:json][timeout:180];(${q});${output};`;
+			const res = await fetch("https://overpass-api.de/api/interpreter", {
+				method: "POST",
+				headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "bikeroutes.org/1.0 (contact@bikeroutes.org)" },
+				body: new URLSearchParams({ data: query }),
+			});
+			if (!res.ok) throw new Error(`Overpass API failed: ${res.status}`);
+			const data = await res.json() as { elements?: any[] };
+			return data.elements || [];
+		};
 
-		const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "bikeroutes.org/1.0 (contact@bikeroutes.org)" },
-			body: new URLSearchParams({ data: query }),
-		});
-
-		if (!overpassRes.ok) {
-			return c.json({ error: "Overpass API failed", status: overpassRes.status }, 502);
+		let allElements: any[] = [];
+		if (types.includes("trail")) {
+			allElements = allElements.concat(await fetchOverpass(queries.filter((_, i) => i === 0).join(""), "out center 500"));
 		}
-
-		const overpassData = await overpassRes.json() as { elements?: any[] };
-		const allElements = (overpassData.elements || []);
+		if (types.includes("rail")) {
+			allElements = allElements.concat(await fetchOverpass(queries.filter((_, i) => (types.includes("trail") ? i === 1 : i === 0)).join(""), "out geom 500"));
+		}
 
 		// Rail features rarely have name tags — use fallback display names.
 		// Trail features must have a name to be useful.
@@ -262,9 +268,9 @@ ingestRoutes.post("/", async (c) => {
 			totalEmbedded += vectors.length;
 		}
 
-		// Insert into trails table + pois table (skip duplicates)
+		// Insert into trails table + pois table (replace so re-ingesting updates geometries)
 		const insertTrail = c.env.DB.prepare(
-			"INSERT OR IGNORE INTO trails (id, source, source_type, source_id, name, category, geom, lat, lon, surface, length_m, difficulty, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+			"INSERT OR REPLACE INTO trails (id, source, source_type, source_id, name, category, geom, lat, lon, surface, length_m, difficulty, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 		);
 		const insertPoi = c.env.DB.prepare(
 			"INSERT OR IGNORE INTO pois (id, name, category, lat, lon, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
