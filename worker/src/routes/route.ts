@@ -196,10 +196,14 @@ routeRoutes.post("/", async (c) => {
 			source = "brouter";
 		} catch (brouterError) {
 			logger.error("All routing engines failed", brouterError, "ROUTING");
-		return c.json({
-			error: "Routing failed",
-			message: "All routing engines are unavailable. Try again shortly.",
-		}, 503);
+			const msg = String(brouterError);
+			if (!userMessage && (msg.includes("operation killed") || msg.includes("timeout"))) {
+				userMessage = "This route is too long for the free backup router. Add a midpoint or split the trip.";
+			}
+			return c.json({
+				error: "Routing failed",
+				message: userMessage || "All routing engines are unavailable. Try again shortly.",
+			}, 503);
 		}
 	}
 

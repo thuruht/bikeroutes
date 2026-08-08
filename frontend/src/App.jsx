@@ -887,7 +887,9 @@ export default function LiveApp() {
             </div>
           ) : routeError ? (
             <div className="route-error fade-in">
-              <div className="msg">Couldn&rsquo;t find a route &mdash; <strong>tap to retry</strong></div>
+              <div className="msg" title={String(routeError.message || routeError)}>
+                {routeError.message || "Couldn’t find a route"} &mdash; <strong>tap to retry</strong>
+              </div>
               <button onClick={() => setRetryKey(k => k + 1)}>Retry</button>
             </div>
           ) : result ? (

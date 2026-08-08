@@ -147,7 +147,10 @@ export async function route(points, pref) {
         }
       })
     });
-    if (!r.ok) throw new Error("worker " + r.status);
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({}));
+      throw new Error(data.message || `worker ${r.status}`);
+    }
     const routeSource = r.headers.get("x-route-source") || "estimate";
     const data = await r.json();
     const trip = data.trip;
