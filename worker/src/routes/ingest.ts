@@ -199,6 +199,22 @@ ingestRoutes.post("/", async (c) => {
 			return c.json({ message: "No features found in OSM bbox", bbox, types: osmTypes }, 200);
 		}
 
+		// Derive a representative lat/lon for an OSM element
+		function centroid(e: any): { lat: number; lon: number } | null {
+			let lat = e.center?.lat ?? e.lat;
+			let lon = e.center?.lon ?? e.lon;
+			if (lat == null || lon == null) {
+				if (e.geometry && Array.isArray(e.geometry) && e.geometry.length) {
+					let sumLat = 0, sumLon = 0;
+					for (const n of e.geometry) { sumLon += n.lon; sumLat += n.lat; }
+					lon = sumLon / e.geometry.length;
+					lat = sumLat / e.geometry.length;
+				}
+			}
+			if (lat == null || lon == null) return null;
+			return { lat, lon };
+		}
+
 		// Build GeoJSON geometry from OSM element
 		function buildGeom(e: any): { geom: any; category: string } {
 			const t = e.tags;
@@ -218,16 +234,14 @@ ingestRoutes.post("/", async (c) => {
 				return { geom: { type: "LineString", coordinates: coords }, category };
 			}
 			// fallback: point geometry from center
-			const lat = e.center?.lat ?? e.lat;
-			const lon = e.center?.lon ?? e.lon;
-			return { geom: { type: "Point", coordinates: [lon, lat] }, category };
+			const c = centroid(e);
+			return { geom: { type: "Point", coordinates: [c?.lon ?? e.lon, c?.lat ?? e.lat] }, category };
 		}
 
 		// Build docs for Vectorize + D1
 		const docs = unique.map((e) => {
 			const t = e.tags;
-			const lat = e.center?.lat ?? e.lat;
-			const lon = e.center?.lon ?? e.lon;
+			const c = centroid(e) || { lat: e.lat, lon: e.lon };
 			const { geom, category } = buildGeom(e);
 			const surface = t.surface || t.tracktype || "";
 			const length = t.length || t.distance || "";
@@ -243,8 +257,8 @@ ingestRoutes.post("/", async (c) => {
 				meta: {
 					name,
 					category,
-					lat,
-					lon,
+					lat: c.lat,
+					lon: c.lon,
 					description: t.description || "",
 					surface,
 					length_m: parseFloat(length) || null,
