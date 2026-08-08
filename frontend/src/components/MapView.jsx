@@ -241,6 +241,15 @@ export default function MapView({ mapObj }) {
     listeners.current.push(['click', 'curated-points', onPointClick]);
     listeners.current.push(['click', 'curated-lines', onLineClick]);
 
+    const setPointer = () => { map.getCanvas().style.cursor = 'pointer'; };
+    const clearPointer = () => { map.getCanvas().style.cursor = ''; };
+    for (const layer of ['curated-points', 'curated-lines', 'curated-clusters']) {
+      map.on('mouseenter', layer, setPointer);
+      map.on('mouseleave', layer, clearPointer);
+      listeners.current.push(['mouseenter', layer, setPointer]);
+      listeners.current.push(['mouseleave', layer, clearPointer]);
+    }
+
     const onStyleData = () => { if (!map.getSource('curated-points')) loadLayers(); };
     map.on('styledata', onStyleData);
     listeners.current.push(['styledata', null, onStyleData]);

@@ -302,9 +302,11 @@ export default function LiveApp() {
   const turnMarker = useRef(null);
   const reqId = useRef(0);
   const wpsRef = useRef(wps);
+  const viewRef = useRef(view);
   const panelScrollRef = useRef(null);
   const scrollSentinelRef = useRef(null);
   useEffect(() => { wpsRef.current = wps; }, [wps]);
+  useEffect(() => { viewRef.current = view; }, [view]);
 
   useEffect(() => { if (panelScrollRef.current) panelScrollRef.current.scrollTop = 0; }, [view]);
 
@@ -429,6 +431,7 @@ export default function LiveApp() {
     map.on("move", updateScale);
     map.on("mousemove", (e) => setReadout(r => ({ ...r, coords: `${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}` })));
     map.on("click", async (e) => {
+      if (viewRef.current !== "plan") return;
       const pt = { lng: e.lngLat.lng, lat: e.lngLat.lat, label: "Locating…" };
       setWps(prev => [...prev, pt]);
       const label = await BR.reverse(pt.lng, pt.lat);
