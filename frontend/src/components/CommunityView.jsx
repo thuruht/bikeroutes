@@ -154,12 +154,13 @@ function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, 
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 'min(92vw, 460px)', height: 'auto', maxHeight: 'min(90vh, 720px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: 'min(92vw, 460px)', maxHeight: 'min(90vh, 720px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <button className="modal-close" onClick={onClose}>{Ic.x}</button>
         <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12, color: 'var(--ink)', flex: 'none' }}>New post</div>
-        <form onSubmit={submit} style={{ overflowY: 'auto', paddingRight: 6, flex: 1, minHeight: 0 }}>
+
+        <form id="create-post-form" onSubmit={submit} style={{ overflowY: 'auto', paddingRight: 6, flex: 1, minHeight: 0 }}>
           <input placeholder="Title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} style={{ marginBottom: 8 }} />
-          <textarea placeholder="What did you see on the trail?" value={body} onChange={(e) => setBody(e.target.value)} rows={5} style={{ resize: 'vertical' }} />
+          <textarea placeholder="What did you see on the trail?" value={body} onChange={(e) => setBody(e.target.value)} rows={4} style={{ resize: 'vertical' }} />
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '10px 0' }}>
             {CATEGORIES.map((c) => (
@@ -176,7 +177,7 @@ function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, 
           )}
 
           {media.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8, marginBottom: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: 6, marginBottom: 12 }}>
               {media.map((m, i) => (
                 <div key={m.key} style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--line)', background: 'var(--paper-2)' }}>
                   {isImage(m.contentType) ? <img src={m.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div className="mono" style={{ padding: 8, fontSize: 10, wordBreak: 'break-all' }}>{m.fileName}</div>}
@@ -193,10 +194,11 @@ function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, 
           </div>
 
           {error && <div className="field-error" style={{ marginTop: 10 }}>{error}</div>}
-          <button type="submit" className="primary" style={{ marginTop: 14, width: '100%' }} disabled={busy || (!body.trim() && media.length === 0)}>
-            {busy ? <span className="spin">{Ic.spinner}</span> : 'Post'}
-          </button>
         </form>
+
+        <button type="submit" form="create-post-form" className="primary" style={{ marginTop: 12, width: '100%', flex: 'none' }} disabled={busy || (!body.trim() && media.length === 0)}>
+          {busy ? <span className="spin">{Ic.spinner}</span> : 'Post'}
+        </button>
       </div>
     </div>
   );
