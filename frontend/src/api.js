@@ -409,3 +409,9 @@ export async function deleteSavedRoute(id) {
   if (!r.ok) throw new Error("delete route " + r.status);
   return r.json();
 }
+
+export async function fetchPublicUser(username) {
+  const r = await fetch(`/api/auth/users/${encodeURIComponent(username)}`);
+  if (!r.ok) throw new Error("user " + r.status);
+  return r.json();
+}

@@ -87,8 +87,9 @@ export default function FeatureSubmissionEditor({ mapObj, categories, feature, o
 
     const click = (e) => {
       const c = [e.lngLat.lng, e.lngLat.lat];
+      const currentMode = modeRef.current;
       setCoords(prev => {
-        if (mode === 'point') return [c];
+        if (currentMode === 'point') return [c];
         if (prev.length > 0) {
           const last = prev[prev.length - 1];
           if (Math.abs(last[0] - c[0]) < 1e-8 && Math.abs(last[1] - c[1]) < 1e-8) return prev;
@@ -126,6 +127,8 @@ export default function FeatureSubmissionEditor({ mapObj, categories, feature, o
   }, []);
 
   useEffect(() => { syncDraftLayers(); }, [coords, mode]);
+  const modeRef = useRef(mode);
+  useEffect(() => { modeRef.current = mode; }, [mode]);
 
   const locateMe = () => {
     if (!navigator.geolocation) return;

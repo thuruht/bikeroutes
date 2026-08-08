@@ -226,6 +226,7 @@ export default function MapView({ mapObj }) {
     else map.once('load', load);
 
     const onClusterClick = async (e) => {
+      if (editorOpenRef.current) return; // let editor catch the map click
       e.stopPropagation();
       const f = e.features[0];
       const clusterId = f.properties.cluster_id;
@@ -259,15 +260,15 @@ export default function MapView({ mapObj }) {
     const hideHover = () => { if (hoverPopup) { hoverPopup.remove(); hoverPopup = null; } };
 
     const onPointClick = (e) => {
+      if (editorOpenRef.current) return; // let editor catch the map click
       e.stopPropagation();
-      if (editorOpenRef.current) return;
       const f = e.features[0];
       selectFeature(f.properties.id || f.id);
     };
 
     const onLineClick = (e) => {
+      if (editorOpenRef.current) return; // let editor catch the map click
       e.stopPropagation();
-      if (editorOpenRef.current) return;
       const f = e.features[0];
       selectFeature(f.properties.id || f.id);
     };

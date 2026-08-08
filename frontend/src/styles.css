@@ -593,3 +593,11 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
 .hover-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
   border-bottom-color: #fff !important;
 }
+
+@media (max-width: 520px) {
+  .modal {
+    padding: 22px 16px 16px;
+    border-radius: 16px;
+    width: 94vw;
+  }
+}

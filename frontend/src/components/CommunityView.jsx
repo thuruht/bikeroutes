@@ -153,10 +153,10 @@ function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, 
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420, maxHeight: '85vh', overflow: 'auto' }}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 'min(92vw, 460px)', height: 'auto', maxHeight: 'min(90vh, 720px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <button className="modal-close" onClick={onClose}>{Ic.x}</button>
-        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12, color: 'var(--ink)' }}>New post</div>
-        <form onSubmit={submit}>
+        <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12, color: 'var(--ink)', flex: 'none' }}>New post</div>
+        <form onSubmit={submit} style={{ overflowY: 'auto', paddingRight: 6, flex: 1, minHeight: 0 }}>
           <input placeholder="Title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} style={{ marginBottom: 8 }} />
           <textarea placeholder="What did you see on the trail?" value={body} onChange={(e) => setBody(e.target.value)} rows={5} style={{ resize: 'vertical' }} />
 
