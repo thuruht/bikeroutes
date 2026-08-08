@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import maplibregl from 'maplibre-gl';
 import * as BR from '../api';
 
 const Ic = {
@@ -197,7 +198,7 @@ function CreatePostModal({ onClose, mapObj, onCreated }) {
   );
 }
 
-function PostCard({ post, me, onOpen, onMutate }) {
+function PostCard({ post, me, onOpen, onMutate, mapObj }) {
   const [liking, setLiking] = useState(false);
   const isMine = me && post.userId === me.id;
 
@@ -222,7 +223,11 @@ function PostCard({ post, me, onOpen, onMutate }) {
           <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{post.author?.displayName ?? post.author?.username ?? 'Anonymous'}</div>
           <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)' }}>{timeAgo(post.createdAt)} ago · {CATEGORIES.find((c) => c.id === post.category)?.label ?? post.category}</div>
         </div>
-        {post.lat != null && <span style={{ color: 'var(--green)' }}>{Ic.pin}</span>}
+        {post.lat != null && (
+          <button className="io-clear" onClick={(e) => { e.stopPropagation(); mapObj.current?.flyTo({ center: [post.lon, post.lat], zoom: 15, duration: 700 }); }} title="Fly to map" style={{ color: 'var(--green)' }}>
+            {Ic.pin}
+          </button>
+        )}
         {isMine && <button className="io-clear" onClick={async (e) => { e.stopPropagation(); if (confirm('Delete this post?')) { await BR.deletePost(post.id); onMutate(); } }} title="Delete">{Ic.x}</button>}
       </div>
 
@@ -341,6 +346,40 @@ export default function CommunityView({ mapObj }) {
   const [detailId, setDetailId] = useState(null);
   const [offset, setOffset] = useState(0);
   const perPage = 20;
+  const markersRef = useRef([]);
+
+  const clearMarkers = () => {
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+  };
+
+  useEffect(() => {
+    const map = mapObj.current;
+    if (!map) return;
+    clearMarkers();
+    for (const post of posts) {
+      if (post.lat == null || post.lon == null) continue;
+      const el = document.createElement('div');
+      el.style.cssText = 'width:22px;height:22px;border-radius:50% 50% 50% 0;background:var(--orange);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);transform:rotate(-45deg);transform-origin:50% 50%;cursor:pointer;';
+      const cat = CATEGORIES.find(c => c.id === post.category)?.label || post.category || 'Post';
+      const popup = new maplibregl.Popup({ offset: 10, closeButton: false }).setHTML(
+        `<div style="font-family:var(--font-body),system-ui,sans-serif;font-size:12px;color:var(--ink);max-width:180px;">` +
+        `<div style="font-weight:600;margin-bottom:3px;">${post.title || post.body.slice(0, 40) || 'Post'}${(post.title || post.body).length > 40 ? '…' : ''}</div>` +
+        `<div style="font-size:11px;color:var(--muted-txt);">${cat} · by ${post.author?.displayName || post.author?.username || 'someone'}</div>` +
+        `</div>`
+      );
+      const mk = new maplibregl.Marker({ element: el })
+        .setLngLat([post.lon, post.lat])
+        .setPopup(popup)
+        .addTo(map);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setDetailId(post.id);
+      });
+      markersRef.current.push(mk);
+    }
+    return () => clearMarkers();
+  }, [posts]);
 
   const loadUser = async () => { setUser(await BR.fetchMe()); };
 
@@ -388,7 +427,7 @@ export default function CommunityView({ mapObj }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {posts.map((p) => (
-          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} />
+          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} mapObj={mapObj} />
         ))}
         {loading && <div className="trail" style={{ padding: 20, textAlign: 'center', color: 'var(--muted-txt)' }}><span className="spin">{Ic.spinner}</span></div>}
         {!loading && posts.length === 0 && (
