@@ -4,6 +4,7 @@ import * as BR from './api';
 import './tokens.css';
 import './styles.css';
 import MapView from './components/MapView';
+import DonatePanel from './components/DonatePanel';
 
 /* ---- icons ---- */
 const Ic = {
@@ -30,7 +31,7 @@ const turnIcon = (t) => t === "left" ? Ic.left : t === "right" ? Ic.right : t ==
 /* ---- Explore view ---- */
 function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBusy,
   categories, selectedCats, onToggleCat, trailsOverlay, railOverlay, toggleTrails, toggleRail,
-  clearExploreMarkers, addExploreMarker }) {
+  clearExploreMarkers, setExploreMarkers }) {
   const searchReqId = useRef(0);
   const searchTimer = useRef(null);
   const [exploreErr, setExploreErr] = useState(false);
@@ -45,10 +46,13 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
       const catParam = cats.length > 0 ? "&category=" + cats.join(",") : "";
       const r = await fetch("/api/search?q=" + encodeURIComponent(q) + catParam);
       const d = await r.json();
-      if (id === searchReqId.current) setResults(d.results || []);
-    } catch { if (id === searchReqId.current) { setResults([]); setExploreErr(true); } }
+      if (id === searchReqId.current) {
+        setResults(d.results || []);
+        setExploreMarkers(d.results || []);
+      }
+    } catch { if (id === searchReqId.current) { setResults([]); setExploreMarkers([]); setExploreErr(true); } }
     if (id === searchReqId.current) setBusy(false);
-  }, [setResults, setBusy, clearExploreMarkers]);
+  }, [setResults, setBusy, clearExploreMarkers, setExploreMarkers]);
 
   const queueSearch = useCallback((q, cats) => {
     setQuery(q);
@@ -65,14 +69,13 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
       ? selectedCats.filter(c => c !== id)
       : [...selectedCats, id];
     onToggleCat(id);
-    if (query.trim()) queueSearch(query, next);
+      if (query.trim()) queueSearch(query, next);
   };
 
   const go = (r) => {
     const m = mapObj.current;
     if (m && r.metadata) {
       m.flyTo({ center: [r.metadata.lon, r.metadata.lat], zoom: 15, duration: 800 });
-      addExploreMarker(r.metadata.lon, r.metadata.lat, r.metadata?.name);
     }
   };
   let body;
@@ -495,16 +498,24 @@ export default function LiveApp() {
     exploreMarkers.current = [];
   }, []);
 
-  const addExploreMarker = useCallback((lng, lat, name) => {
+  const setExploreMarkers = useCallback((results) => {
     clearExploreMarkers();
     const map = mapObj.current;
-    if (!map) return;
-    const el = document.createElement("div");
-    el.style.cssText = "width:20px;height:20px;border-radius:50%;background:var(--orange);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;";
-    el.title = name || "Explore result";
-    const mk = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
-    exploreMarkers.current.push(mk);
+    if (!map || !Array.isArray(results)) return;
+    results.forEach((r) => {
+      const lon = r.metadata?.lon ?? r.lon ?? r.lng;
+      const lat = r.metadata?.lat ?? r.lat;
+      const name = r.metadata?.name ?? r.name ?? "Result";
+      if (lon == null || lat == null) return;
+      const el = document.createElement("div");
+      el.style.cssText = "width:18px;height:18px;border-radius:50%;background:var(--orange);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;";
+      el.title = name;
+      const mk = new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map);
+      exploreMarkers.current.push(mk);
+    });
   }, [clearExploreMarkers]);
+
+
 
   /* ---- compute route when waypoints / pref / retry change ---- */
   useEffect(() => {
@@ -706,18 +717,24 @@ export default function LiveApp() {
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("explore"); setInfoOpen(false); }}>Explore</a>
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "map" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("map"); setInfoOpen(false); }}>Map</a>
               <a href="#" className={modalSection === "map-data" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "map-data" ? null : "map-data"); }}>Map data</a>
+              <a href="#" className={modalSection === "donate" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "donate" ? null : "donate"); }}>Donate</a>
               <a href="#" className={modalSection === "about" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "about" ? null : "about"); }}>About</a>
             </div>
             {modalSection === "map-data" ? (
               <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
                 <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>Map data sources</div>
                 <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />CARTO Voyager / Dark Matter tiles</div>
+                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />CARTO Voyager / Dark Matter tiles (R2-hosted tiles coming soon)</div>
                   <div><b style={{ color: "var(--ink)" }}>Cycling overlay</b><br />Waymarked Trails cycling map &mdash; &copy; waymarkedtrails.org</div>
                   <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors</div>
                   <div><b style={{ color: "var(--ink)" }}>Geocoding</b><br />OpenStreetMap Nominatim</div>
                   <div><b style={{ color: "var(--ink)" }}>Routing</b><br />Valhalla (bicycle profile) with FOSSGIS &amp; BRouter fallback</div>
                 </div>
+              </div>
+            ) : modalSection === "donate" ? (
+              <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
+                <div style={{ fontWeight: 600, marginBottom: 10, color: "var(--ink)" }}>Support BikeRoutes.org</div>
+                <DonatePanel />
               </div>
             ) : modalSection === "about" ? (
               <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
@@ -878,7 +895,7 @@ export default function LiveApp() {
             categories={categories} selectedCats={selectedCats} onToggleCat={onToggleCat}
             trailsOverlay={trailsOverlay} railOverlay={railOverlay}
             toggleTrails={toggleTrails} toggleRail={toggleRail}
-            clearExploreMarkers={clearExploreMarkers} addExploreMarker={addExploreMarker} />}
+            clearExploreMarkers={clearExploreMarkers} setExploreMarkers={setExploreMarkers} />}
           {view === "map" && <MapView mapObj={mapObj} />}
           <div ref={scrollSentinelRef} style={{ height: 1 }} />
           <div className={"panel-fade" + (showScrollHint ? " show" : "")}>

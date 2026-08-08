@@ -29,6 +29,17 @@ async function getPayPalToken(env: Env): Promise<string> {
 }
 
 /**
+ * GET /api/donate/config
+ * Public PayPal client ID for the frontend SDK (safe to expose).
+ */
+donateRoutes.get("/config", async (c) => {
+	return c.json({
+		clientId: c.env.PAYPAL_CLIENT_ID || null,
+		currency: "USD",
+	});
+});
+
+/**
  * POST /api/donate/create-order
  * Body: { amount: number, tier: string }
  */
