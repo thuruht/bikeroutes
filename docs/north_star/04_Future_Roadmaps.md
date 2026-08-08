@@ -11,7 +11,7 @@ While the MVP and immediate Phase 2 goals are clearly defined, BikeRoutes.org mu
     *   **Offline-First Architecture:** Progressive Web App (PWA) capabilities allowing users to download vector tiles and Valhalla routing graphs for specific regions to their device for use without cell service.
     *   **Satellite & Topo Overlays:** Premium map layers (funded via subscriptions) offering high-res satellite imagery and detailed topographic contours.
     *   **Weather & Wind Telemetry:** Integration with meteorological APIs to show headwinds, tailwinds, and storm forecasts along a planned route timeline.
-*   **Monetization Fit:** High. Adventure cyclists are accustomed to paying for premium tools (e.g., RideWithGPS, Komoot). A "Reki's Expedition" subscription tier could unlock advanced offline features and weather data.
+*   **Monetization Fit:** High. Adventure cyclists are accustomed to paying for premium tools (e.g., RideWithGPS, Komoot). An "Expedition" subscription tier could unlock advanced offline features and weather data.
 
 ## Priority 2 (Path A): The Hyper-Local Community Hub
 *This path focuses on maximizing user engagement, local advocacy, and crowd-sourced data.*
@@ -21,8 +21,8 @@ While the MVP and immediate Phase 2 goals are clearly defined, BikeRoutes.org mu
     *   **Group Ride Logistics:** Tools to plan, share, and RSVP for group rides, complete with pace expectations and dynamic re-routing if the group splits.
     *   **Live Trail Conditions:** Waze-style reporting for downed trees, flooded paths, or closed bridges, decaying over time or resolved by community consensus.
     *   **Local Organization Portals:** Dedicated dashboards for local cycling advocacy groups to manage their official routes, post events, and communicate with local riders.
-    *   **"Reki's Work Days":** Organizing real-world trail maintenance days coordinated through the app.
-*   **Monetization Fit:** Moderate. Relies heavily on volume of small donations, merch sales (Reki gear), and potential sponsorships from local advocacy groups or city parks departments.
+    *   **Community Work Days:** Organizing real-world trail maintenance days coordinated through the app.
+*   **Monetization Fit:** Moderate. Relies heavily on volume of small donations, merch sales, and potential sponsorships from local advocacy groups or city parks departments.
 
 ## Priority 3 (Path C): Data, APIs & B2B Infrastructure
 *This path treats the consumer app as a loss-leader or showcase for a powerful, monetizable backend infrastructure.*
@@ -34,12 +34,12 @@ While the MVP and immediate Phase 2 goals are clearly defined, BikeRoutes.org mu
     *   **Vectorized Trail Embeddings:** Monetizing the semantic search database for use in third-party tourism applications.
 *   **Monetization Fit:** Extremely High. This is the most lucrative path, ensuring the core consumer app remains 100% free and ad-free indefinitely.
 
-## Priority 4 (Path D): Gamified Tourism & Reki's Quests
+## Priority 4 (Path D): Gamified Tourism & Cycling Quests
 *This path focuses on casual riders, families, and tourists, using gamification to drive retention and local economic impact.*
 
 *   **Core Focus:** Making cycling a game, encouraging exploration of new areas, and partnering with local businesses.
 *   **Key Features:**
-    *   **Reki's Quests:** Scavenger hunts or passport-style challenges (e.g., "Ride all 5 bridges in the county," "Complete 100 miles of gravel").
+    *   **Cycling Quests:** Scavenger hunts or passport-style challenges (e.g., "Ride all 5 bridges in the county," "Complete 100 miles of gravel").
     *   **Sponsored Checkpoints:** Local bike shops, breweries, or cafes pay to be featured as a "Checkpoint." Riders checking in via the app unlock real-world discounts (e.g., 10% off a pint) or exclusive digital badges.
     *   **Strava/Wearable Integration:** Syncing completed rides to validate quests without needing the app open.
     *   **Audio Tours:** Location-triggered audio describing historical landmarks or nature facts along curated routes.

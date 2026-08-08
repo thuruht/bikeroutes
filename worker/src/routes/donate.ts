@@ -116,7 +116,7 @@ donateRoutes.post("/capture-order", async (c) => {
 
 			return c.json({
 				status: "completed",
-				message: "🦌 You're the best. Reki's doing a happy tail-wag right now!",
+				message: "You're the best. Every donation keeps the trails mapped.",
 				claimToken,
 			});
 		}
@@ -156,6 +156,6 @@ donateRoutes.get("/stats", async (c) => {
 	return c.json({
 		total_donors: result?.total_donors || 0,
 		total_raised: result?.total_raised || 0,
-		reki_says: "🦌 Every dollar keeps the trails mapped!",
+		note: "Every dollar keeps the trails mapped!",
 	});
 });

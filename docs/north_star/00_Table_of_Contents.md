@@ -9,7 +9,6 @@ Welcome to the central repository for the vision, architecture, and future of Bi
    - Target Audience & User Personas
    - Financial Viability & Monetization Strategy
    - Promotion & Growth Tactics
-   - Brand Mascot: Reki the White-tailed Deer
 
 2. [Technical To-Do List](./02_Technical_Todo.md)
    - Immediate Architecture Cleanup
@@ -26,7 +25,7 @@ Welcome to the central repository for the vision, architecture, and future of Bi
    - Path B: The Hardcore Off-Grid Adventure Tool (Primary Preference)
    - Path A: The Hyper-Local Community Hub (Secondary Preference)
    - Path C: Data, APIs & B2B Infrastructure
-   - Path D: Gamified Tourism & Reki's Quests
+   - Path D: Gamified Tourism & Cycling Quests
    - Compromise & Blended Directions
 
 5. [Style Guide & Conventions](./05_Style_Guide.md)
@@ -45,10 +44,8 @@ Welcome to the central repository for the vision, architecture, and future of Bi
    - Routing, Maps & Data
    - Tooling & APIs
 
-8. [Mascot Identity](./08_Mascot_Identity.md)
-   - Visual Attributes
-   - Voice & Copywriting
-   - Product Integration
+8. [Mascot Identity (Archived)](./08_Mascot_Identity.md)
+   - Historical reference — the Reki mascot has been retired
 
 9. [Navigation Mode](./09_Navigation_Mode.md)
    - Core Features
@@ -80,6 +77,6 @@ Welcome to the central repository for the vision, architecture, and future of Bi
     - Component Checklist
 
 15. [AI Search Architecture](./15_AI_Search_Architecture.md)
-    - Semantic Understanding & Vectorize
-    - Reki's LLM Persona
-    - Analytics & Feedback Loop
+   - Semantic Understanding & Vectorize
+   - Friendly Search Assistant Persona
+   - Analytics & Feedback Loop

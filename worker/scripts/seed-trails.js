@@ -122,7 +122,7 @@ async function d1Exec(sql, binds) {
 // Phase 1 — Seed from existing D1 POIs
 // ------------------------------------------------------------------
 async function fromD1() {
-  console.log("\n🦌 Phase 1 — Seeding from existing D1 POIs…");
+  console.log("\n Phase 1 — Seeding from existing D1 POIs…");
   const rows = await d1Query("SELECT id, name, category, lat, lon, description FROM pois");
   console.log(`  Found ${rows.length} POIs in D1`);
 
@@ -192,7 +192,7 @@ async function overpass(query) {
 }
 
 async function fromOSM(bbox) {
-  console.log("\n🦌 Phase 2 — Fetching OSM cycleways & trails…");
+  console.log("\n Phase 2 — Fetching OSM cycleways & trails…");
   console.log(`  BBox: ${bbox}`);
 
   // Query: cycleways, paths, tracks suitable for bicycles
@@ -288,7 +288,7 @@ async function fromOSM(bbox) {
 // ------------------------------------------------------------------
 async function fromGeoJSON(filePath) {
   const fs = require("fs");
-  console.log(`\n🦌 Phase 3 — Loading GeoJSON from ${filePath}…`);
+  console.log(`\n Phase 3 — Loading GeoJSON from ${filePath}…`);
   const gj = JSON.parse(fs.readFileSync(filePath, "utf8"));
   const features = (gj.features || []).filter((f) => f.properties?.name);
   console.log(`  Found ${features.length} named features`);
@@ -362,7 +362,7 @@ Usage:
   if (flags.fromOSM) await fromOSM(flags.bbox);
   if (flags.fromGeo) await fromGeoJSON(flags.fromGeo.replace("--geojson=", ""));
 
-  console.log("\n🦌 All done! Your search bar is now loaded with trail smarts.\n");
+  console.log("\n All done! Your search bar is now loaded with trail smarts.\n");
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

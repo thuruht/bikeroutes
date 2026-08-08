@@ -2,12 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='9' fill='%232D5F3A'/%3E%3Cg transform='translate(7 7) scale(0.65)'%3E%3Crect x='9.6' y='6' width='5.6' height='28' rx='2.8' fill='%23FFF5E6'/%3E%3Cpath fill='%23FFF5E6' fill-rule='evenodd' d='M21 15.4 a9.3 9.3 0 1 1 0 18.6 a9.3 9.3 0 1 1 0-18.6 Z M21 20.2 a4.5 4.5 0 1 0 0 9 a4.5 4.5 0 1 0 0-9 Z'/%3E%3Ccircle cx='21' cy='24.7' r='2.4' fill='%23FF6B1A'/%3E%3C/g%3E%3C/svg%3E" />
+    <link rel="icon" href="/byn3.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="BikeRoutes.org — Free, open-source bike trail navigation and mapping for Kansas City and the Midwest. Official trails, bike lanes, and World Cup 2026 routes. Scouted by Reki 🦌⚡" />
+    <meta name="description" content="BikeRoutes.org — Free, open-source bike trail navigation and mapping for Kansas City and the Midwest. Official trails, bike lanes, MARC bikeways, and World Cup 2026 routes." />
     <meta name="keywords" content="bike routes, cycling trails, kansas city trails, kcmo bike lanes, marc bikeways, world cup 2026 routes, cycling navigation, openstreetmap, mtb trails, gravel trails, paved trails" />
     <meta name="author" content="BikeRoutes.org" />
-    <meta name="theme-color" content="#0B0C08" />
+    <meta name="theme-color" content="#171614" />
     <link rel="canonical" href="https://bikeroutes.org/" />
 
     <!-- Bunny Fonts -->
@@ -20,73 +20,22 @@
     <meta property="og:title" content="BikeRoutes.org — Free open cycling maps for the Midwest" />
     <meta property="og:description" content="Ad-free, open-source bike route planner. Surface-aware routing, elevation, turn-by-turn, GPX/KML export. Powered by OpenStreetMap." />
     <meta property="og:url" content="https://bikeroutes.org/" />
-    <meta property="og:image" content="https://bikeroutes.org/reki_icon.png" />
+    <meta property="og:image" content="https://bikeroutes.org/byn3.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="BikeRoutes.org — Free open cycling maps for the Midwest" />
-    <meta name="twitter:description" content="Ad-free, open-source bike route planner for the Midwest. Reki's scouted every trail." />
-    <meta name="twitter:image" content="https://bikeroutes.org/reki_icon.png" />
+    <meta name="twitter:description" content="Ad-free, open-source bike route planner for the Midwest." />
+    <meta name="twitter:image" content="https://bikeroutes.org/byn3.png" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://bikeroutes.org/" />
     <meta property="twitter:title" content="BikeRoutes.org — Free Trail Explorer for Kansas City" />
     <meta property="twitter:description" content="Free, open-source bike trail navigation for the Midwest. No ads, no tracking. Powered by authoritative MARC GIS data." />
-    <meta property="twitter:image" content="https://bikeroutes.org/reki.png" />
+    <meta property="twitter:image" content="https://bikeroutes.org/byn3.png" />
 
-    <title>bikeroutes.org — route planner · v0.9 RC</title>
+    <title>BikeRoutes.org — route planner · v0.9 RC</title>
   </head>
   <body>
-    <!-- CANONICAL SVG MARK LIBRARY -->
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-      <symbol id="mark-b" viewBox="0 0 40 40">
-        <g fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12.5 7 L12.5 32"/>
-          <circle cx="21.5" cy="24.5" r="8"/>
-          <path d="M28 19 L33 13.5"/>
-        </g>
-        <circle cx="21.5" cy="24.5" r="1.9" fill="currentColor"/>
-        <circle cx="12.5" cy="7" r="2.6" fill="currentColor"/>
-        <circle cx="34" cy="12" r="2.7" fill="var(--ac, #FF6B1A)"/>
-      </symbol>
-      <symbol id="reki-head" viewBox="34 20 172 172">
-        <g stroke="#0B0C08" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
-          <g fill="none" stroke="#0B0C08" stroke-width="13">
-            <path d="M101,82 Q86,54 82,32"/><path d="M90,58 Q77,51 68,45"/><path d="M84,40 Q73,37 64,36"/>
-            <path d="M139,82 Q154,54 158,32"/><path d="M150,58 Q163,51 172,45"/><path d="M156,40 Q167,37 176,36"/>
-          </g>
-          <g fill="none" stroke="#D4A96A" stroke-width="7">
-            <path d="M101,82 Q86,54 82,32"/><path d="M90,58 Q77,51 68,45"/><path d="M84,40 Q73,37 64,36"/>
-            <path d="M139,82 Q154,54 158,32"/><path d="M150,58 Q163,51 172,45"/><path d="M156,40 Q167,37 176,36"/>
-          </g>
-          <path d="M90,96 C72,84 54,86 45,99 C55,110 73,113 86,108 Z" fill="#C0763C"/>
-          <path d="M150,96 C168,84 186,86 195,99 C185,110 167,113 154,108 Z" fill="#C0763C"/>
-          <path d="M85,98 C72,90 60,92 53,100 C61,107 73,108 82,104 Z" fill="#F0D7B0" stroke-width="0"/>
-          <path d="M155,98 C168,90 180,92 187,100 C179,107 167,108 158,104 Z" fill="#F0D7B0" stroke-width="0"/>
-          <path d="M120,68 C95,68 80,89 80,114 C80,133 90,147 100,157 C107,164 112,170 120,173 C128,170 133,164 140,157 C150,147 160,133 160,114 C160,89 145,68 120,68 Z" fill="#C0763C"/>
-          <path d="M120,131 C135,131 145,142 145,153 C145,165 133,173 120,174 C107,173 95,165 95,153 C95,142 105,131 120,131 Z" fill="#FFF5E6"/>
-          <ellipse cx="96" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
-          <ellipse cx="144" cy="138" rx="8" ry="6" fill="#E0905A" stroke-width="0" opacity=".7"/>
-          <path d="M120,144 C129,144 134,150 131,155 C129,159 123,161 120,161 C117,161 111,159 109,155 C106,150 111,144 120,144 Z" fill="#241A12" stroke-width="3.5"/>
-          <ellipse cx="120" cy="149" rx="5" ry="3" fill="#3a2c1f" stroke-width="0"/>
-          <ellipse cx="101" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
-          <ellipse cx="139" cy="113" rx="11" ry="13" fill="#FFF5E6"/>
-          <circle cx="101" cy="114" r="6.5" fill="#241A12" stroke-width="0"/>
-          <circle cx="139" cy="114" r="6.5" fill="#241A12" stroke-width="0"/>
-          <circle cx="99" cy="111" r="2.1" fill="#FFF5E6" stroke-width="0"/>
-          <circle cx="137" cy="111" r="2.1" fill="#FFF5E6" stroke-width="0"/>
-          <path d="M90,99 Q101,93 112,98" fill="none" stroke="#9E5E2C" stroke-width="4"/>
-          <path d="M128,98 Q139,93 150,99" fill="none" stroke="#9E5E2C" stroke-width="4"/>
-          <path d="M86,84 C84,60 101,48 120,48 C139,48 156,60 154,84 C130,77 110,77 86,84 Z" fill="#4B5320"/>
-          <path d="M88,82 C70,82 57,88 54,97 C61,99 73,97 84,91 C88,88 90,84 90,82 Z" fill="#39401A"/>
-          <path d="M120,48 L120,77" fill="none" stroke="#39401A" stroke-width="3"/>
-          <circle cx="120" cy="50" r="3.4" fill="#FF6B1A" stroke-width="2.5"/>
-          <path d="M112,63.2 C105.5,61.6 99.5,62.8 95.5,66 C100.5,66 104.5,67 106.8,68.3 C101.5,68.9 97.5,70.2 95,72.2 C100.5,71.1 105.5,70.1 112,67.6 Z" fill="#FFF5E6" stroke-width="2.4"/>
-          <path d="M128,63.2 C134.5,61.6 140.5,62.8 144.5,66 C139.5,66 135.5,67 133.2,68.3 C138.5,68.9 142.5,70.2 145,72.2 C139.5,71.1 134.5,70.1 128,67.6 Z" fill="#FFF5E6" stroke-width="2.4"/>
-          <path d="M112,68 L120,60 L128,68 L123,68 L123,75 L117,75 L117,68 Z" fill="#FF6B1A" stroke-width="2.5"/>
-        </g>
-      </symbol>
-    </svg>
-
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

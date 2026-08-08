@@ -23,7 +23,7 @@ export class ValhallaContainer extends Container<Env> {
 	};
 
 	override async onStart(): Promise<void> {
-		console.log("🦌 Valhalla container started — ready to scout routes!");
+		console.log(" Valhalla container started — ready to scout routes!");
 		// Implement keepalive ping every 4 minutes (240s) because sleepAfter is 5m
 		await this.schedule(240, "keepalivePing");
 	}
@@ -36,10 +36,10 @@ export class ValhallaContainer extends Container<Env> {
 	}
 
 	override onStop(): void {
-		console.log("🦌 Valhalla container sleeping — Reki's taking a nap.");
+		console.log("Valhalla container sleeping");
 	}
 
 	override onError(error: unknown): void {
-		console.error("🦌 Valhalla container error:", error);
+		console.error(" Valhalla container error:", error);
 	}
 }

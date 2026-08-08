@@ -3,6 +3,7 @@ import maplibregl from 'maplibre-gl';
 import * as BR from './api';
 import './tokens.css';
 import './styles.css';
+import MapView from './components/MapView';
 
 /* ---- icons ---- */
 const Ic = {
@@ -25,29 +26,6 @@ const Ic = {
   layers: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
 };
 const turnIcon = (t) => t === "left" ? Ic.left : t === "right" ? Ic.right : t === "arrive" ? Ic.flag : Ic.dot;
-
-/* ---- Reki mascot ---- */
-function Reki({ size = 64, mood = "scout", onRekiClick }) {
-  const lines = {
-    scout: "Reki's scouting the route…",
-    empty: "Pick a start and a destination — or click the map. I'll find the bikeable way.",
-    estimate: "Trail signal's weak out here — showing a best estimate.",
-  };
-  return (
-    <div style={{ display: "flex", gap: 12, alignItems: "center", padding: "14px 12px",
-      background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 12 }}>
-      <span onClick={onRekiClick} style={{ flex: "none", width: size, height: size, borderRadius: 12,
-        background: "var(--green-soft)", border: "1px solid var(--line)",
-        display: "grid", placeItems: "center", overflow: "hidden", cursor: onRekiClick ? "pointer" : "default" }}>
-        <svg viewBox="0 -3 172 172" width={size - 10} height={size - 10}
-          role="img" aria-label="Reki the deer" style={{ display: "block" }}>
-          <use href="#reki-head" x="0" y="-3" width="172" height="172" />
-        </svg>
-      </span>
-      <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>{lines[mood]}</div>
-    </div>
-  );
-}
 
 /* ---- Explore view ---- */
 function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBusy,
@@ -158,97 +136,6 @@ function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBu
       </div>
 
       {body}
-    </div>
-  );
-}
-
-/* ---- Curated (JKCBIKEMAP) view: list-first, no marker dump ---- */
-function CuratedView({ mapObj, onBack }) {
-  const [busy, setBusy] = useState(false);
-  const [features, setFeatures] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [error, setError] = useState(false);
-  const [cats, setCats] = useState([]);
-  const [activeCat, setActiveCat] = useState("All");
-  const markerRef = useRef(null);
-
-  const clearMarker = () => { if (markerRef.current) { markerRef.current.remove(); markerRef.current = null; } };
-
-  const centerOf = (geom) => {
-    if (!geom) return null;
-    if (geom.type === "Point") return geom.coordinates;
-    if (geom.type === "LineString") {
-      const [lon, lat] = geom.coordinates.reduce(([sx, sy], [x, y]) => [sx + x, sy + y], [0, 0]);
-      return [lon / geom.coordinates.length, lat / geom.coordinates.length];
-    }
-    return null;
-  };
-
-  useEffect(() => {
-    clearMarker();
-    setBusy(true);
-    setError(false);
-    fetch("/api/curated-features?limit=500")
-      .then(r => r.json())
-      .then(d => {
-        const list = d.features || [];
-        setFeatures(list);
-        const categories = ["All", ...Array.from(new Set(list.map(f => f.properties?.category).filter(Boolean)))];
-        setCats(categories);
-      })
-      .catch(() => setError(true))
-      .finally(() => setBusy(false));
-    return clearMarker;
-  }, []);
-
-  const selectFeature = (f) => {
-    setSelected(f);
-    const map = mapObj.current;
-    const center = centerOf(f.geometry);
-    if (map && center) {
-      map.flyTo({ center, zoom: Math.max(map.getZoom(), 14), duration: 800 });
-      clearMarker();
-      const el = document.createElement("div");
-      el.style.cssText = "width:18px;height:18px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 0 4px rgba(159,184,74,.35);";
-      markerRef.current = new maplibregl.Marker({ element: el }).setLngLat(center).addTo(map);
-    }
-  };
-
-  const filtered = activeCat === "All" ? features : features.filter(f => f.properties?.category === activeCat);
-
-  return (
-    <div className="fade-in">
-      <div style={{ marginBottom: 14, fontSize: 12.5, color: "var(--muted-txt)", lineHeight: 1.4 }}>
-        Hand-curated ride anchors, neighborhoods, trail spines, and planned connectors for KC.
-      </div>
-      {cats.length > 1 && (
-        <div className="chips" style={{ marginBottom: 12 }}>
-          {cats.map(c => (
-            <span key={c} className={"chip" + (activeCat === c ? " active" : "")} onClick={() => setActiveCat(c)}>{c}</span>
-          ))}
-        </div>
-      )}
-      {busy && <div className="mono" style={{ color: "var(--muted-txt)", fontSize: 12, padding: "10px 0" }}>Loading curated features…</div>}
-      {error && <div className="mono" style={{ color: "var(--red)", fontSize: 12, padding: "10px 0" }}>Failed to load curated features.</div>}
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {filtered.map(f => (
-          <div key={f.id} className={"trail" + (selected?.id === f.id ? " active" : "")} style={{ cursor: "pointer" }} onClick={() => selectFeature(f)}>
-            <div className="spark" style={{ display: "grid", placeItems: "center", background: f.properties?.feature_type === "line" ? "var(--green-soft)" : "var(--orange-soft)" }}>
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: f.properties?.feature_type === "line" ? "var(--green)" : "var(--orange)" }}>
-                {f.properties?.feature_type === "line"
-                  ? <><path d="M22 12H2" /><path d="M5 8l-4 4 4 4" /><path d="M19 16l4-4-4-4" /></>
-                  : <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2" /></>}
-              </svg>
-            </div>
-            <div className="info">
-              <div className="nm">{f.properties?.name || f.id}</div>
-              <div className="sub">{f.properties?.category || ""} · {f.properties?.feature_type || ""}</div>
-              {f.properties?.public_description && <div className="sub" style={{ marginTop: 4, opacity: 0.85 }}>{f.properties.public_description}</div>}
-            </div>
-          </div>
-        ))}
-      </div>
-      {filtered.length === 0 && !busy && <div className="mono fade-in" style={{ padding: "20px 0", textAlign: "center", color: "var(--muted-txt)" }}>No curated features in this category.</div>}
     </div>
   );
 }
@@ -392,7 +279,7 @@ export default function LiveApp() {
   const [hoverTurn, setHoverTurn] = useState(null);
   const [readout, setReadout] = useState({ scale: null, coords: null });
   const [infoOpen, setInfoOpen] = useState(false);
-  const [view, setView] = useState("plan");
+  const [view, setView] = useState("map");
   const [exploreQuery, setExploreQuery] = useState("");
   const [exploreResults, setExploreResults] = useState([]);
   const [exploreBusy, setExploreBusy] = useState(false);
@@ -402,7 +289,6 @@ export default function LiveApp() {
   const [railOverlay, setRailOverlay] = useState(() => localStorage.getItem("br-rail") === "on");
   const [modalSection, setModalSection] = useState(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
-  const [rekiOpen, setRekiOpen] = useState(false);
 
   const mapRef = useRef(null);
   const longPressRef = useRef(null);
@@ -456,8 +342,14 @@ export default function LiveApp() {
     const map = mapObj.current; if (!map) return;
     if (map.getSource("trails")) return;
     map.addSource("trails", { type: "raster", tiles: [BR.TILES.trailsOverlay], tileSize: 256, attribution: BR.TILES.trailsAttribution });
-    map.addLayer({ id: "trails", type: "raster", source: "trails",
-      layout: { visibility: trailsOverlay ? "visible" : "none" } }, "route-casing");
+    map.addLayer({
+      id: "trails", type: "raster", source: "trails",
+      minzoom: 12,
+      paint: {
+        "raster-opacity": ["interpolate", ["linear"], ["zoom"], 11, 0, 12, 0.7, 14, 1],
+      },
+      layout: { visibility: trailsOverlay ? "visible" : "none" },
+    }, "route-casing");
   }, [trailsOverlay]);
 
   const addRailLayer = useCallback(() => {
@@ -490,9 +382,10 @@ export default function LiveApp() {
       id: "rail-stations",
       type: "circle",
       source: "rail",
+      minzoom: 11,
       filter: ["in", ["get", "category"], ["literal", ["station", "halt", "junction"]]],
       paint: {
-        "circle-radius": 6,
+        "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 4, 13, 6],
         "circle-color": "#e67e22",
         "circle-stroke-width": 2,
         "circle-stroke-color": "#fff",
@@ -760,11 +653,11 @@ export default function LiveApp() {
       <div className="topbar">
         <div className="brand">
           <span className="app-tile" aria-hidden="true">
-            <svg viewBox="0 0 40 40"><use href="#mark-b" /></svg>
+            <img src="/byn3.png" alt="" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }} />
           </span>
           <div className="brand-txt">
             <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
-              b<span className="i-slot"><span className="head" onClick={(e) => { e.stopPropagation(); setRekiOpen(true); }}><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+              b<span className="i-slot"><span className="head"><svg viewBox="0 0 120 80"><use href="#cowboy-hat" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
             </div>
             <div className="tag mono">open cycling maps · midwest</div>
           </div>
@@ -806,12 +699,12 @@ export default function LiveApp() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setInfoOpen(false)}>{Ic.x}</button>
             <div className="wordmark" aria-label="bikeroutes.org">
-              b<span className="i-slot"><span className="head"><svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+              b<span className="i-slot"><span className="head"><svg viewBox="0 0 120 80"><use href="#cowboy-hat" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
             </div>
             <div className="modal-nav">
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("plan"); setInfoOpen(false); }}>Plan</a>
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "explore" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("explore"); setInfoOpen(false); }}>Explore</a>
-              <a href="#" className={(modalSection === null || modalSection === "main") && view === "curated" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("curated"); setInfoOpen(false); }}>Curated</a>
+              <a href="#" className={(modalSection === null || modalSection === "main") && view === "map" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("map"); setInfoOpen(false); }}>Map</a>
               <a href="#" className={modalSection === "map-data" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "map-data" ? null : "map-data"); }}>Map data</a>
               <a href="#" className={modalSection === "about" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(modalSection === "about" ? null : "about"); }}>About</a>
             </div>
@@ -857,39 +750,12 @@ export default function LiveApp() {
         </div>
       )}
 
-      {/* REKI MODAL */}
-      {rekiOpen && (
-        <div className="modal-overlay" onClick={() => setRekiOpen(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setRekiOpen(false)}>{Ic.x}</button>
-            <div className="reki-modal-body">
-              <div className="avatar">
-                <svg viewBox="0 -3 172 172"><use href="#reki-head" /></svg>
-              </div>
-              <div className="name">Reki</div>
-              <div className="bio">
-                Trail scout &amp; bike route optimizer. Reki&rsquo;s been tracking
-                every path, pavement crack, and gravel shortcut across the
-                Midwest since&hellip; well, since someone wrote the code.
-              </div>
-              <div className="quip">
-                &ldquo;Four hooves beat two wheels if you&rsquo;re after
-                shortcuts. But I&rsquo;m partial to asphalt.&rdquo;
-              </div>
-              <div className="bio" style={{ fontSize: 11.5, color: "var(--muted-txt)" }}>
-                Ask me about trails, water stations, or where the hills bite.
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* PANEL */}
       <div className="panel">
         <div className="modetabs">
           <button className={view === "plan" ? "active" : ""} onClick={() => setView("plan")}>Plan a route</button>
           <button className={view === "explore" ? "active" : ""} onClick={() => setView("explore")}>Explore</button>
-          <button className={view === "curated" ? "active" : ""} onClick={() => setView("curated")}>Curated</button>
+          <button className={view === "map" ? "active" : ""} onClick={() => setView("map")}>Map</button>
         </div>
         <div className="panel-scroll" ref={panelScrollRef}>
           {view === "plan" && <>
@@ -926,7 +792,9 @@ export default function LiveApp() {
 
           {/* states */}
           {valid.length < 2 ? (
-            <div style={{ marginTop: 16 }}><Reki mood="empty" onRekiClick={() => setRekiOpen(true)} /></div>
+            <div style={{ marginTop: 16, padding: "14px 12px", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>
+              Pick a start and a destination — or click the map to set waypoints.
+            </div>
           ) : loading ? (
             <div style={{ marginTop: 16 }}>
               <div className="route-skelly fade-in">
@@ -940,7 +808,9 @@ export default function LiveApp() {
                 </div>
                 <div className="bar" />
               </div>
-              <div style={{ marginTop: 10 }}><Reki mood="scout" onRekiClick={() => setRekiOpen(true)} /></div>
+              <div style={{ marginTop: 10, padding: "14px 12px", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>
+                Scouting the route for a bikeable way…
+              </div>
             </div>
           ) : routeError ? (
             <div className="route-error fade-in">
@@ -982,7 +852,9 @@ export default function LiveApp() {
                 <button onClick={exportKML}>{Ic.gpx} KML</button>
               </div>
 
-              {result.source === "estimated" && <div style={{ marginTop: 14 }}><Reki mood="estimate" onRekiClick={() => setRekiOpen(true)} /></div>}
+              {result.source === "estimated" && <div style={{ marginTop: 14, padding: "14px 12px", background: "var(--orange-soft)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>
+                Trail signal is weak here — showing a best-estimate route.
+              </div>}
 
               <div className="turns">
                 <div className="turns-head">Directions · {result.turns.length} steps</div>
@@ -1007,7 +879,7 @@ export default function LiveApp() {
             trailsOverlay={trailsOverlay} railOverlay={railOverlay}
             toggleTrails={toggleTrails} toggleRail={toggleRail}
             clearExploreMarkers={clearExploreMarkers} addExploreMarker={addExploreMarker} />}
-          {view === "curated" && <CuratedView mapObj={mapObj} />}
+          {view === "map" && <MapView mapObj={mapObj} />}
           <div ref={scrollSentinelRef} style={{ height: 1 }} />
           <div className={"panel-fade" + (showScrollHint ? " show" : "")}>
             <span className="scroll-arrow">&darr; more</span>

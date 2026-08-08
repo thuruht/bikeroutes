@@ -9,7 +9,7 @@ The search system shifts from traditional keyword matching to **Semantic Underst
 ### The Stack
 *   **Embedding Model:** `@cf/baai/bge-base-en-v1.5` (768 dimensions)
 *   **Vector Database:** Cloudflare Vectorize (`TRAIL_SEARCH`)
-*   **Mascot LLM:** `@cf/meta/llama-3-8b-instruct`
+*   **Search Assistant LLM:** `@cf/meta/llama-3-8b-instruct`
 *   **Rate Limiting:** KV-based Token Bucket (10 req/min)
 
 ## 2. Request Lifecycle
@@ -26,11 +26,11 @@ The Worker sends the query text to Workers AI. The model returns a 768-dimension
 ### C. The Vector Probe
 The generated vector is sent to the `TRAIL_SEARCH` index. Vectorize performs a cosine similarity search against pre-indexed trails and returns the top 5 matches, including their metadata (ID, Name, Description).
 
-### D. Reki's Persona Synthesis
+### D. Search Assistant Response Synthesis
 If matches are found, the Worker constructs a context-rich prompt for Llama 3:
 1.  **Context:** The names and descriptions of the top 5 matches.
-2.  **System Prompt:** Defines Reki's persona (helpful scout deer, uses nature puns, short responses).
-3.  **Result:** Reki "explains" why these paths were chosen, creating an empathetic user experience.
+2.  **System Prompt:** Defines a neutral, helpful assistant persona focused on practical trail guidance.
+3.  **Result:** The assistant explains why these paths were chosen in a concise, practical way.
 
 ## 3. Analytics & Feedback Loop
 

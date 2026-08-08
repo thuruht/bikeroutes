@@ -1,207 +1,12 @@
 @import url('https://fonts.bunny.net/css?family=outfit:400,500,600,700|ibm-plex-sans:400,500,600|ibm-plex-mono:400,500,600');
+@import "tokens.css";
 
 /* ============================================================
-   bikeroutes.org — DESIGN TOKENS  (single source of truth)
+   bikeroutes.org — BRAND LOCKUP + global utility classes
    ------------------------------------------------------------
-   Tactical Hi-Tech · MO Camo Edition.
-   ============================================================ */
-
-:root {
-  /* ---------- 1. BRAND PALETTE (immutable) ---------- */
-  --brand-deer-brown:   #C0763C;
-  --brand-blaze-orange: #FF6B1A;
-  --brand-camo-olive:   #4B5320;
-  --brand-cream-white:  #FFF5E6;
-  --brand-forest-green: #2D5F3A;
-  --brand-trail-tan:    #D4A96A;
-  --brand-dark-hoof:    #0B0C08;
-  --brand-sky-blue:     #6BAED6;
-
-  /* ---------- 3. SCALES (theme-independent) ---------- */
-
-  /* type families */
-  --font-head: "Outfit", system-ui, -apple-system, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
-
-  /* type scale */
-  --text-2xs:  0.6875rem;
-  --text-xs:   0.75rem;
-  --text-sm:   0.8125rem;
-  --text-base: 0.875rem;
-  --text-md:   1rem;
-  --text-lg:   1.0625rem;
-  --text-xl:   1.3125rem;
-  --text-2xl:  1.625rem;
-  --text-3xl:  1.875rem;
-  --text-4xl:  2.25rem;
-
-  /* line-height */
-  --lh-tight: 1.1;
-  --lh-snug: 1.25;
-  --lh-normal: 1.5;
-  --lh-relaxed: 1.6;
-
-  /* weight */
-  --fw-regular: 400;
-  --fw-medium: 500;
-  --fw-semibold: 600;
-  --fw-bold: 700;
-
-  /* letter-spacing */
-  --track-tight: -0.02em;
-  --track-snug: -0.01em;
-  --track-normal: 0;
-  --track-wide: 0.02em;
-  --track-caps: 0.07em;
-
-  /* spacing — 4px base grid */
-  --space-0: 0;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-
-  /* radius */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 11px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
-  --radius-pill: 999px;
-
-  /* minimum touch target */
-  --touch-min: 44px;
-
-  /* motion */
-  --ease-out: cubic-bezier(.22,.61,.36,1);
-  --ease-in-out: cubic-bezier(.4,0,.2,1);
-  --dur-fast: .12s;
-  --dur: .18s;
-  --dur-slow: .9s;
-
-  /* z-index scale */
-  --z-map: 1;
-  --z-readout: 25;
-  --z-panel: 30;
-  --z-topbar: 40;
-  --z-modal: 80;
-
-  /* ---------- 2. SEMANTIC TOKENS · LIGHT ---------- */
-  --paper:      #f4efe3;
-  --paper-2:    #ebe4d3;
-  --ink:        #1b1c12;  /* ← dark-hoof, raised for soft contrast  */
-  --ink-2:      #46473a;
-  --muted:      #827c68;
-  --muted-txt:  #827c68;
-  --line:       #e0d7c2;
-  --line-2:     #d2c8ae;
-  --panel:      rgba(248, 244, 235, 0.94);
-  --panel-solid:#f8f4eb;
-  --green:      #5e7a2e;
-  --green-deep: #4c6724;
-  --green-soft: #e5ead2;
-  --orange:     #e2590f;
-  --orange-soft:#f6e0ce;
-  --link:       #1f6e93;
-  --accent-glow: 0 0 0 1px rgba(226,89,15,.35), 0 6px 18px rgba(226,89,15,.22);
-  --shadow:     0 1px 2px rgba(40,36,28,.06), 0 8px 28px rgba(40,36,28,.10);
-  --shadow-sm:  0 1px 2px rgba(40,36,28,.08), 0 2px 8px rgba(40,36,28,.06);
-  --grid-line:  rgba(75,83,32,.05);
-
-  /* feedback */
-  --danger:      #c0392b;
-  --danger-soft: #f7ddd8;
-  --warn:        #b9722a;
-  --success:     #4c6724;
-
-  /* focus ring */
-  --focus-ring-color: var(--orange);
-  --focus-ring: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--orange);
-
-  /* map (light) */
-  --m-paper:    #efe8d8;
-  --m-paper-2:  #eae2cf;
-  --m-road:     #e2d8c0;
-  --m-road-art: #fffdf7;
-  --m-road-art-edge: #e0d4b8;
-  --m-water:    #bcd0ce;
-  --m-water-edge:#a6c0bc;
-  --m-park:     #d8e3c0;
-  --m-park-edge:#c7d6a9;
-  --m-contour:  #e5dbc4;
-  --m-label:    #8a8369;
-  --m-build:    #e7dec9;
-
-  --route:      #e2590f;
-  --route-edge: #fffdf7;
-  --route-alt:  #5e7a2e;
-
-  color-scheme: light;
-}
-
-[data-theme="dark"] {
-  /* ---------- 2. SEMANTIC TOKENS · DARK ----------
-     Tactical Hi-Tech — MO Camo Edition. The PRIMARY brand
-     expression. Dark-hoof base, cream text, blaze accent. */
-  --paper:      #0b0c08;   /* ← dark-hoof, verbatim                 */
-  --paper-2:    #15160e;
-  --ink:        #fff5e6;   /* ← cream-white, verbatim               */
-  --ink-2:      #c5c1ad;
-  --muted:      #8c8970;
-  --muted-txt:  #8c8970;
-  --line:       #23241a;
-  --line-2:     #333524;
-  --panel:      rgba(13, 14, 9, 0.90);
-  --panel-solid:#0f100a;
-  --green:      #9fb84a;
-  --green-deep: #88a23b;
-  --green-soft: #1e2410;
-  --orange:     #ff6b1a;
-  --orange-soft:#2a1b0e;
-  --link:       #6BAED6;
-  --accent-glow: 0 0 0 1px rgba(255,107,26,.55), 0 0 22px rgba(255,107,26,.40);
-  --shadow:     0 1px 2px rgba(0,0,0,.5), 0 12px 36px rgba(0,0,0,.55);
-  --shadow-sm:  0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.45);
-  --grid-line:  rgba(159,184,74,.06);
-
-  --danger:      #e9624f;
-  --danger-soft: #2a1310;
-  --warn:        #d98a3c;
-  --success:     #9fb84a;
-
-  --focus-ring-color: var(--orange);
-  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--orange);
-
-  --m-paper:    #0e0f09;
-  --m-paper-2:  #0a0b06;
-  --m-road:     #26271c;
-  --m-road-art: #343626;
-  --m-road-art-edge: #3f4130;
-  --m-water:    #11201f;
-  --m-water-edge:#1a2e2a;
-  --m-park:     #1b2410;
-  --m-park-edge:#26321a;
-  --m-contour:  #1c1d12;
-  --m-label:    #6e6b55;
-  --m-build:    #1a1b12;
-
-  --route:      #ff6b1a;
-  --route-edge: #0b0c08;
-  --route-alt:  #9fb84a;
-
-  color-scheme: dark;
-}
-
-/* ============================================================
-   BRAND LOCKUP — wordmark classes used by App.jsx JSX
-   styles.css does not redefine .wordmark / .app-tile / etc.
+   Component styles live in styles.css. Token definitions live
+   in tokens.css. This file imports the tokens and defines the
+   wordmark/app-tile lockup and a few global helpers.
    ============================================================ */
 
 .brand .app-tile {
@@ -211,8 +16,8 @@
 }
 .brand .app-tile svg {
   width: 28px; height: 28px;
-  color: var(--brand-cream-white);
-  --ac: var(--brand-blaze-orange);
+  color: var(--paper);
+  --ac: var(--route);
 }
 .brand-txt { display: flex; flex-direction: column; gap: 1px; }
 
@@ -232,7 +37,7 @@
 .maplibregl-ctrl-attrib { background: var(--panel) !important; color: var(--muted-txt) !important; font-size: 10px !important; border-radius: 8px !important; }
 .maplibregl-ctrl-attrib a { color: var(--ink-2) !important; }
 
-/* ---------- Legacy UI classes (kept for compatibility) ---------- */
+/* Legacy UI helper classes (kept for compatibility) */
 .marker { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: var(--shadow-sm); cursor: pointer; }
 .marker.start { background: var(--green); }
 .marker.dest { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-soft), var(--shadow); }
@@ -245,15 +50,4 @@
 
 .prefs { display: flex; gap: 8px; margin-top: 16px; }
 .prefs button { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink-2); font-size: 13px; font-weight: 500; cursor: pointer; }
-.prefs button.active { background: var(--orange); color: #fff; border-color: var(--orange); }
-
-/* Tentacles (Redesign Shell) */
-#tentacles { position: fixed; inset: 0; pointer-events: none; opacity: 0.15; overflow: hidden; z-index: -1; }
-.tentacle, .tentacle::before { position: absolute; border-radius: 999px; transform-origin: top center; animation: drift var(--dur) ease-in-out infinite alternate; }
-.tentacle { width: 1.5px; height: var(--len); left: var(--x); top: -8vh; background: linear-gradient(120deg, var(--green), transparent); filter: blur(0.2px); }
-.tentacle::before { content: ""; inset: 0; width: 17px; left: -4px; background: linear-gradient(120deg, var(--green), transparent); opacity: 0.5; }
-@keyframes drift {
-  from { transform: rotate(calc(var(--rot) * -2)) translateY(0); }
-  to { transform: rotate(var(--rot)) translateY(2vh); }
-}
-@media (prefers-reduced-motion: reduce) { .tentacle { animation: none; } }
+.prefs button.active { background: var(--green); color: #fff; border-color: var(--green); }

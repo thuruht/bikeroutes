@@ -71,7 +71,7 @@ export class RouteSession extends DurableObject<Env> {
 		await this.ctx.storage.delete("session");
 		return Response.json({
 			status: "cleared",
-			message: "🦌 Route cleared. Ready for a new adventure!",
+			message: " Route cleared. Ready for a new adventure!",
 		});
 	}
 }

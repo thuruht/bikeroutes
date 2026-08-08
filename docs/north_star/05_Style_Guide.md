@@ -23,13 +23,7 @@ The UI blends a soft, "premium" consumer aesthetic with tactical utility. It use
 *   **Border Radius:** Multi-scale: `radius-md` (8px), `radius-lg` (16px), `radius-xl` (24px).
 *   **Shadows:** Soft, deep shadows (`--shadow-lg`) to create elevation without harsh borders.
 
-## 2. Mascot Usage: Reki the Deer
-Reki is a tool for empathy and brand recognition.
-*   **Tone:** Reki is helpful, curious, and slightly playful. He is never condescending.
-*   **Visuals:** Use the official flat-vector style. He should integrate seamlessly into the Light Tactical UI, often appearing in `.box` or `.panel` containers.
-*   **Placement:** Use him for empty states, errors, loading screens, and donation appeals. Do *not* use him to interrupt the core routing workflow.
-
-## 3. Code Architecture & Conventions
+## 2. Code Architecture & Conventions
 
 ### Frontend (React + Vite)
 *   **Components:** Functional components with Hooks. Use descriptive names.

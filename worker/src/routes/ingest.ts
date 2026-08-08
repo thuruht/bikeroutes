@@ -106,7 +106,7 @@ ingestRoutes.post("/", async (c) => {
 		}
 
 		return c.json({
-			message: `Indexed ${totalEmbedded} D1 POIs into Vectorize 🦌`,
+			message: `Indexed ${totalEmbedded} D1 POIs into Vectorize `,
 			total: rows.length,
 		});
 	}
@@ -296,7 +296,7 @@ ingestRoutes.post("/", async (c) => {
 		}
 
 		return c.json({
-			message: `OSM ${osmTypes} ingestion complete 🦌`,
+			message: `OSM ${osmTypes} ingestion complete `,
 			found: elements.length,
 			deduplicated: unique.length,
 			indexed: totalEmbedded,

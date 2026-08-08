@@ -241,7 +241,7 @@ curatedFeatureRoutes.post("/", async (c) => {
 			).bind(user.id).run();
 		}
 
-		return c.json({ id: featureId, message: "Feature created 🦌" }, 201);
+		return c.json({ id: featureId, message: "Feature created " }, 201);
 	} catch (e) {
 		return c.json({ error: "Failed to create feature", message: String(e) }, 500);
 	}

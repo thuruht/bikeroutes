@@ -36,6 +36,18 @@ app.use("*", cors({
 	maxAge: 86400,
 }));
 
+// ─── Domain redirect: JKCBIKEMAP → bikeroutes.org ──────
+app.use("*", async (c, next) => {
+	const host = c.req.header("host");
+	if (host === "jojomap.kcmo.xyz") {
+		const url = new URL(c.req.url);
+		url.hostname = "bikeroutes.org";
+		url.protocol = "https:";
+		return c.redirect(url.toString(), 301);
+	}
+	await next();
+});
+
 // ─── Routes ───────────────────────────────────────────
 app.route("/api/route", routeRoutes);
 app.route("/api", geocodeRoutes);      // mounts /api/geocode + /api/reverse
@@ -67,7 +79,7 @@ app.post("/api/admin/sync-gis", async (c) => {
 		await syncGisData(c.env);
 		const bikeResult = await syncMarcBikeways(c.env);
 		const kmlResult = await syncKmlConstruction(c.env);
-		return c.json({ message: "GIS sync complete 🦌", ...bikeResult, kmlInserted: kmlResult });
+		return c.json({ message: "GIS sync complete", ...bikeResult, kmlInserted: kmlResult });
 	} catch (e) {
 		return c.json({ error: "Sync failed", message: String(e) }, 500);
 	}
@@ -79,7 +91,7 @@ app.post("/api/admin/sync-gis", async (c) => {
 app.all("/*", (c) => {
 	return c.json({
 		error: "Trail not found",
-		message: "Reki couldn't find that API endpoint. Try /api/health? 🦌",
+		message: "That API endpoint doesn't exist. Try /api/health?",
 		status: 404,
 	}, 404);
 });
@@ -88,7 +100,7 @@ app.all("/*", (c) => {
 app.onError((err, c) => {
 	logger.error("Worker unhandled exception", err);
 	return c.json({
-		error: "Reki tripped on a root",
+		error: "Internal error",
 		message: "Something went wrong. Try again in a sec.",
 		status: 500,
 	}, 500);

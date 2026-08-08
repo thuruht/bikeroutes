@@ -1,49 +1,88 @@
 /* ============================================================
    bikeroutes.org — DESIGN TOKENS  (single source of truth)
    ------------------------------------------------------------
-   Tactical Hi-Tech · MO Camo Edition.
-   This file is the canonical token layer. styles.css and every
-   page @import it. Three layers:
-     1. BRAND PALETTE  — the 8 named brand colors, fixed hexes.
-     2. SEMANTIC TOKENS — functional, theme-aware (light / dark).
+   Green / Paper palette · JKCBIKEMAP-inspired.
+   Two layers:
+     1. SEMANTIC TOKENS — functional, theme-aware (light / dark).
                           UI code references THESE, never raw hex.
-     3. SCALES         — type, space, radius, shadow, motion, z.
-   ------------------------------------------------------------
-   Brand → semantic mapping is documented inline. Some semantic
-   tints are intentionally deepened/lightened from the brand hex
-   to hold WCAG AA contrast on a given surface; those deltas are
-   noted with "AA-tuned".
+     2. SCALES          — type, space, radius, shadow, motion, z.
    ============================================================ */
 
 :root {
-  /* ---------- 1. BRAND PALETTE (immutable) ---------- */
-  --brand-deer-brown:   #C0763C;  /* Reki body, warm headers          */
-  --brand-blaze-orange: #FF6B1A;  /* primary accent / CTA / safety     */
-  --brand-camo-olive:   #4B5320;  /* tactical surfaces, secondary bg   */
-  --brand-cream-white:  #FFF5E6;  /* primary text on dark, chest/tail  */
-  --brand-forest-green: #2D5F3A;  /* cap, bag, accent buttons          */
-  --brand-trail-tan:    #D4A96A;  /* card surfaces, secondary bg       */
-  --brand-dark-hoof:    #0B0C08;  /* deep dark base, ink, outlines     */
-  --brand-sky-blue:     #6BAED6;  /* links, interactive, map water     */
+  /* ---------- 1. SEMANTIC TOKENS · LIGHT ----------
+     Warm paper surfaces with muted green accents.               */
+  --paper:       #f4f0e6;
+  --paper-2:     #e9e4d7;
+  --paper-3:     #e2ddd0;
+  --ink:         #333333;
+  --ink-2:       #555555;
+  --muted:       #777777;
+  --muted-txt:   #777777;
+  --line:        #d0c8b0;
+  --line-2:      #c5bb9e;
+  --panel:       rgba(244, 240, 230, 0.94);
+  --panel-solid: #f4f0e6;
 
-  /* ---------- 3. SCALES (theme-independent) ---------- */
+  --green:       #7a9a8c;
+  --green-deep:  #5f7d70;
+  --green-soft:  #dce5e1;
+  --orange:      #c06c44;
+  --orange-soft: #eedcd0;
+  --link:        #4b7f8c;
+
+  --accent-glow: 0 0 0 1px rgba(122,154,140,.35), 0 6px 18px rgba(122,154,140,.22);
+  --shadow:      0 1px 2px rgba(40,37,29,.06), 0 8px 28px rgba(40,37,29,.10);
+  --shadow-sm:   0 1px 2px rgba(40,37,29,.08), 0 2px 8px rgba(40,37,29,.06);
+  --grid-line:   rgba(122,154,140,.06);
+
+  /* feedback */
+  --danger:      #c0392b;
+  --danger-soft: #f7ddd8;
+  --warn:        #b9722a;
+  --success:     #5f7d70;
+
+  /* focus ring — green accent */
+  --focus-ring-color: var(--green);
+  --focus-ring: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--green);
+
+  /* map (light) */
+  --m-paper:     #efe8d8;
+  --m-paper-2:   #eae2cf;
+  --m-road:      #e2d8c0;
+  --m-road-art:  #fffdf7;
+  --m-road-art-edge: #e0d4b8;
+  --m-water:     #bcd0ce;
+  --m-water-edge: #a6c0bc;
+  --m-park:      #d8e3c0;
+  --m-park-edge: #c7d6a9;
+  --m-contour:   #e5dbc4;
+  --m-label:     #8a8369;
+  --m-build:     #e7dec9;
+
+  --route:       #e2590f;
+  --route-edge:  #fffdf7;
+  --route-alt:   #7a9a8c;
+
+  color-scheme: light;
+
+  /* ---------- 2. SCALES (theme-independent) ---------- */
 
   /* type families */
-  --font-head: "Outfit", system-ui, -apple-system, sans-serif;     /* headers, wordmark, brand */
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif; /* UI + trail data */
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;   /* coords, data, captions */
+  --font-head: "Outfit", system-ui, -apple-system, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
 
-  /* type scale — mobile-first, rem on 16px root. label / px / use */
-  --text-2xs:  0.6875rem;  /* 11  — micro caps, map labels        */
-  --text-xs:   0.75rem;    /* 12  — captions, meta, hints         */
-  --text-sm:   0.8125rem;  /* 13  — secondary UI, nav, turn rows  */
-  --text-base: 0.875rem;   /* 14  — body / input default          */
-  --text-md:   1rem;       /* 16  — emphasised body               */
-  --text-lg:   1.0625rem;  /* 17  — card titles, section heads    */
-  --text-xl:   1.3125rem;  /* 21  — sub-display                   */
-  --text-2xl:  1.625rem;   /* 26  — display                       */
-  --text-3xl:  1.875rem;   /* 30  — hero stat (route distance)    */
-  --text-4xl:  2.25rem;    /* 36  — marketing hero                */
+  /* type scale */
+  --text-2xs:  0.6875rem;
+  --text-xs:   0.75rem;
+  --text-sm:   0.8125rem;
+  --text-base: 0.875rem;
+  --text-md:   1rem;
+  --text-lg:   1.0625rem;
+  --text-xl:   1.3125rem;
+  --text-2xl:  1.625rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
 
   /* line-height */
   --lh-tight: 1.1;
@@ -62,9 +101,9 @@
   --track-snug: -0.01em;
   --track-normal: 0;
   --track-wide: 0.02em;
-  --track-caps: 0.07em;   /* uppercase eyebrow / section labels */
+  --track-caps: 0.07em;
 
-  /* spacing — 4px base grid (matches the 24px tactical texture = 6 units) */
+  /* spacing */
   --space-0: 0;
   --space-1: 4px;
   --space-2: 8px;
@@ -77,9 +116,7 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* radius — the documented system. (Supersedes the legacy single 6px.)
-     6 → controls nested in a group · 11 → buttons/inputs/pills
-     14 → cards · 18 → floating panels · pill → chips/toggles */
+  /* radius */
   --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 11px;
@@ -87,7 +124,7 @@
   --radius-xl: 18px;
   --radius-pill: 999px;
 
-  /* minimum touch target (outdoor, gloved, one-handed) */
+  /* minimum touch target */
   --touch-min: 44px;
 
   /* motion */
@@ -103,111 +140,59 @@
   --z-panel: 30;
   --z-topbar: 40;
   --z-modal: 80;
-
-  /* ---------- 2. SEMANTIC TOKENS · LIGHT ----------
-     "Daylight Trail Tan" — warm camo daytime. Designed to stay
-     legible on a glaring phone screen outdoors. */
-  --paper:      #f4efe3;  /* ← trail-tan, lightened to a paper tint */
-  --paper-2:    #ebe4d3;
-  --ink:        #1b1c12;  /* ← dark-hoof, raised for soft contrast  */
-  --ink-2:      #46473a;
-  --muted:      #827c68;
-  --muted-txt:  #827c68;
-  --line:       #e0d7c2;
-  --line-2:     #d2c8ae;
-  --panel:      rgba(248, 244, 235, 0.94);
-  --panel-solid:#f8f4eb;
-  --green:      #5e7a2e;   /* ← camo-olive, AA-tuned brighter "moss" */
-  --green-deep: #4c6724;
-  --green-soft: #e5ead2;
-  --orange:     #e2590f;   /* ← blaze-orange, AA-tuned darker on light (4.5:1 on paper) */
-  --orange-soft:#f6e0ce;
-  --link:       #1f6e93;   /* ← sky-blue, AA-tuned darker on light   */
-  --accent-glow: 0 0 0 1px rgba(226,89,15,.35), 0 6px 18px rgba(226,89,15,.22);
-  --shadow:     0 1px 2px rgba(40,36,28,.06), 0 8px 28px rgba(40,36,28,.10);
-  --shadow-sm:  0 1px 2px rgba(40,36,28,.08), 0 2px 8px rgba(40,36,28,.06);
-  --grid-line:  rgba(75,83,32,.05);
-
-  /* feedback */
-  --danger:      #c0392b;
-  --danger-soft: #f7ddd8;
-  --warn:        #b9722a;
-  --success:     #4c6724;
-
-  /* focus ring — 2px offset in the surface color, 2px blaze ring */
-  --focus-ring-color: var(--orange);
-  --focus-ring: 0 0 0 2px var(--panel-solid), 0 0 0 4px var(--orange);
-
-  /* map (light) */
-  --m-paper:    #efe8d8;
-  --m-paper-2:  #eae2cf;
-  --m-road:     #e2d8c0;
-  --m-road-art: #fffdf7;
-  --m-road-art-edge: #e0d4b8;
-  --m-water:    #bcd0ce;
-  --m-water-edge:#a6c0bc;
-  --m-park:     #d8e3c0;
-  --m-park-edge:#c7d6a9;
-  --m-contour:  #e5dbc4;
-  --m-label:    #8a8369;
-  --m-build:    #e7dec9;
-
-  --route:      #e2590f;
-  --route-edge: #fffdf7;
-  --route-alt:  #5e7a2e;
-
-  color-scheme: light;
 }
 
 [data-theme="dark"] {
-  /* ---------- 2. SEMANTIC TOKENS · DARK ----------
-     Tactical Hi-Tech — MO Camo Edition. The PRIMARY brand
-     expression. Dark-hoof base, cream text, blaze accent. */
-  --paper:      #0b0c08;   /* ← dark-hoof, verbatim                 */
-  --paper-2:    #15160e;
-  --ink:        #fff5e6;   /* ← cream-white, verbatim               */
-  --ink-2:      #c5c1ad;
-  --muted:      #8c8970;
-  --muted-txt:  #8c8970;
-  --line:       #23241a;
-  --line-2:     #333524;
-  --panel:      rgba(13, 14, 9, 0.90);
-  --panel-solid:#0f100a;
-  --green:      #9fb84a;   /* ← camo-olive, AA-tuned brighter on dark */
-  --green-deep: #88a23b;
-  --green-soft: #1e2410;
-  --orange:     #ff6b1a;   /* ← blaze-orange, verbatim              */
-  --orange-soft:#2a1b0e;
-  --link:       #6BAED6;   /* ← sky-blue, verbatim                  */
-  --accent-glow: 0 0 0 1px rgba(255,107,26,.55), 0 0 22px rgba(255,107,26,.40);
-  --shadow:     0 1px 2px rgba(0,0,0,.5), 0 12px 36px rgba(0,0,0,.55);
-  --shadow-sm:  0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.45);
-  --grid-line:  rgba(159,184,74,.06);
+  /* ---------- 1. SEMANTIC TOKENS · DARK ----------
+     Deep warm dark with muted teal/green accents.              */
+  --paper:       #171614;
+  --paper-2:     #1c1b19;
+  --paper-3:     #201f1d;
+  --ink:         #e3e0d8;
+  --ink-2:       #b0aca2;
+  --muted:       #8b877d;
+  --muted-txt:   #8b877d;
+  --line:        #393836;
+  --line-2:      #4a4840;
+  --panel:       rgba(23, 22, 20, 0.92);
+  --panel-solid: #171614;
 
-  --danger:      #e9624f;
-  --danger-soft: #2a1310;
-  --warn:        #d98a3c;
-  --success:     #9fb84a;
+  --green:       #4f98a3;
+  --green-deep:  #3d7a84;
+  --green-soft:  #1e302f;
+  --orange:      #d98a5a;
+  --orange-soft: #2e2018;
+  --link:        #6baed6;
 
-  --focus-ring-color: var(--orange);
-  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--orange);
+  --accent-glow: 0 0 0 1px rgba(79,152,163,.55), 0 0 22px rgba(79,152,163,.40);
+  --shadow:      0 1px 2px rgba(0,0,0,.5), 0 12px 36px rgba(0,0,0,.55);
+  --shadow-sm:   0 1px 2px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.45);
+  --grid-line:   rgba(79,152,163,.06);
 
-  --m-paper:    #0e0f09;
-  --m-paper-2:  #0a0b06;
-  --m-road:     #26271c;
-  --m-road-art: #343626;
-  --m-road-art-edge: #3f4130;
-  --m-water:    #11201f;
-  --m-water-edge:#1a2e2a;
-  --m-park:     #1b2410;
-  --m-park-edge:#26321a;
-  --m-contour:  #1c1d12;
-  --m-label:    #6e6b55;
-  --m-build:    #1a1b12;
+  --danger:       #e9624f;
+  --danger-soft:  #2a1310;
+  --warn:         #d98a3c;
+  --success:      #4f98a3;
 
-  --route:      #ff6b1a;
-  --route-edge: #0b0c08;
-  --route-alt:  #9fb84a;
+  --focus-ring-color: var(--green);
+  --focus-ring: 0 0 0 2px var(--paper), 0 0 0 4px var(--green);
+
+  --m-paper:     #141311;
+  --m-paper-2:   #0f0e0d;
+  --m-road:      #262420;
+  --m-road-art:  #34302a;
+  --m-road-art-edge: #3f3a32;
+  --m-water:     #11201f;
+  --m-water-edge: #1a2e2a;
+  --m-park:      #1b2314;
+  --m-park-edge: #26321a;
+  --m-contour:   #1c1a15;
+  --m-label:     #6e6b55;
+  --m-build:     #1a1814;
+
+  --route:       #ff6b1a;
+  --route-edge:  #171614;
+  --route-alt:   #4f98a3;
 
   color-scheme: dark;
 }

@@ -80,7 +80,7 @@ export class POIStore extends DurableObject<Env> {
 		if (Number(countResult.cnt) >= 10) {
 			return new Response(JSON.stringify({
 				error: "Daily submission limit reached",
-				message: "🦌 Reki says slow down — 10 POIs per day is the limit!",
+				message: "Slow down — 10 POIs per day is the limit!",
 			}), { status: 429, headers: { "Content-Type": "application/json" } });
 		}
 
@@ -95,7 +95,7 @@ export class POIStore extends DurableObject<Env> {
 		return new Response(JSON.stringify({
 			id,
 			status: "pending",
-			message: "🦌 POI submitted! A Trail Steward will review it soon.",
+			message: " POI submitted! A Trail Steward will review it soon.",
 		}), { status: 201, headers: { "Content-Type": "application/json" } });
 	}
 
@@ -151,8 +151,8 @@ export class POIStore extends DurableObject<Env> {
 			id,
 			action,
 			message: action === "approve"
-				? "🦌 POI approved! It's now on the map."
-				: "🦌 POI rejected.",
+				? " POI approved! It's now on the map."
+				: " POI rejected.",
 		}), { headers: { "Content-Type": "application/json" } });
 	}
 }

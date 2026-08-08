@@ -110,12 +110,14 @@ All endpoints on `gis2.marc2.org` support `f=geojson&outSR=4326` for WGS84 outpu
 - Trigger: `POST /api/admin/sync-gis` (X-Admin-Secret) or daily cron
 
 ## Brand / UI Decisions (implemented)
-- **No always-visible nav bar** — placeholder nav links and privacy badge removed from desktop. Single info button (ℹ️) opens a modal with: wordmark, nav links (Plan/Explore/Map data/About), privacy notice, version chip, tagline.
+  - **No always-visible nav bar** — placeholder nav links and privacy badge removed from desktop. Single info button (ℹ️) opens a modal with: wordmark, nav links (Plan/Explore/Map/About), privacy notice, version chip, tagline.
 - **Wordmark** is clickable → opens info modal.
-- **Reki deer head** SVG in wordmark "i" dot uses viewBox `0 -3 172 172` (centered, no antler clipping). Same viewBox in the mascot component.
+- **Cowboy hat** SVG replaces the deer head as the dot of the "i" in the wordmark.
+- **Bike logo** (`byn3.png`) is used for the app tile / favicon.
 - **Modal wordmark** rendered at 28px via `.modal .wordmark { font-size: 28px; display: flex; justify-content: center; }`.
 - **Typography**: Outfit heading font, IBM Plex Sans body.
 - **Theme toggle**: sun/moon buttons, persisted in localStorage `br-theme`.
+- **JKCBIKEMAP domain** `jojomap.kcmo.xyz` 301-redirects to `https://bikeroutes.org`.
 
 ## Known Gotchas
 - **Valhalla container** is alpha (`@cloudflare/containers` v0.1.0). Docker must be running locally for `wrangler deploy` to build it. Use `--containers-rollout=none` to skip; routing falls back to FOSSGIS then BRouter.
@@ -154,5 +156,5 @@ curl https://bikeroutes.org/api/poi/categories
 ## Style
 - Hono routers in `worker/src/routes/`. Use `logger` from `../lib/logger` for structured JSON logs.
 - Frontend: no CSS Modules — plain CSS files (`styles.css`, `index.css`).
-- Mascot voice: friendly, deer/nature puns, ends with 🦌.
+- Copy: neutral, practical, no mascot voice.
 - Commit format: `type: description` (e.g. `feat:`, `fix:`, `chore:`).

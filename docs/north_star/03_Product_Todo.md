@@ -23,8 +23,8 @@ The MVP focuses on delivering a superior, ad-free routing experience that clearl
 *   [ ] **Donation Engine & Merch Fulfillment:**
     *   *Feature:* The PayPal integration, donation tiers, and the automated Printful pipeline for T-shirt/hoodie fulfillment for high-tier donors.
     *   *Tech Ref:* Cloudflare Worker endpoints, Stripe/PayPal SDKs, KV storage for claim tokens.
-*   [ ] **Mascot Integration:**
-    *   *Feature:* Placing Reki the Deer in UI empty states, error pages (404s), and loading screens to establish brand identity.
+*   [ ] **Empty-state Illustrations:**
+    *   *Feature:* Brand-consistent illustrations or marks in UI empty states, error pages (404s), and loading screens.
 
 ## Milestone 2: Community & Content (Phase 2)
 Once the routing foundation is solid, the focus shifts to user-generated content and retention.
@@ -36,7 +36,7 @@ Once the routing foundation is solid, the focus shifts to user-generated content
     *   *Feature:* A "Report Inaccuracy" button that queues surface corrections for review and eventual upstreaming to OpenStreetMap.
 *   [ ] **User Profiles & Badges:**
     *   *Feature:* Public profiles displaying contribution stats and badges (e.g., "Scout", "Pathfinder") earned through interaction.
-*   [ ] **"Reki's Trail Mail" Newsletter Automation:**
+*   [ ] **"Trail Mail" Newsletter Automation:**
     *   *Feature:* Automated curation of the "Trail of the Month" and community stats to drive recurring engagement.
 
 ## Milestone 3: Advanced Navigation & Analytics (Phase 3)
@@ -45,7 +45,7 @@ Once the routing foundation is solid, the focus shifts to user-generated content
 *   [ ] **Community Heatmaps:**
     *   *Feature:* Visualizing the most popular riding corridors based on anonymized user routing data.
 *   [ ] **Curated "Featured Loops":**
-    *   *Feature:* Pre-packaged, ready-to-ride loops organized by difficulty, distance, and scenery, heavily featuring Reki's recommendations.
+    *   *Feature:* Pre-packaged, ready-to-ride loops organized by difficulty, distance, and scenery, curated by local riders and route stewards.
 
 ---
 *Next: Explore the [Future Roadmaps](./04_Future_Roadmaps.md)*

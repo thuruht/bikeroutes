@@ -63,7 +63,7 @@ searchRoutes.get("/", async (c) => {
 	if (!query || query.length < 3) {
 		return c.json({
 			error: "Search query too short",
-			message: "Give Reki more to work with — at least 3 characters! 🦌",
+			message: "Search query too short — give me at least 3 characters.",
 		}, 400);
 	}
 
@@ -73,7 +73,7 @@ searchRoutes.get("/", async (c) => {
 	if (!allowed) {
 		return c.json({
 			error: "Too many searches",
-			message: "Reki needs a breather. Try again in a minute. 🦌💨",
+			message: "Too many searches — take a breather and try again in a minute.",
 		}, 429, {
 			"X-RateLimit-Remaining": "0",
 			"Retry-After": "60",
@@ -110,7 +110,7 @@ searchRoutes.get("/", async (c) => {
 			});
 		}
 
-		let rekiResponse = "🦌 Hmm, Reki hasn't explored that area yet. Try different words?";
+		let helperResponse = "No matches found. Try different words or a nearby region.";
 
 		if (matches.length > 0) {
 			const contextText = matches.map((m, i) => {
@@ -118,13 +118,12 @@ searchRoutes.get("/", async (c) => {
 				return `[${i+1}] ${meta.name || 'Unknown Location'} - ${meta.description || ''}`;
 			}).join("\n");
 
-			const systemPrompt = `You are Reki, a helpful scout deer mascot for BikeRoutes.org. 
+			const systemPrompt = `You are a helpful local cycling map assistant for BikeRoutes.org.
 Your job is to recommend bike trails and locations based on the user's search query and the provided database results.
 RULES:
 1. Keep your response very short (1-3 sentences maximum).
-2. Be friendly and use subtle deer/nature puns (like 'hoofing it', 'scouted this path', etc.).
-3. End with a deer emoji 🦌.
-4. ONLY recommend places from the provided context. If nothing fits perfectly, pick the closest match.
+2. Be friendly and practical.
+3. ONLY recommend places from the provided context. If nothing fits perfectly, pick the closest match.
 
 Context trails found:
 ${contextText}`;
@@ -137,7 +136,7 @@ ${contextText}`;
 				max_tokens: 150
 			}) as ChatResponse;
 
-			rekiResponse = chatResponse.response;
+			helperResponse = chatResponse.response;
 		}
 
 		// Also log the search to D1 for analytics
@@ -161,7 +160,7 @@ ${contextText}`;
 				metadata: m.metadata,
 			})),
 			remaining,
-			reki_says: rekiResponse,
+			message: helperResponse,
 		}, 200, {
 			"X-RateLimit-Remaining": String(remaining),
 		});
@@ -169,7 +168,7 @@ ${contextText}`;
 		logger.error("Semantic search failed", error, "SEARCH");
 		return c.json({
 			error: "Search failed",
-			message: "Reki got distracted by a butterfly. Try again. 🦋🦌",
+			message: "Search failed. Try again in a moment.",
 		}, 500);
 	}
 });

@@ -42,7 +42,7 @@ healthRoutes.get("/", async (c) => {
 		status: allOk ? "healthy" : "degraded",
 		checks,
 		version: "0.1.0-alpha",
-		reki: allOk ? "🦌 All systems go!" : "🦌 Something's off... checking the trail.",
+		message: allOk ? "All systems go" : "Something's off... checking the trail.",
 		timestamp: new Date().toISOString(),
 	}, allOk ? 200 : 503);
 });

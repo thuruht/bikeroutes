@@ -11,7 +11,7 @@
 - `index.css` — full design token system (tokens.css + styles.css merged). Bunny Fonts @import (NOT Google). Dark tactical theme is primary brand expression.
 - `App.jsx` (757 lines) — full LiveApp port from `final-app.jsx`. Multi-waypoint routing, draggable markers, PlaceSearch, elevation scrub → map dot, turn hover → locate, GPX/KML export, privacy badge, scale bar + coordinate readout, zoom controls, theme toggle.
 - `lib/api.js` (373 lines) — `BR` object: `BR.route(points, pref)`, `BR.geocode(q)`, `BR.reverse(lng,lat)`, `BR.pointAtFrac`, `BR.fmtKm`, `BR.fmtTime`. Worker `/api/*` endpoints first, BRouter public fallback, straight-line estimate as final fallback. **Never dead-ends.**
-- `components/BrandSprite.jsx` — canonical vector SVG sprite (`#mark-b`, `#mark-b-solid`, `#pin-wing`, `#reki`, `#reki-head`, `#reki-sil`). Render once near root, reference anywhere with `<svg><use href="#mark-b" /></svg>`.
+- `components/BrandSprite.jsx` — canonical vector SVG sprite (`#mark-b`, `#mark-b-solid`, `#pin-wing`, `#cowboy-hat`). Render once near root, reference anywhere with `<svg><use href="#mark-b" /></svg>`.
 
 ### Shell
 - `index.html` — proper OG/Twitter meta, theme-color, SVG favicon ref, Bunny Fonts preconnect, web manifest link. Removed Inter font (wrong brand), added IBM Plex Sans + IBM Plex Mono via Bunny.
@@ -28,9 +28,9 @@
 ## What's still TODO
 
 ### Immediate (before ship)
-- [ ] **`main.jsx`** — render `<BrandSprite />` once before `<App />` so `<use href="#reki-head" />` etc. resolve. Just add `import BrandSprite from './components/BrandSprite'` and put `<BrandSprite />` inside the root render.
+- [ ] **`main.jsx`** — render `<BrandSprite />` once before `<App />` so `<use href="#cowboy-hat" />` and `<use href="#mark-b" />` resolve. Just add `import BrandSprite from './components/BrandSprite'` and put `<BrandSprite />` inside the root render.
 - [ ] **PlaceSearch component** — the agent inlined it inside App.jsx. Consider extracting to `components/PlaceSearch.jsx` for cleanliness (not blocking).
-- [ ] **Reki.jsx / components** — the old standalone components (GeoInput, Summary, Turns, Elevation) now have inline equivalents inside App.jsx. The standalone files weren't updated. They're unused by the new App but they're still there — either delete or leave (won't affect build since App.jsx doesn't import them).
+- [ ] **Legacy standalone components** (GeoInput, Summary, Turns, Elevation, Reki) now have inline equivalents inside App.jsx. The standalone files weren't updated. They're unused by the new App but they're still there — either delete or leave (won't affect build since App.jsx doesn't import them).
 
 ### Worker (Milestone 2 — not blocking MVP)
 - [ ] `/api/route` response adapter — currently passes Valhalla JSON raw. Frontend `api.js` already adapts it, but a richer adapter in the Worker would enable caching the normalised shape.
@@ -89,10 +89,10 @@ worker/src/
 
 The **v1.0 brand package** (Brand Marks — Final, "Approved · v1.0" + Design System page) is now integrated:
 - `frontend/public/design/` — tokens.css, styles.css, Design System (`index.html`), Brand Marks (`brand-marks.html`), served at `/design/`. These are the canonical reference docs.
-- App header now renders the real lockup: `#mark-b` on a green app-tile, wordmark with `#reki-head` as the i-dot, `v1.0` chip (`App.jsx` topbar + lockup CSS in `index.css`).
+- App header now renders the real lockup: `#mark-b` on a green app-tile, wordmark with `#cowboy-hat` as the i-dot, `v1.0` chip (`App.jsx` topbar + lockup CSS in `index.css`).
 - `favicon.svg` → solid b-wheel on **forest-green** tile (was dark-hoof).
 - MapLibre attribution themed via `.maplibregl-ctrl-attrib` in `index.css`.
-- **Canon note:** Reki's cap badge is the **diamond** (`M120,59.5 L127.5,68 L120,76.5 L112.5,68 Z`). The arrow variant found in some exploration-board files is superseded — don't "fix" the diamond.
+- The Reki mascot has been retired; BrandSprite now ships only the bike mark, wing pin, and cowboy-hat i-dot.
 
 ## Dev setup
 ```bash

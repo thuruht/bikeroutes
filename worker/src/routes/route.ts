@@ -111,8 +111,8 @@ routeRoutes.post("/", async (c) => {
 	if (cached) {
 		return c.json(cached, 200, {
 			"X-Cache": "HIT",
-			"X-Reki": encodeURIComponent("🦌 cached trail"),
-			"X-Reki-Source": "cache",
+			"X-Route-Source": "cache",
+			"X-Route-Note": "cached",
 		});
 	}
 
@@ -191,10 +191,10 @@ routeRoutes.post("/", async (c) => {
 			source = "brouter";
 		} catch (brouterError) {
 			logger.error("All routing engines failed", brouterError, "ROUTING");
-			return c.json({
-				error: "Reki got lost",
-				message: "All routing engines are taking a nap. Try again shortly.",
-			}, 503);
+		return c.json({
+			error: "Routing failed",
+			message: "All routing engines are unavailable. Try again shortly.",
+		}, 503);
 		}
 	}
 
@@ -214,8 +214,8 @@ routeRoutes.post("/", async (c) => {
 
 		return c.json(routeData, 200, {
 			"X-Cache": "MISS",
-			"X-Reki": encodeURIComponent(source === "edge" ? "🦌 fresh scouted trail" : source === "fossgis" ? "🦌 scouted via FOSSGIS" : "🦌 scouted via BRouter"),
-			"X-Reki-Source": source,
+			"X-Route-Source": source,
+			"X-Route-Note": source === "edge" ? "fresh" : source === "fossgis" ? "via FOSSGIS" : "via BRouter",
 		});
 	}
 

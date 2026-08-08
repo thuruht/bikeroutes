@@ -1,8 +1,8 @@
-# 🦌 BikeRoutes.org
+# BikeRoutes.org
 
 **Free, open‑source, community‑driven bike trail navigation for the Midwest.**
 
-> *"Hey! I'm Reki. I've scouted every trail in the Midwest so you don't have to. Let's ride."*
+> *"Open cycling maps for the Midwest — ad‑free, surface‑aware, and built for riders."*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Powered by Cloudflare Workers](https://img.shields.io/badge/Powered%20by-Cloudflare%20Workers-orange.svg)](https://workers.cloudflare.com)
@@ -45,14 +45,6 @@ BikeRoutes.org is a **free, donation‑supported** web platform for urban and of
 
 ---
 
-## Mascot
-
-Meet **Reki** 🦌 — a young white‑tailed deer who scouts every trail in the Midwest. He wears a cycling cap and carries a messenger bag full of trail maps. [Read the full brand guide →](docs/north_star/08_Mascot_Identity.md)
-
----
-
-
-
 ## 🌟 North Star Guide
 
 The central vision, architecture, roadmap, and styling guidelines for the project are comprehensively documented in the [North Star Guide](docs/north_star/00_Table_of_Contents.md). All contributors (human and AI) should review this guide before making major changes.
@@ -72,8 +64,7 @@ bikeroutes/
 ├── docs/               # Planning docs, specs, brand guide
 │   ├── archive/        # Archived legacy brainstorming
 │   ├── north_star/     # Current architecture and design specs (Source of Truth)
-│   └── assets/
-│       └── reki_concept.png
+│   └── assets/         # Archived design assets
 ├── frontend/           # React + Vite + MapLibre GL JS
 ├── worker/             # Cloudflare Workers (API, tiles proxy, search)
 ├── routing/            # [Pending setup] Valhalla Docker config
@@ -97,9 +88,9 @@ BikeRoutes.org is **free forever** and supported entirely by donations. Your sup
 
 | ☕ $5 | 🥪 $10 | 🗺️ $15 | 👕 $25 | 🏔️ $50 |
 |-------|--------|---------|--------|---------|
-| Coffee for Reki | Reki's Sandwich | Trail Supporter | Route Builder (T‑shirt) | Reki's Inner Circle (Hoodie) |
+| Coffee | Sandwich | Trail Supporter | Route Builder (T‑shirt) | Inner Circle (Hoodie) |
 
-Monthly subscriptions available: **Reki's Trail Fund** ($3/mo) · **Reki's Patrol** ($5/mo) · **Reki's Herd** ($10/mo)
+Monthly subscriptions available: **Trail Fund** ($3/mo) · **Patrol** ($5/mo) · **Herd** ($10/mo)
 
 ---
 
