@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import * as BR from '../api';
+import PublicProfile from './PublicProfile';
 
 const Ic = {
   heart: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.7 0l-.1.1-.1-.1a5.5 5.5 0 0 0-7.7 7.7l.1.1L12 21l7.7-8.6.1-.1a5.5 5.5 0 0 0 0-7.7z"/></svg>,
@@ -168,7 +169,7 @@ function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, 
 
           {location && (
             <div style={{ fontSize: 12, color: 'var(--muted-txt)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-              {Ic.pin} Pin at {location.lat.toFixed(4)}, {location.lon.toFixed(4)}
+              <span style={{ width: 14, height: 14, display: 'grid', placeItems: 'center' }}>{Ic.pin}</span> Pin at {location.lat.toFixed(4)}, {location.lon.toFixed(4)}
               <button type="button" className="pillbtn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => { const c = mapObj.current?.getCenter(); if (c) setLocation({ lat: c.lat, lon: c.lng }); }}>Use map center</button>
               <button type="button" className="pillbtn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={onPickLocationStart}>Pick on map</button>
             </div>
@@ -201,7 +202,7 @@ function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, 
   );
 }
 
-function PostCard({ post, me, onOpen, onMutate, mapObj }) {
+function PostCard({ post, me, onOpen, onMutate, mapObj, onShowProfile }) {
   const [liking, setLiking] = useState(false);
   const isMine = me && post.userId === me.id;
 
@@ -223,11 +224,15 @@ function PostCard({ post, me, onOpen, onMutate, mapObj }) {
           {post.author?.avatarUrl ? <img src={post.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : Ic.user}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)' }}>{post.author?.displayName ?? post.author?.username ?? 'Anonymous'}</div>
+          <button
+            className="text-btn"
+            onClick={(e) => { e.stopPropagation(); post.author?.username && onShowProfile?.(post.author.username); }}
+            style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+          >{post.author?.displayName ?? post.author?.username ?? 'Anonymous'}</button>
           <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)' }}>{timeAgo(post.createdAt)} ago · {CATEGORIES.find((c) => c.id === post.category)?.label ?? post.category}</div>
         </div>
         {post.lat != null && (
-          <button className="io-clear" onClick={(e) => { e.stopPropagation(); mapObj.current?.flyTo({ center: [post.lon, post.lat], zoom: 15, duration: 700 }); }} title="Fly to map" style={{ color: 'var(--green)' }}>
+          <button className="io-clear" onClick={(e) => { e.stopPropagation(); mapObj.current?.flyTo({ center: [post.lon, post.lat], zoom: 15, duration: 700 }); }} title="Fly to map" style={{ color: 'var(--green)', width: 20, height: 20, display: 'grid', placeItems: 'center' }}>
             {Ic.pin}
           </button>
         )}
@@ -299,7 +304,7 @@ function PostDetail({ id, onClose, me, mapObj }) {
             <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)' }}>{timeAgo(p.createdAt)} ago · {CATEGORIES.find((c) => c.id === p.category)?.label ?? p.category}</div>
           </div>
           {p.lat != null && (
-            <button className="pillbtn" onClick={() => { mapObj.current?.flyTo({ center: [p.lon, p.lat], zoom: 15 }); onClose(); }} style={{ marginLeft: 'auto', padding: '6px 9px' }}>{Ic.pin} Map</button>
+            <button className="pillbtn" onClick={() => { mapObj.current?.flyTo({ center: [p.lon, p.lat], zoom: 15 }); onClose(); }} style={{ marginLeft: 'auto', padding: '6px 9px', display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 14, height: 14, display: 'grid', placeItems: 'center' }}>{Ic.pin}</span> Map</button>
           )}
         </div>
 
@@ -350,6 +355,7 @@ export default function CommunityView({ mapObj }) {
   const [offset, setOffset] = useState(0);
   const [pickingLocation, setPickingLocation] = useState(false);
   const [draftLocation, setDraftLocation] = useState(null);
+  const [profileUsername, setProfileUsername] = useState(null);
   const perPage = 20;
   const markersRef = useRef([]);
   const pickHandlerRef = useRef(null);
