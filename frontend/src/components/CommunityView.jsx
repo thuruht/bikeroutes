@@ -265,7 +265,7 @@ function PostCard({ post, me, onOpen, onMutate, mapObj, onShowProfile }) {
   );
 }
 
-function PostDetail({ id, onClose, me, mapObj }) {
+function PostDetail({ id, onClose, me, mapObj, onShowProfile }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
@@ -325,7 +325,11 @@ function PostDetail({ id, onClose, me, mapObj }) {
           <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)', marginBottom: 8 }}>{p.commentCount} comment{p.commentCount !== 1 ? 's' : ''}</div>
           {data.comments.map((c) => (
             <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-              <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink)' }}>{c.author?.displayName ?? 'Anonymous'}</div>
+              <button
+                className="text-btn"
+                onClick={() => c.author?.username && onShowProfile?.(c.author.username)}
+                style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}
+              >{c.author?.displayName ?? 'Anonymous'}</button>
               <div style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{c.body}</div>
               <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginTop: 2 }}>{timeAgo(c.createdAt)} ago</div>
             </div>
@@ -458,7 +462,7 @@ export default function CommunityView({ mapObj }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {posts.map((p) => (
-          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} mapObj={mapObj} />
+          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} mapObj={mapObj} onShowProfile={setProfileUsername} />
         ))}
         {loading && <div className="trail" style={{ padding: 20, textAlign: 'center', color: 'var(--muted-txt)' }}><span className="spin">{Ic.spinner}</span></div>}
         {!loading && posts.length === 0 && (
@@ -481,7 +485,8 @@ export default function CommunityView({ mapObj }) {
           onCreated={onMutate}
         />
       )}
-      {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} />}
+      {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} onShowProfile={setProfileUsername} />}
+      {profileUsername && <PublicProfile username={profileUsername} onClose={() => setProfileUsername(null)} />}
     </div>
   );
 }
