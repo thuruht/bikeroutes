@@ -13,6 +13,7 @@
 - [x] D1 migration `0019_community_posts.sql` applied to production.
 - [x] Community categories cleaned up: removed nonsensical "Mud/snake", split into `Mud` and `Wildlife`, relabeled `Trail report`.
 - [x] "New post" plus icon sized correctly instead of scaling to fill the button.
+- [x] Route legend filtered to remove generic street-name local bike relations; now shows real named routes/trails and uses theme colors.
 - [x] Curated feature submission/review flow: users can suggest new points/lines or request edits to existing features; moderators approve/reject from the Map panel.
 - [x] D1 migration `0020_curated_submissions.sql` applied to production.
 
@@ -40,7 +41,7 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 
 ## Bugs / errors / typos
 - [x] `mudosnake` post category removed → replaced with `mud` and `wildlife` categories.
-- [x] Real email sending implemented for magic-link codes.
+- [x] Real email sending implemented for magic-link codes; dev_code fallback removed (email only).
 - [ ] Magic-link codes stored in KV with hash key but never rate-limited; brute-force possible.
 - [ ] Workers AI model names (`@cf/baai/bge-base-en-v1.5`) can change and break `/api/search`; needs monitoring/dashboard check.
 - [ ] `last_import: "never"` in `/api/health` is misleading; the daily cron is running but no heartbeat is written for it.
