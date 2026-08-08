@@ -178,13 +178,19 @@ ingestRoutes.post("/", async (c) => {
 			return !!t.name;
 		});
 
-		// Deduplicate by source type + id
+		// Deduplicate by source type + id (derive a centroid for ways with full geometry)
 		const seen = new Set<string>();
 		const unique: any[] = [];
 		for (const e of elements) {
-			const lat = e.center?.lat ?? e.lat;
-			const lon = e.center?.lon ?? e.lon;
-			if (!lat || !lon) continue;
+			let lat = e.center?.lat ?? e.lat;
+			let lon = e.center?.lon ?? e.lon;
+			if ((lat == null || lon == null) && e.geometry && Array.isArray(e.geometry) && e.geometry.length) {
+				let sumLat = 0, sumLon = 0;
+				for (const n of e.geometry) { sumLon += n.lon; sumLat += n.lat; }
+				lon = sumLon / e.geometry.length;
+				lat = sumLat / e.geometry.length;
+			}
+			if (lat == null || lon == null) continue;
 			const key = `${e.type}:${e.id}`;
 			if (!seen.has(key)) { seen.add(key); unique.push(e); }
 		}
