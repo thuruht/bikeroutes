@@ -442,9 +442,8 @@ export default function MapView({ mapObj }) {
           )}
 
           <div style={{ marginTop: 4, padding: 12, borderRadius: 14, background: 'var(--paper-2)', border: '1px solid var(--line)' }}>
-            <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Route shields</span>
-              <span style={{ fontSize: 9 }}> overlay</span>
+            <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>
+              Route shields
             </div>
             <TrailLegend />
           </div>

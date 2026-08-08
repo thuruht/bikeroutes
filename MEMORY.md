@@ -68,7 +68,7 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 - [ ] Valhalla container is **not running in production** because the build machine has no Docker. FOSSGIS fallback handles routing for now.
 - [x] Route source badge fixed to show actual source (Valhalla/FOSSGIS/BRouter) from response header.
 - [ ] Old JKCBIKEMAP reports, checkpoints, comments, and gamification data were not migrated.
-- [ ] Route "Save" button is just a local state toggle; saved routes are not persisted to D1.
+- [x] Route "Save" button now persists routes to D1; users can load and delete saved routes from the Plan panel.
 - [ ] Tile proxy `/api/tiles/*.pmtiles` 404s if no `.pmtiles` file is in R2 yet.
 - [ ] North Star / KC2026 pages (`docs/north_star`) mention placeholder leaderboard and scout route submission UI; not implemented.
 
