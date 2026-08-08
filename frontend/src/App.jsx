@@ -348,64 +348,80 @@ export default function LiveApp() {
 
   const addTrailsOverlay = useCallback(() => {
     const map = mapObj.current; if (!map) return;
-    if (map.getSource("trails")) return;
-    map.addSource("trails", { type: "raster", tiles: [BR.TILES.trailsOverlay], tileSize: 256, attribution: BR.TILES.trailsAttribution });
-    map.addLayer({
-      id: "trails", type: "raster", source: "trails",
-      minzoom: 8,
-      paint: {
-        "raster-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.35, 10, 0.65, 12, 0.85, 14, 1],
-      },
-      layout: { visibility: trailsOverlay ? "visible" : "none" },
-    }, "route-casing");
+    const vis = trailsOverlay ? "visible" : "none";
+    if (!map.getSource("trails")) {
+      map.addSource("trails", { type: "raster", tiles: [BR.TILES.trailsOverlay], tileSize: 256, attribution: BR.TILES.trailsAttribution });
+    }
+    if (!map.getLayer("trails")) {
+      map.addLayer({
+        id: "trails", type: "raster", source: "trails",
+        minzoom: 8,
+        paint: {
+          "raster-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.35, 10, 0.65, 12, 0.85, 14, 1],
+        },
+        layout: { visibility: vis },
+      }, "route-casing");
+    } else {
+      map.setLayoutProperty("trails", "visibility", vis);
+    }
   }, [trailsOverlay]);
 
   const addRailLayer = useCallback(() => {
     const map = mapObj.current; if (!map) return;
-    if (map.getSource("rail")) return;
-    map.addSource("rail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
-    map.addLayer({
-      id: "rail-lines",
-      type: "line",
-      source: "rail",
-      filter: ["!=", ["get", "category"], "station"],
-      paint: {
-        "line-color": ["match", ["get", "category"],
-          "disused", "#96a89e", "abandoned", "#b8c6bf",
-          "light_rail", "#5f8a78", "tram", "#5f8a78",
-          "#7a9a8c"],
-        "line-width": ["match", ["get", "category"],
-          "disused", 1.5, "abandoned", 1,
-          2.5],
-        "line-opacity": ["match", ["get", "category"],
-          "disused", 0.4, "abandoned", 0.25,
-          0.55],
-        "line-dasharray": ["match", ["get", "category"],
-          "disused", ["literal", [4, 3]], "abandoned", ["literal", [2, 4]],
-          ["literal", [1, 0]]],
-      },
-      layout: { visibility: railOverlay ? "visible" : "none" },
-    }, "route-casing");
-    map.addLayer({
-      id: "rail-stations",
-      type: "circle",
-      source: "rail",
-      minzoom: 11,
-      filter: ["in", ["get", "category"], ["literal", ["station", "halt", "junction"]]],
-      paint: {
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 4, 13, 6],
-        "circle-color": "#7a9a8c",
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#fff",
-        "circle-opacity": 0.7,
-      },
-      layout: { visibility: railOverlay ? "visible" : "none" },
-    }, "route-casing");
-    // Fetch rail data
-    fetch("/api/features?type=rail").then(r => r.json()).then(data => {
-      const src = map.getSource("rail");
-      if (src) src.setData(data);
-    }).catch(() => {});
+    const vis = railOverlay ? "visible" : "none";
+    let src = map.getSource("rail");
+    if (!src) {
+      src = map.addSource("rail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      fetch("/api/features?type=rail").then(r => r.json()).then(data => {
+        const s = map.getSource("rail");
+        if (s) s.setData(data);
+      }).catch(() => {});
+    }
+    if (!map.getLayer("rail-lines")) {
+      map.addLayer({
+        id: "rail-lines",
+        type: "line",
+        source: "rail",
+        filter: ["!=", ["get", "category"], "station"],
+        paint: {
+          "line-color": ["match", ["get", "category"],
+            "disused", "#96a89e", "abandoned", "#b8c6bf",
+            "light_rail", "#5f8a78", "tram", "#5f8a78",
+            "#7a9a8c"],
+          "line-width": ["match", ["get", "category"],
+            "disused", 1.5, "abandoned", 1,
+            2.5],
+          "line-opacity": ["match", ["get", "category"],
+            "disused", 0.4, "abandoned", 0.25,
+            0.55],
+          "line-dasharray": ["match", ["get", "category"],
+            "disused", ["literal", [4, 3]], "abandoned", ["literal", [2, 4]],
+            ["literal", [1, 0]]],
+        },
+        layout: { visibility: vis },
+      }, "route-casing");
+    } else {
+      map.setLayoutProperty("rail-lines", "visibility", vis);
+    }
+    if (!map.getLayer("rail-stations")) {
+      map.addLayer({
+        id: "rail-stations",
+        type: "circle",
+        source: "rail",
+        minzoom: 11,
+        filter: ["in", ["get", "category"], ["literal", ["station", "halt", "junction"]]],
+        paint: {
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 4, 13, 6],
+          "circle-color": "#7a9a8c",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#fff",
+          "circle-opacity": 0.7,
+        },
+        layout: { visibility: vis },
+      }, "route-casing");
+    } else {
+      map.setLayoutProperty("rail-stations", "visibility", vis);
+    }
   }, [railOverlay]);
 
   const updateScale = useCallback(() => {

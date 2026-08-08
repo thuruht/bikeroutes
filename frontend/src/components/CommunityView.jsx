@@ -16,10 +16,11 @@ const Ic = {
 const CATEGORIES = [
   { id: 'general', label: 'General' },
   { id: 'photo', label: 'Photo' },
-  { id: 'report', label: 'Report' },
+  { id: 'report', label: 'Trail report' },
   { id: 'hazard', label: 'Hazard' },
-  { id: 'mudosnake', label: 'Mud/snake' },
   { id: 'flooding', label: 'Flooding' },
+  { id: 'mud', label: 'Mud' },
+  { id: 'wildlife', label: 'Wildlife' },
   { id: 'route', label: 'Route' },
   { id: 'meetup', label: 'Meetup' },
   { id: 'gear', label: 'Gear' },
@@ -368,7 +369,7 @@ export default function CommunityView({ mapObj }) {
       </div>
 
       <button className="primary" style={{ width: '100%', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={() => user ? setShowCreate(true) : setShowAuth(true)}>
-        {Ic.plus} New post
+        <span style={{ width: 18, height: 18, display: 'grid', placeItems: 'center' }}>{Ic.plus}</span> New post
       </button>
 
       {!user && (

@@ -210,7 +210,7 @@ communityRoutes.post("/posts", async (c) => {
 
   const title = sanitizeString(body.title, 140);
   const category = sanitizeString(body.category, 50) ?? "general";
-  const validCategories = ["general", "report", "mudosnake", "mud", "flooding", "hazard", "photo", "route", "meetup", "gear", "question"];
+  const validCategories = ["general", "report", "mud", "wildlife", "flooding", "hazard", "photo", "route", "meetup", "gear", "question"];
   const finalCategory = validCategories.includes(category) ? category : "general";
 
   const id = uuidv4();
