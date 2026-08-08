@@ -441,12 +441,7 @@ export default function MapView({ mapObj }) {
             </>
           )}
 
-          <div style={{ marginTop: 4, padding: 12, borderRadius: 14, background: 'var(--paper-2)', border: '1px solid var(--line)' }}>
-            <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8 }}>
-              Route shields
-            </div>
-            <TrailLegend />
-          </div>
+          <TrailLegend />
 
           {busy && <div className="mono" style={{ color: 'var(--muted-txt)', fontSize: 12, padding: '8px 0' }}>Loading map features…</div>}
           {error && <div className="mono" style={{ color: 'var(--danger)', fontSize: 12, padding: '8px 0' }}>Failed to load curated features.</div>}
