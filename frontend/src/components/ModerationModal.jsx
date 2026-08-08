@@ -90,8 +90,8 @@ export default function ModerationModal({ onClose }) {
                     <button className="pillbtn" disabled={busy === r.id + 'dismiss'} onClick={() => act(r.id, 'dismiss')}>Dismiss</button>
                   </>
                 )}
-                {r.post_id && <button className="pillbtn" onClick={() => togglePost(r.post_id, r.post_body?.startsWith('[hidden]') ? 'hidden' : 'active')}>Toggle post</button>}
-                {r.comment_id && <button className="pillbtn" onClick={() => toggleComment(r.comment_id, r.comment_body?.startsWith('[hidden]') ? 'hidden' : 'active')}>Toggle comment</button>}
+                {r.post_id && <button className="pillbtn" onClick={() => togglePost(r.post_id, r.post_status)}>{r.post_status === 'hidden' ? 'Show post' : 'Hide post'}</button>}
+                {r.comment_id && <button className="pillbtn" onClick={() => toggleComment(r.comment_id, r.comment_status)}>{r.comment_status === 'hidden' ? 'Show comment' : 'Hide comment'}</button>}
               </div>
             </div>
           ))}

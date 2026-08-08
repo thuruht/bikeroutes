@@ -30,8 +30,8 @@ adminCommunityRoutes.get("/reports", async (c) => {
 	try {
 		const { results } = await c.env.DB.prepare(
 			`SELECT r.id, r.post_id, r.comment_id, r.reporter_id, r.reason, r.status, r.moderator_note, r.created_at,
-			        p.body AS post_body,
-			        c.body AS comment_body,
+			        p.body AS post_body, p.status AS post_status,
+			        c.body AS comment_body, c.status AS comment_status,
 			        rep.display_name AS reporter_display_name, rep.username AS reporter_username,
 			        cu.display_name AS comment_author_display_name, cu.username AS comment_author_username
 			 FROM community_reports r
