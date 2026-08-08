@@ -16,7 +16,10 @@
 - [x] Route legend moved from hidden info modal to visible Map panel; filtered street-name noise; added display names and network context.
 - [x] Curated feature submission/review flow: users can suggest new points/lines or request edits to existing features; moderators approve/reject from the Map panel.
 - [x] Route source badge now reads the real provider from the worker's `X-Route-Source` header instead of always claiming Valhalla.
-- [x] D1 migration `0020_curated_submissions.sql` applied to production.
+- [x] Global auth context with logged-in user indicator in the top bar across all views.
+- [x] User avatar upload + profile editing (username, display name, bio).
+- [x] Secure direct messages (private conversations between signed-in users).
+- [x] D1 migrations `0020_curated_submissions.sql` and `0023_direct_messages.sql` applied to production.
 
 ## Regression guard policy (must follow)
 These rules exist because `main` is production. Every change below has to pass before commit/push:
@@ -49,6 +52,7 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 
 ## Incomplete / stubs / lazy shortcuts
 - [x] Curated-feature contribution / correction UI with geometry editor added; still needs notifications on approve/reject.
+- [ ] Old JKCBIKEMAP reports, checkpoints, comments, and gamification data were not migrated (only schema + 62 curated features exist in the local repo; there is no dump of user-generated content).
 - [ ] Community: no map markers for posts yet. Posts have `lat`/`lon` but nothing renders them on the map.
 - [ ] Community: post location picker is just "use current map center"; no click-to-pin UI.
 - [ ] Community: no notification system for replies/likes.
