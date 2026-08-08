@@ -52,14 +52,10 @@ authRoutes.post("/request", async (c) => {
 	await c.env.SESSIONS.put(`login_code:${emailHash}`, code, { expirationTtl: 900 });
 
 	const sent = await sendLoginCode(email, code, c.env);
-	const isLocalDev = c.req.header('origin')?.includes('localhost') ?? false;
-	const response: { message: string; dev_code?: string } = {
-		message: sent ? "Code emailed. Check your inbox." : "Email failed — use the dev code if available."
-	};
-	if (isLocalDev || !sent) {
-		response.dev_code = code; // fallback for dev or email failure
+	if (!sent) {
+		return c.json({ error: "Could not send email. Try again later." }, 502);
 	}
-	return c.json(response);
+	return c.json({ message: "Code emailed. Check your inbox." });
 });
 
 // ─── Verify Magic Code ────────────────────────────────────────────

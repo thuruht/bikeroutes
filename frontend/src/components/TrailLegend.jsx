@@ -17,15 +17,21 @@ export default function TrailLegend() {
 
   return (
     <div style={{ display: 'grid', gap: 6, maxHeight: 220, overflowY: 'auto', paddingRight: 4 }}>
-      {routes.map((r, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 11 }}>
-          <span className="mono" style={{
-            flex: 'none', padding: '2px 5px', borderRadius: 4,
-            background: '#e8e0f0', color: '#5e4b7a', fontWeight: 600,
-          }}>{r.ref}</span>
-          <span style={{ color: 'var(--ink-2)' }}>{r.name}</span>
-        </div>
-      ))}
+      {routes.map((r, i) => {
+        const showRef = r.ref && r.ref.toLowerCase() !== (r.name || '').toLowerCase();
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 11 }}>
+            {showRef && (
+              <span className="mono" style={{
+                flex: 'none', padding: '2px 6px', borderRadius: 4,
+                background: 'var(--green-soft)', color: 'var(--green)', fontWeight: 600,
+                border: '1px solid var(--line)',
+              }}>{r.ref}</span>
+            )}
+            <span style={{ color: 'var(--ink-2)' }}>{r.name}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -12,8 +12,20 @@ import { logger } from "../lib/logger";
 export const legendRoutes = new Hono<{ Bindings: Env }>();
 
 const BBOX = "38.8,-95.0,39.4,-94.2";
-const KV_KEY = "TRAIL_OVERLAY_LEGEND";
+const KV_KEY = "TRAIL_OVERLAY_LEGEND_V2";
 const CACHE_TTL = 86400; // 24h
+
+const STREET_SUFFIX_RE = /\b(st|street|ave|avenue|rd|road|dr|drive|blvd|boulevard|ln|lane|way|cir|circle|ter|terrace|pl|place|ct|court|pkwy|parkway|run|loop)\b/i;
+
+function isStreetNameLocalRoute(r: RouteInfo): boolean {
+	// Named regional/national routes are always OK
+	if (r.network && ["ncn", "rcn", "icn"].includes(r.network)) return false;
+	// Many KC lcn relations are just generic street refs like "115th Street".
+	// Filter those out when name and ref are the same street-style text.
+	if (!r.name || !r.ref) return false;
+	if (r.name.toLowerCase() !== r.ref.toLowerCase()) return false;
+	return STREET_SUFFIX_RE.test(r.name);
+}
 
 interface RouteInfo {
 	ref: string;
@@ -67,14 +79,22 @@ legendRoutes.get("/", async (c) => {
 	}
 
 	// Sort by ref for stable display
-	routes.sort((a, b) => a.ref.localeCompare(b.ref));
+	const filtered = routes.filter(r => !isStreetNameLocalRoute(r));
+
+	const networkRank = { icn: 0, ncn: 1, rcn: 2, lcn: 3 };
+	filtered.sort((a, b) => {
+		const ra = networkRank[a.network as keyof typeof networkRank] ?? 4;
+		const rb = networkRank[b.network as keyof typeof networkRank] ?? 4;
+		if (ra !== rb) return ra - rb;
+		return a.ref.localeCompare(b.ref);
+	});
 
 	// Cache in KV
 	try {
-		await c.env.ROUTE_CACHE.put(KV_KEY, JSON.stringify(routes), { expirationTtl: CACHE_TTL });
+		await c.env.ROUTE_CACHE.put(KV_KEY, JSON.stringify(filtered), { expirationTtl: CACHE_TTL });
 	} catch (err) {
 		logger.warn("Failed to cache trail legend", err, "LEGEND");
 	}
 
-	return c.json({ source: "overpass", routes });
+	return c.json({ source: "overpass", routes: filtered });
 });
