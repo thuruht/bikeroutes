@@ -273,8 +273,8 @@ communityRoutes.post("/posts/:id/like", async (c) => {
   try {
     await c.env.DB.prepare("INSERT OR IGNORE INTO community_post_likes (id, post_id, user_id) VALUES (?, ?, ?)").bind(uuidv4(), postId, user.id).run();
     await c.env.DB.prepare(
-      `UPDATE community_posts SET like_count = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?), \n                                     score = like_count * 1.0 + comment_count * 2.0 + strftime('%s', created_at) / 86400.0 \n       WHERE id = ?`
-    ).bind(postId, postId).run();
+      `UPDATE community_posts SET like_count = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?),\n                                     score = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?) * 1.0\n                                           + (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?) * 2.0\n                                           + strftime('%s', created_at) / 86400.0\n       WHERE id = ?`
+    ).bind(postId, postId, postId, postId).run();
     return c.json({ success: true });
   } catch (error) {
     logger.error("Failed to like post", error, "COMMUNITY");
@@ -290,8 +290,8 @@ communityRoutes.post("/posts/:id/unlike", async (c) => {
   try {
     await c.env.DB.prepare("DELETE FROM community_post_likes WHERE post_id = ? AND user_id = ?").bind(postId, user.id).run();
     await c.env.DB.prepare(
-      `UPDATE community_posts SET like_count = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?), \n                                     score = like_count * 1.0 + comment_count * 2.0 + strftime('%s', created_at) / 86400.0 \n       WHERE id = ?`
-    ).bind(postId, postId).run();
+      `UPDATE community_posts SET like_count = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?),\n                                     score = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?) * 1.0\n                                           + (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?) * 2.0\n                                           + strftime('%s', created_at) / 86400.0\n       WHERE id = ?`
+    ).bind(postId, postId, postId, postId).run();
     return c.json({ success: true });
   } catch (error) {
     logger.error("Failed to unlike post", error, "COMMUNITY");
@@ -313,8 +313,8 @@ communityRoutes.post("/posts/:id/comment", async (c) => {
       "INSERT INTO community_post_comments (id, post_id, user_id, author_name, body) VALUES (?, ?, ?, ?, ?)"
     ).bind(id, postId, user?.id ?? null, user && !anonymous ? user.display_name : null, text).run();
     await c.env.DB.prepare(
-      `UPDATE community_posts SET comment_count = (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?), \n                                      score = like_count * 1.0 + comment_count * 2.0 + strftime('%s', created_at) / 86400.0 \n       WHERE id = ?`
-    ).bind(postId, postId).run();
+      `UPDATE community_posts SET comment_count = (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?),\n                                      score = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?) * 1.0\n                                            + (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?) * 2.0\n                                            + strftime('%s', created_at) / 86400.0\n       WHERE id = ?`
+    ).bind(postId, postId, postId, postId).run();
 
     // Notify post author (not self)
     const post = await c.env.DB.prepare("SELECT user_id, title FROM community_posts WHERE id = ?").bind(postId).first<{ user_id: string; title: string | null }>();

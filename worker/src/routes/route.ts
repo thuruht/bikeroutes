@@ -5,6 +5,7 @@
 import { Hono } from "hono";
 import { getContainer } from "@cloudflare/containers";
 import { logger } from "../lib/logger";
+import { checkRateLimit, getClientIP } from "../lib/rate-limit";
 
 export const routeRoutes = new Hono<{ Bindings: Env }>();
 
@@ -102,6 +103,18 @@ routeRoutes.post("/", async (c) => {
 			error: "Invalid coordinates",
 			message: "Locations must contain valid lat/lon (0,0 is not permitted).",
 		}, 400);
+	}
+
+	// Rate limit: 20 routes / minute / IP
+	const ip = getClientIP(c);
+	const { allowed: routeAllowed } = await checkRateLimit(
+		c.env.RATE_LIMITS,
+		`route:${ip}`,
+		20,
+		60_000,
+	);
+	if (!routeAllowed) {
+		return c.json({ error: "Too many route requests. Slow down." }, 429);
 	}
 
 	const cacheKey = `route:v2:${await sha256(body)}`;

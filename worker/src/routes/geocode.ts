@@ -8,6 +8,7 @@
  */
 
 import { Hono } from "hono";
+import { checkRateLimit, getClientIP } from "../lib/rate-limit";
 
 export const geocodeRoutes = new Hono<{ Bindings: Env }>();
 
@@ -25,6 +26,10 @@ function kvKey(prefix: string, val: string) {
 geocodeRoutes.get("/geocode", async (c) => {
 	const q = (c.req.query("q") || "").trim();
 	if (!q) return c.json({ error: "Query too short" }, 400);
+
+	const ip = getClientIP(c);
+	const { allowed } = await checkRateLimit(c.env.RATE_LIMITS, `geocode:${ip}`, 60, 60_000);
+	if (!allowed) return c.json({ error: "Too many geocode requests. Slow down." }, 429);
 
 	const cacheKey = kvKey("geo", q);
 	const cached = await c.env.ROUTE_CACHE.get(cacheKey, "json");
@@ -63,6 +68,10 @@ geocodeRoutes.get("/reverse", async (c) => {
 	const lng = parseFloat(c.req.query("lng") || "");
 	const lat = parseFloat(c.req.query("lat") || "");
 	if (!isFinite(lng) || !isFinite(lat)) return c.json({ error: "Invalid coordinates" }, 400);
+
+	const ip = getClientIP(c);
+	const { allowed } = await checkRateLimit(c.env.RATE_LIMITS, `reverse:${ip}`, 60, 60_000);
+	if (!allowed) return c.json({ error: "Too many reverse geocode requests. Slow down." }, 429);
 
 	// round to 4dp for cache key (~11m precision — good enough for reverse)
 	const cacheKey = `rev:${lat.toFixed(4)},${lng.toFixed(4)}`;

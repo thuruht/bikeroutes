@@ -5,17 +5,23 @@
 
 import { Hono } from "hono";
 import { logger } from "../lib/logger";
+import { checkRateLimit, getClientIP } from "../lib/rate-limit";
 
 export const donateRoutes = new Hono<{ Bindings: Env }>();
 
-const PAYPAL_API = "https://api-m.paypal.com"; // Use sandbox for dev
+function getPayPalBase(env: Env): string {
+	return env.PAYPAL_ENVIRONMENT === "sandbox"
+		? "https://api-m.sandbox.paypal.com"
+		: "https://api-m.paypal.com";
+}
 
 /**
  * Get PayPal access token using client credentials
  */
 async function getPayPalToken(env: Env): Promise<string> {
 	const auth = btoa(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`);
-	const resp = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
+	const base = getPayPalBase(env);
+	const resp = await fetch(`${base}/v1/oauth2/token`, {
 		method: "POST",
 		headers: {
 			Authorization: `Basic ${auth}`,
@@ -36,6 +42,7 @@ donateRoutes.get("/config", async (c) => {
 	return c.json({
 		clientId: c.env.PAYPAL_CLIENT_ID || null,
 		currency: "USD",
+		environment: c.env.PAYPAL_ENVIRONMENT === "sandbox" ? "sandbox" : "production",
 	});
 });
 
@@ -44,15 +51,23 @@ donateRoutes.get("/config", async (c) => {
  * Body: { amount: number, tier: string }
  */
 donateRoutes.post("/create-order", async (c) => {
+	const ip = getClientIP(c);
+	const { allowed } = await checkRateLimit(c.env.RATE_LIMITS, `donate:${ip}`, 10, 60_000);
+	if (!allowed) return c.json({ error: "Too many donation attempts. Slow down." }, 429);
+
 	const { amount, tier } = await c.req.json<{ amount: number; tier: string }>();
 
-	if (!amount || amount < 5 || amount > 500) {
+	if (typeof amount !== "number" || !Number.isFinite(amount) || amount < 5 || amount > 500) {
 		return c.json({ error: "Invalid donation amount" }, 400);
+	}
+	if (!tier || typeof tier !== "string" || tier.length > 40) {
+		return c.json({ error: "Invalid donation tier" }, 400);
 	}
 
 	try {
 		const token = await getPayPalToken(c.env);
-		const resp = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
+		const base = getPayPalBase(c.env);
+		const resp = await fetch(`${base}/v2/checkout/orders`, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
@@ -85,9 +100,14 @@ donateRoutes.post("/create-order", async (c) => {
 donateRoutes.post("/capture-order", async (c) => {
 	const { orderID, tier } = await c.req.json<{ orderID: string; tier: string }>();
 
+	if (!orderID || typeof orderID !== "string" || orderID.length > 80) {
+		return c.json({ error: "Invalid order ID" }, 400);
+	}
+
 	try {
 		const token = await getPayPalToken(c.env);
-		const resp = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}/capture`, {
+		const base = getPayPalBase(c.env);
+		const resp = await fetch(`${base}/v2/checkout/orders/${orderID}/capture`, {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${token}`,
