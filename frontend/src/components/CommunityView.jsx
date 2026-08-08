@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import * as BR from '../api';
+import { useAuth } from '../AuthContext';
 import PublicProfile from './PublicProfile';
 
 const Ic = {
@@ -356,7 +357,7 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile }) {
 }
 
 export default function CommunityView({ mapObj }) {
-  const [user, setUser] = useState(null);
+  const { user, refreshUser } = useAuth();
   const [posts, setPosts] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -418,8 +419,6 @@ export default function CommunityView({ mapObj }) {
     return () => { if (map && pickHandlerRef.current) map.off('click', pickHandlerRef.current); };
   }, [pickingLocation]);
 
-  const loadUser = async () => { setUser(await BR.fetchMe()); };
-
   const loadPosts = async (reset = false, cat = category) => {
     setLoading(true);
     const curOffset = reset ? 0 : offset;
@@ -432,7 +431,7 @@ export default function CommunityView({ mapObj }) {
     setLoading(false);
   };
 
-  useEffect(() => { loadUser(); loadPosts(true); }, []);
+  useEffect(() => { loadPosts(true); }, []);
 
   useEffect(() => { loadPosts(true); }, [category]);
 
@@ -483,7 +482,7 @@ export default function CommunityView({ mapObj }) {
         )}
       </div>
 
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onUser={(u) => { setUser(u); setShowAuth(false); loadUser(); }} />}
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onUser={() => { refreshUser(); setShowAuth(false); }} />}
       {showCreate && (
         <CreatePostModal
           mapObj={mapObj}

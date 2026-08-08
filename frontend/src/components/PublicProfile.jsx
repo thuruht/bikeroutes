@@ -1,6 +1,19 @@
 import { useEffect, useState } from 'react';
 import * as BR from '../api';
 
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  return Promise.resolve();
+}
+
 const Ic = {
   user: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>,
   x: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>,
@@ -11,6 +24,7 @@ export default function PublicProfile({ username, onClose }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setLoading(true); setError(null);
@@ -55,14 +69,18 @@ export default function PublicProfile({ username, onClose }) {
               <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)', marginBottom: 16 }}>No bio yet.</div>
             )}
 
-            <a
+            <button
+              type="button"
               className="pillbtn"
               style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-              href={`?profile=${encodeURIComponent(profile.username)}`}
-              onClick={(e) => { e.preventDefault(); }}
+              onClick={() => {
+                const url = new URL(window.location.href);
+                url.searchParams.set('profile', profile.username);
+                copyToClipboard(url.toString()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
+              }}
             >
-              {Ic.link} Direct link
-            </a>
+              {Ic.link} {copied ? 'Link copied' : 'Direct link'}
+            </button>
           </div>
         )}
       </div>

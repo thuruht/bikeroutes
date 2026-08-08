@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { getCurrentUser } from "../lib/auth";
 import { logger } from "../lib/logger";
+import { createNotification } from "../lib/notifications";
 
 export const messageRoutes = new Hono<{ Bindings: Env }>();
 
@@ -117,6 +118,23 @@ messageRoutes.post("/conversations/:id/messages", async (c) => {
 		await c.env.DB.prepare(
 			"INSERT INTO direct_messages (id, conversation_id, sender_id, body) VALUES (?, ?, ?, ?)"
 		).bind(id, convId, user.id, text).run();
+
+		// Notify other conversation participants
+		const recipients = await c.env.DB.prepare(
+			"SELECT user_id FROM conversation_participants WHERE conversation_id = ? AND user_id != ?"
+		).bind(convId, user.id).all<{ user_id: string }>();
+
+		const senderName = user.display_name || user.username || "Someone";
+		for (const r of recipients.results ?? []) {
+			await createNotification(c.env.DB, {
+				user_id: r.user_id,
+				type: "dm",
+				title: "New message",
+				body: `${senderName}: ${text.slice(0, 80)}${text.length > 80 ? "…" : ""}`,
+				link: `/messages?c=${convId}`,
+			});
+		}
+
 		return c.json({ id, created_at: new Date().toISOString() }, 201);
 	} catch (error) {
 		logger.error("Failed to send message", error, "MESSAGES");

@@ -9,6 +9,7 @@
 import { Hono } from "hono";
 import { getCurrentUser, canEditCurated, isModerator } from "../lib/auth";
 import { createNotification } from "../lib/notifications";
+import { logger } from "../lib/logger";
 
 export const curatedFeatureRoutes = new Hono<{ Bindings: Env }>();
 
@@ -426,6 +427,26 @@ curatedFeatureRoutes.post("/:id/comments", async (c) => {
 		 VALUES (?, ?, ?, ?)
 		 RETURNING id`
 	).bind(id, userId, authorName, text).first<{ id: string }>();
+
+	// Notify feature owner, but never notify the commenter themselves
+	if (user && userId) {
+		try {
+			const feature = await c.env.DB.prepare(
+				"SELECT owner_id, name FROM curated_features WHERE id = ?"
+			).bind(id).first<{ owner_id: string | null; name: string | null }>();
+			if (feature?.owner_id && feature.owner_id !== userId) {
+				await createNotification(c.env.DB, {
+					user_id: feature.owner_id,
+					type: "comment",
+					title: "New comment on your feature",
+					body: `${user.display_name || user.username || "Someone"} commented on ${feature.name || "your feature"}: ${text.slice(0, 80)}${text.length > 80 ? "…" : ""}`,
+					link: `/feature/${id}`,
+				});
+			}
+		} catch (error) {
+			logger.error("Failed to notify feature owner", error, "FEATURES");
+		}
+	}
 
 	return c.json({ id: result?.id, message: "Comment posted" }, 201);
 });
