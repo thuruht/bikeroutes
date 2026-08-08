@@ -3,6 +3,7 @@ import maplibregl from 'maplibre-gl';
 import * as BR from '../api';
 import { useAuth } from '../AuthContext';
 import PublicProfile from './PublicProfile';
+import ReportModal from './ReportModal';
 
 const Ic = {
   heart: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.7 0l-.1.1-.1-.1a5.5 5.5 0 0 0-7.7 7.7l.1.1L12 21l7.7-8.6.1-.1a5.5 5.5 0 0 0 0-7.7z"/></svg>,
@@ -205,7 +206,7 @@ function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, 
   );
 }
 
-function PostCard({ post, me, onOpen, onMutate, mapObj, onShowProfile }) {
+function PostCard({ post, me, onOpen, onMutate, mapObj, onShowProfile, onReport }) {
   const [liking, setLiking] = useState(false);
   const isMine = me && post.userId === me.id;
 
@@ -262,13 +263,18 @@ function PostCard({ post, me, onOpen, onMutate, mapObj, onShowProfile }) {
         <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5 }}>
           <span style={{ width: 17, height: 17, display: 'block' }}>{Ic.comment}</span> {post.commentCount}
         </span>
+        {me && (
+          <button onClick={(e) => { e.stopPropagation(); onReport({ type: 'post', id: post.id }); }} title="Report" style={{ marginLeft: 'auto', display: 'grid', placeItems: 'center', width: 22, height: 22, background: 'transparent', border: 0, color: 'var(--muted-txt)', cursor: 'pointer' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>
+          </button>
+        )}
         {!me && <span className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginLeft: 'auto' }}>sign in to like</span>}
       </div>
     </div>
   );
 }
 
-function PostDetail({ id, onClose, me, mapObj, onShowProfile }) {
+function PostDetail({ id, onClose, me, mapObj, onShowProfile, onReport }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
@@ -313,6 +319,11 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile }) {
           {p.lat != null && (
             <button className="pillbtn" onClick={() => { mapObj.current?.flyTo({ center: [p.lon, p.lat], zoom: 15 }); onClose(); }} style={{ marginLeft: 'auto', padding: '6px 9px', display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 14, height: 14, display: 'grid', placeItems: 'center' }}>{Ic.pin}</span> Map</button>
           )}
+          {me && (
+            <button className="pillbtn" onClick={() => onReport({ type: 'post', id: p.id })} style={{ padding: '6px 9px', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg> Report
+            </button>
+          )}
         </div>
 
         <div style={{ overflowY: 'auto', paddingRight: 6, flex: 1, minHeight: 0 }}>
@@ -339,7 +350,10 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile }) {
                   style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}
                 >{c.author?.displayName ?? 'Anonymous'}</button>
                 <div style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{c.body}</div>
-                <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginTop: 2 }}>{timeAgo(c.createdAt)} ago</div>
+                <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span>{timeAgo(c.createdAt)} ago</span>
+                  {me && <button onClick={() => onReport({ type: 'comment', id: c.id })} style={{ background: 'transparent', border: 0, color: 'var(--muted-txt)', cursor: 'pointer', fontSize: 10, padding: 0 }}>Report</button>}
+                </div>
               </div>
             ))}
           </div>
@@ -369,6 +383,7 @@ export default function CommunityView({ mapObj }) {
   const [pickingLocation, setPickingLocation] = useState(false);
   const [draftLocation, setDraftLocation] = useState(null);
   const [profileUsername, setProfileUsername] = useState(null);
+  const [reportTarget, setReportTarget] = useState(null);
   const perPage = 20;
   const markersRef = useRef([]);
   const pickHandlerRef = useRef(null);
@@ -469,7 +484,7 @@ export default function CommunityView({ mapObj }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {posts.map((p) => (
-          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} mapObj={mapObj} onShowProfile={setProfileUsername} />
+          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} mapObj={mapObj} onShowProfile={setProfileUsername} onReport={setReportTarget} />
         ))}
         {loading && <div className="trail" style={{ padding: 20, textAlign: 'center', color: 'var(--muted-txt)' }}><span className="spin">{Ic.spinner}</span></div>}
         {!loading && posts.length === 0 && (
@@ -492,8 +507,19 @@ export default function CommunityView({ mapObj }) {
           onCreated={onMutate}
         />
       )}
-      {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} onShowProfile={setProfileUsername} />}
+      {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} onShowProfile={setProfileUsername} onReport={setReportTarget} />}
       {profileUsername && <PublicProfile username={profileUsername} onClose={() => setProfileUsername(null)} />}
+      {reportTarget && (
+        <ReportModal
+          targetType={reportTarget.type}
+          targetId={reportTarget.id}
+          onClose={() => setReportTarget(null)}
+          onSubmit={async (reason) => {
+            if (reportTarget.type === 'post') await BR.reportPost(reportTarget.id, reason);
+            else await BR.reportComment(reportTarget.id, reason);
+          }}
+        />
+      )}
     </div>
   );
 }

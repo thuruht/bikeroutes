@@ -9,6 +9,7 @@ import DonatePanel from './components/DonatePanel';
 
 import CommunityView from './components/CommunityView';
 import UserMenu from './components/UserMenu';
+import ModerationModal from './components/ModerationModal';
 import SignInModal from './components/SignInModal';
 import ProfileModal from './components/ProfileModal';
 import MessagesModal from './components/MessagesModal';
@@ -330,6 +331,7 @@ export default function LiveApp() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [showModeration, setShowModeration] = useState(false);
   const [showPublicProfile, setShowPublicProfile] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('profile') || null;
@@ -784,7 +786,7 @@ export default function LiveApp() {
           <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} title="Tactical dark" aria-label="Dark theme">{Ic.moon}</button>
         </div>
         <button className="pillbtn" onClick={() => setInfoOpen(true)} title="Info" style={{ padding: "9px 11px" }}>{Ic.info}</button>
-        <UserMenu onSignIn={() => setShowSignIn(true)} onProfile={() => setShowProfile(true)} onMessages={() => setShowMessages(true)} />
+        <UserMenu onSignIn={() => setShowSignIn(true)} onProfile={() => setShowProfile(true)} onMessages={() => setShowMessages(true)} onModeration={() => setShowModeration(true)} />
         <button className="pillbtn solid" style={{ userSelect: "none" }}
           title={wps.length > 0 ? "Click remove last stop · Long-press clear route" : (view !== "plan" ? "Switch to plan" : "New route")}
           onMouseDown={() => {
@@ -1058,6 +1060,7 @@ export default function LiveApp() {
       {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
       {showMessages && <MessagesModal onClose={() => setShowMessages(false)} />}
+      {showModeration && <ModerationModal onClose={() => setShowModeration(false)} />}
       {showPublicProfile && (
         <PublicProfile
           username={showPublicProfile}

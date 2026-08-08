@@ -333,6 +333,73 @@ export async function deletePost(id) {
   return r.json();
 }
 
+export async function reportPost(id, reason) {
+  const r = await fetch(`/api/community/posts/${id}/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ reason }),
+  });
+  if (!r.ok) throw new Error("report post " + r.status);
+  return r.json();
+}
+
+export async function reportComment(id, reason) {
+  const r = await fetch(`/api/community/comments/${id}/report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ reason }),
+  });
+  if (!r.ok) throw new Error("report comment " + r.status);
+  return r.json();
+}
+
+// ---- community moderation (admin/moderator) ------------------------------
+export async function fetchCommunityReports(status = "open") {
+  const r = await fetch(`/api/admin/community/reports?status=${encodeURIComponent(status)}`, { headers: authHeaders() });
+  if (!r.ok) throw new Error("reports " + r.status);
+  return r.json();
+}
+
+export async function resolveReport(id, moderatorNote) {
+  const r = await fetch(`/api/admin/community/reports/${id}/resolve`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ moderator_note: moderatorNote }),
+  });
+  if (!r.ok) throw new Error("resolve report " + r.status);
+  return r.json();
+}
+
+export async function dismissReport(id, moderatorNote) {
+  const r = await fetch(`/api/admin/community/reports/${id}/dismiss`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ moderator_note: moderatorNote }),
+  });
+  if (!r.ok) throw new Error("dismiss report " + r.status);
+  return r.json();
+}
+
+export async function setPostStatus(id, status) {
+  const r = await fetch(`/api/admin/community/posts/${id}/status`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ status }),
+  });
+  if (!r.ok) throw new Error("set post status " + r.status);
+  return r.json();
+}
+
+export async function setCommentStatus(id, status) {
+  const r = await fetch(`/api/admin/community/comments/${id}/status`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ status }),
+  });
+  if (!r.ok) throw new Error("set comment status " + r.status);
+  return r.json();
+}
+
 // ---- curated feature submissions -----------------------------------------
 export async function submitFeature(body) {
   const r = await fetch("/api/curated-features/submissions", {

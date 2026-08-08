@@ -6,6 +6,19 @@ import { createNotification } from "../lib/notifications";
 
 export const communityRoutes = new Hono<{ Bindings: Env }>();
 
+async function notifyModerators(db: D1Database, title: string, body: string): Promise<void> {
+  try {
+    const { results } = await db.prepare(
+      "SELECT id FROM users WHERE role IN ('admin', 'moderator')"
+    ).all<{ id: string }>();
+    for (const u of results ?? []) {
+      await createNotification(db, { user_id: u.id, type: "report", title, body, link: "/admin/community" });
+    }
+  } catch (error) {
+    logger.error("Failed to notify moderators", error, "COMMUNITY");
+  }
+}
+
 const PUBLIC_POST_FIELDS = `
   p.id, p.user_id, p.title, p.body, p.category, p.lat, p.lon,
   p.status, p.score, p.like_count, p.comment_count, p.created_at, p.updated_at,
@@ -170,8 +183,8 @@ communityRoutes.get("/posts/:id", async (c) => {
   const mediaMap = await getMediaRows(db, [id]);
 
   const comments = await db.prepare(
-    `SELECT c.id, c.user_id, c.author_name, c.body, c.created_at, \n            u.display_name, u.username, u.avatar_url \n     FROM community_post_comments c \n     LEFT JOIN users u ON u.id = c.user_id \n     WHERE c.post_id = ? ORDER BY c.created_at DESC LIMIT 50`
-  ).bind(id).all<{ id: string; user_id: string | null; author_name: string | null; body: string; created_at: string; display_name: string | null; username: string | null; avatar_url: string | null }>();
+    `SELECT c.id, c.user_id, c.author_name, c.body, c.created_at, c.status, \n            u.display_name, u.username, u.avatar_url \n     FROM community_post_comments c \n     LEFT JOIN users u ON u.id = c.user_id \n     WHERE c.post_id = ? AND c.status = 'active' ORDER BY c.created_at DESC LIMIT 50`
+  ).bind(id).all<{ id: string; user_id: string | null; author_name: string | null; body: string; created_at: string; status: string; display_name: string | null; username: string | null; avatar_url: string | null }>();
 
   const likedByMe = await isLikedByMe(c, id);
 
@@ -257,6 +270,31 @@ communityRoutes.delete("/posts/:id", async (c) => {
   }
 });
 
+// ─── Report post ────────────────────────────────────────────────────
+communityRoutes.post("/posts/:id/report", async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) return c.json({ error: "Sign in to report" }, 401);
+  const postId = c.req.param("id");
+  const body = await c.req.json<{ reason?: string }>();
+  const reason = sanitizeString(body.reason, 500);
+  if (!reason) return c.json({ error: "Reason is required" }, 400);
+
+  const post = await c.env.DB.prepare("SELECT 1 FROM community_posts WHERE id = ?").bind(postId).first();
+  if (!post) return c.json({ error: "Post not found" }, 404);
+
+  try {
+    await c.env.DB.prepare(
+      "INSERT INTO community_reports (post_id, reporter_id, reason) VALUES (?, ?, ?)"
+    ).bind(postId, user.id, reason).run();
+
+    await notifyModerators(c.env.DB, "New community report", `${user.display_name || user.username} reported a post: ${reason.slice(0, 80)}`);
+    return c.json({ success: true });
+  } catch (error) {
+    logger.error("Failed to report post", error, "COMMUNITY");
+    return c.json({ error: "Failed to submit report" }, 500);
+  }
+});
+
 // ─── Like / unlike ──────────────────────────────────────────────────
 async function isLikedByMe(c: Context<{ Bindings: Env }>, postId: string): Promise<boolean> {
   const user = await getCurrentUser(c);
@@ -332,6 +370,31 @@ communityRoutes.post("/posts/:id/comment", async (c) => {
   } catch (error) {
     logger.error("Failed to add comment", error, "COMMUNITY");
     return c.json({ error: "Failed to comment" }, 500);
+  }
+});
+
+// ─── Report comment ─────────────────────────────────────────────────
+communityRoutes.post("/comments/:id/report", async (c) => {
+  const user = await getCurrentUser(c);
+  if (!user) return c.json({ error: "Sign in to report" }, 401);
+  const commentId = c.req.param("id");
+  const body = await c.req.json<{ reason?: string }>();
+  const reason = sanitizeString(body.reason, 500);
+  if (!reason) return c.json({ error: "Reason is required" }, 400);
+
+  const comment = await c.env.DB.prepare("SELECT 1 FROM community_post_comments WHERE id = ?").bind(commentId).first();
+  if (!comment) return c.json({ error: "Comment not found" }, 404);
+
+  try {
+    await c.env.DB.prepare(
+      "INSERT INTO community_reports (comment_id, reporter_id, reason) VALUES (?, ?, ?)"
+    ).bind(commentId, user.id, reason).run();
+
+    await notifyModerators(c.env.DB, "New comment report", `${user.display_name || user.username} reported a comment: ${reason.slice(0, 80)}`);
+    return c.json({ success: true });
+  } catch (error) {
+    logger.error("Failed to report comment", error, "COMMUNITY");
+    return c.json({ error: "Failed to submit report" }, 500);
   }
 });
 

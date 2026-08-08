@@ -25,6 +25,7 @@ import { communityRoutes } from "./routes/community";
 import { messageRoutes } from "./routes/messages";
 import { notificationRoutes } from "./routes/notifications";
 import { savedRouteRoutes } from "./routes/saved-routes";
+import { adminCommunityRoutes } from "./routes/admin-community";
 
 // Re-export Durable Objects & Containers so Wrangler can find them
 export { POIStore } from "./durable-objects/POIStore";
@@ -72,6 +73,7 @@ app.route("/api/community", communityRoutes);
 app.route("/api/community", messageRoutes);
 app.route("/api/notifications", notificationRoutes);
 app.route("/api/saved-routes", savedRouteRoutes);
+app.route("/api/admin/community", adminCommunityRoutes);
 
 // ─── Legacy redirect: old seed endpoint → new ingest endpoint ───
 app.get("/api/admin/seed-trails", async (c) => {
