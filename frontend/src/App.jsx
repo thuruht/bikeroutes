@@ -511,15 +511,24 @@ export default function LiveApp() {
       const lon = r.metadata?.lon ?? r.lon ?? r.lng;
       const lat = r.metadata?.lat ?? r.lat;
       const name = r.metadata?.name ?? r.name ?? "Result";
+      const category = r.metadata?.category ?? "";
+      const score = r.score ? `${(r.score * 100).toFixed(0)}% match` : "";
       if (lon == null || lat == null) return;
       const el = document.createElement("div");
       el.style.cssText = "width:20px;height:20px;border-radius:50%;background:var(--orange);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;z-index:20;";
       el.title = name;
+      const popup = new maplibregl.Popup({ offset: 12, closeButton: false }).setHTML(
+        `<div style="font-family:var(--font-body),system-ui,sans-serif;font-size:13px;color:var(--ink);max-width:180px;">` +
+        `<div style="font-weight:600;margin-bottom:3px;">${name}</div>` +
+        (category ? `<div style="font-size:11px;color:var(--muted-txt);">${category}</div>` : "") +
+        (score ? `<div style="font-size:11px;color:var(--green);margin-top:4px;">${score}</div>` : "") +
+        `</div>`
+      );
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         map.flyTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 14), duration: 600 });
       });
-      const mk = new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map);
+      const mk = new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).setPopup(popup).addTo(map);
       exploreMarkers.current.push(mk);
     });
   }, [clearExploreMarkers]);
