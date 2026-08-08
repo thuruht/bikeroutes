@@ -86,8 +86,8 @@ export default function MapView({ mapObj }) {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
         cluster: true,
-        clusterMaxZoom: 14,
-        clusterRadius: 50,
+        clusterMaxZoom: 13,
+        clusterRadius: 35,
       });
     }
     if (!map.getSource('curated-lines')) {
@@ -216,11 +216,34 @@ export default function MapView({ mapObj }) {
       e.stopPropagation();
       const f = e.features[0];
       const clusterId = f.properties.cluster_id;
+      const source = map.getSource('curated-points');
+      const leaves = await new Promise((resolve, reject) => {
+        source.getClusterLeaves(clusterId, 20, 0, (err, items) => (err ? reject(err) : resolve(items || [])));
+      });
+      const names = leaves.map(item => item.properties?.name || item.properties?.id || 'Feature').slice(0, 12);
+      const html = `<div style="font-family:var(--font-body),system-ui,sans-serif;font-size:12px;color:var(--ink);max-width:180px;">` +
+        `<div style="font-weight:600;margin-bottom:6px;">${leaves.length} feature${leaves.length === 1 ? '' : 's'}</div>` +
+        names.map(n => `<div style="padding:2px 0;color:var(--ink-2);border-bottom:1px solid var(--line);">${n}</div>`).join('') +
+        (leaves.length > 12 ? '<div style="color:var(--muted-txt);margin-top:4px;">…and more</div>' : '') +
+        `</div>`;
+      new maplibregl.Popup({ offset: 12, closeButton: false }).setLngLat(f.geometry.coordinates).setHTML(html).addTo(map);
       const zoom = await new Promise((resolve, reject) => {
-        map.getSource('curated-points').getClusterExpansionZoom(clusterId, (err, z) => (err ? reject(err) : resolve(z)));
+        source.getClusterExpansionZoom(clusterId, (err, z) => (err ? reject(err) : resolve(z)));
       });
       map.flyTo({ center: f.geometry.coordinates, zoom: Math.min(zoom + 1, 16), duration: 500 });
     };
+
+    let hoverPopup = null;
+    const showHover = (e, f) => {
+      const name = f.properties?.name || f.properties?.id || 'Feature';
+      const cat = f.properties?.category || '';
+      if (hoverPopup) hoverPopup.remove();
+      hoverPopup = new maplibregl.Popup({ offset: 10, closeButton: false, className: 'hover-popup' })
+        .setLngLat(e.lngLat)
+        .setHTML(`<div style="font-family:var(--font-body),system-ui,sans-serif;font-size:12px;color:var(--ink);max-width:160px;"><div style="font-weight:600;">${name}</div>${cat ? `<div style="font-size:11px;color:var(--muted-txt);">${cat}</div>` : ''}</div>`)
+        .addTo(map);
+    };
+    const hideHover = () => { if (hoverPopup) { hoverPopup.remove(); hoverPopup = null; } };
 
     const onPointClick = (e) => {
       e.stopPropagation();
@@ -240,6 +263,14 @@ export default function MapView({ mapObj }) {
     listeners.current.push(['click', 'curated-clusters', onClusterClick]);
     listeners.current.push(['click', 'curated-points', onPointClick]);
     listeners.current.push(['click', 'curated-lines', onLineClick]);
+
+    for (const layer of ['curated-points', 'curated-lines']) {
+      const enter = (e) => showHover(e, e.features[0]);
+      map.on('mouseenter', layer, enter);
+      map.on('mouseleave', layer, hideHover);
+      listeners.current.push(['mouseenter', layer, enter]);
+      listeners.current.push(['mouseleave', layer, hideHover]);
+    }
 
     const setPointer = () => { map.getCanvas().style.cursor = 'pointer'; };
     const clearPointer = () => { map.getCanvas().style.cursor = ''; };
