@@ -154,7 +154,10 @@ ingestRoutes.post("/", async (c) => {
 				headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": "bikeroutes.org/1.0 (contact@bikeroutes.org)" },
 				body: new URLSearchParams({ data: query }),
 			});
-			if (!res.ok) throw new Error(`Overpass API failed: ${res.status}`);
+			if (!res.ok) {
+				const text = await res.text().catch(() => "");
+				throw new Error(`Overpass API failed: ${res.status} ${text.slice(0, 200)}`);
+			}
 			const data = await res.json() as { elements?: any[] };
 			return data.elements || [];
 		};
@@ -164,7 +167,7 @@ ingestRoutes.post("/", async (c) => {
 			allElements = allElements.concat(await fetchOverpass(queries.filter((_, i) => i === 0).join(""), "out center 500"));
 		}
 		if (types.includes("rail")) {
-			allElements = allElements.concat(await fetchOverpass(queries.filter((_, i) => (types.includes("trail") ? i === 1 : i === 0)).join(""), "out geom 500"));
+			allElements = allElements.concat(await fetchOverpass(queries.filter((_, i) => (types.includes("trail") ? i === 1 : i === 0)).join(""), "out geom"));
 		}
 
 		// Rail features rarely have name tags — use fallback display names.
