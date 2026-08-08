@@ -365,13 +365,18 @@ export default function LiveApp() {
     if (pProfile) setShowPublicProfile(pProfile);
   }, []);
 
-  // Keep URL in sync with route plan so Share copies a working link
+  // Keep URL in sync with route plan so Share copies a working link.
+  // Preserve params we don't own (e.g. ?profile=...).
   useEffect(() => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(window.location.search);
     if (wps.length >= 2) params.set('wps', encodeWps(wps));
+    else params.delete('wps');
     if (pref !== 'balanced') params.set('pref', pref);
+    else params.delete('pref');
     if (view !== 'plan') params.set('view', view);
+    else params.delete('view');
     if (result?.source) params.set('src', result.source);
+    else params.delete('src');
     const qs = params.toString();
     const target = `${window.location.pathname}${qs ? '?' + qs : ''}`;
     if (target !== window.location.pathname + window.location.search) {
