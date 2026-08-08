@@ -5,6 +5,7 @@ import './tokens.css';
 import './styles.css';
 import MapView from './components/MapView';
 import DonatePanel from './components/DonatePanel';
+import TrailLegend from './components/TrailLegend';
 
 /* ---- icons ---- */
 const Ic = {
@@ -733,10 +734,14 @@ export default function LiveApp() {
                 <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>Map data sources</div>
                 <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
                   <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />CARTO Voyager / Dark Matter tiles (R2-hosted tiles coming soon)</div>
-                  <div><b style={{ color: "var(--ink)" }}>Cycling overlay</b><br />Waymarked Trails cycling map &mdash; &copy; waymarkedtrails.org</div>
+                  <div><b style={{ color: "var(--ink)" }}>Cycling overlay</b><br />Waymarked Trails cycling map &mdash; &copy; waymarkedtrails.org. Purple lines are signed bike routes; letters below explain the local route refs.</div>
                   <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors</div>
                   <div><b style={{ color: "var(--ink)" }}>Geocoding</b><br />OpenStreetMap Nominatim</div>
                   <div><b style={{ color: "var(--ink)" }}>Routing</b><br />Valhalla (bicycle profile) with FOSSGIS &amp; BRouter fallback</div>
+                </div>
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+                  <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>Route legend</div>
+                  <TrailLegend />
                 </div>
               </div>
             ) : modalSection === "donate" ? (
