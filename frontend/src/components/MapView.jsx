@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
+import * as BR from '../api';
+import FeatureSubmissionEditor from './FeatureSubmissionEditor';
 
 const CATEGORY_COLORS = {
   'Trail spines': '#7a9a8c',
@@ -48,8 +50,18 @@ export default function MapView({ mapObj }) {
   const [comments, setComments] = useState([]);
   const [checkpoints, setCheckpoints] = useState([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorFeature, setEditorFeature] = useState(null);
+  const [user, setUser] = useState(null);
+  const [showReview, setShowReview] = useState(false);
+  const [submissions, setSubmissions] = useState([]);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const markerRef = useRef(null);
   const listeners = useRef([]);
+  const editorOpenRef = useRef(false);
+
+  useEffect(() => { BR.fetchMe().then(setUser); }, []);
+  useEffect(() => { editorOpenRef.current = editorOpen; }, [editorOpen]);
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(features.map(f => f.properties?.category).filter(Boolean)));
@@ -247,12 +259,14 @@ export default function MapView({ mapObj }) {
 
     const onPointClick = (e) => {
       e.stopPropagation();
+      if (editorOpenRef.current) return;
       const f = e.features[0];
       selectFeature(f.properties.id || f.id);
     };
 
     const onLineClick = (e) => {
       e.stopPropagation();
+      if (editorOpenRef.current) return;
       const f = e.features[0];
       selectFeature(f.properties.id || f.id);
     };
@@ -335,89 +349,175 @@ export default function MapView({ mapObj }) {
   const allActive = activeCats.length === categories.length;
   const toggleAll = () => setActiveCats(allActive ? [] : categories);
 
+  const isModerator = user?.role === 'admin' || user?.role === 'moderator';
+
+  const openNewEditor = () => { setSelected(null); clearHighlight(); setEditorFeature(null); setEditorOpen(true); };
+  const openEditEditor = () => { if (selected) { setEditorFeature(selected); setEditorOpen(true); } };
+  const closeEditor = () => { setEditorOpen(false); setEditorFeature(null); };
+
+  const loadSubmissions = async () => {
+    if (!isModerator) return;
+    setReviewLoading(true);
+    try { const d = await BR.fetchSubmissions('pending'); setSubmissions(d.submissions || []); }
+    catch (e) { console.error(e); setSubmissions([]); }
+    setReviewLoading(false);
+  };
+
+  const onSubmitted = async () => {
+    closeEditor();
+    setSelected(null); clearHighlight();
+    setBusy(true);
+    try { const d = await fetch('/api/curated-features?limit=500').then(r => r.json()); setFeatures(d.features || []); }
+    catch { setError(true); }
+    setBusy(false);
+  };
+
+  const handleApprove = async (id) => {
+    const note = window.prompt('Admin note (optional):') || undefined;
+    setReviewLoading(true);
+    try { await BR.reviewSubmission(id, 'approve', note); await loadSubmissions(); await onSubmitted(); }
+    catch (e) { console.error(e); alert('Approve failed'); setReviewLoading(false); }
+  };
+
+  const handleReject = async (id) => {
+    const note = window.prompt('Rejection reason (optional):') || undefined;
+    setReviewLoading(true);
+    try { await BR.reviewSubmission(id, 'reject', note); await loadSubmissions(); }
+    catch (e) { console.error(e); alert('Reject failed'); setReviewLoading(false); }
+  };
+
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: 12.5, color: 'var(--muted-txt)', lineHeight: 1.4 }}>
-        Community-curated ride anchors, trail spines, and planned connectors for the KC metro.
-      </div>
-
-      {categories.length > 0 && (
+      {editorOpen ? (
+        <FeatureSubmissionEditor
+          mapObj={mapObj}
+          categories={categories}
+          feature={editorFeature}
+          onClose={closeEditor}
+          onSubmitted={onSubmitted}
+        />
+      ) : (
         <>
-          <div className="legend-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Legend</span>
-            <button className="text-btn" onClick={toggleAll} style={{ fontSize: 11, color: 'var(--green)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              {allActive ? 'Hide all' : 'Show all'}
+          <div style={{ fontSize: 12.5, color: 'var(--muted-txt)', lineHeight: 1.4 }}>
+            Community-curated ride anchors, trail spines, and planned connectors for the KC metro.
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="primary" style={{ flex: 1 }} onClick={() => user ? openNewEditor() : alert('Sign in to suggest a feature')}>
+              Suggest a feature
             </button>
-          </div>
-          <div className="legend-grid" style={{ display: 'grid', gap: 6 }}>
-            {categories.map(cat => (
-              <button key={cat} onClick={() => toggleCat(cat)} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                textAlign: 'left', padding: '8px 10px', borderRadius: 10,
-                border: '1px solid var(--line)', background: activeCats.includes(cat) ? 'var(--green-soft)' : 'var(--paper-2)',
-                color: 'var(--ink)', cursor: 'pointer', fontSize: 12,
-              }}>
-                <span style={{ width: 10, height: 10, borderRadius: '50%', background: CATEGORY_COLORS[cat] || DEFAULT_COLOR, flex: 'none' }} />
-                <span style={{ flex: 1 }}>{cat}</span>
-                <span style={{ fontSize: 10, color: 'var(--muted-txt)' }}>
-                  {features.filter(f => f.properties?.category === cat).length}
-                </span>
+            {isModerator && (
+              <button className="pillbtn" onClick={() => { setShowReview(s => !s); if (!showReview) loadSubmissions(); }} style={{ flex: 'none' }}>
+                {showReview ? 'Hide review' : 'Review'}
               </button>
-            ))}
+            )}
           </div>
-        </>
-      )}
 
-      {busy && <div className="mono" style={{ color: 'var(--muted-txt)', fontSize: 12, padding: '8px 0' }}>Loading map features…</div>}
-      {error && <div className="mono" style={{ color: 'var(--danger)', fontSize: 12, padding: '8px 0' }}>Failed to load curated features.</div>}
-
-      {selected && (
-        <div className="feature-card" style={{
-          marginTop: 8, padding: 14, borderRadius: 14,
-          background: 'var(--paper-2)', border: '1px solid var(--line)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <div className="nm" style={{ fontWeight: 600, fontFamily: 'var(--font-head)', fontSize: 15, color: 'var(--ink)' }}>
-              {selected.properties?.name || selected.id}
-            </div>
-            <button className="text-btn" onClick={() => { setSelected(null); clearHighlight(); }} style={{ fontSize: 16, color: 'var(--muted-txt)', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
-          </div>
-          <div className="mono" style={{ fontSize: 11, color: 'var(--muted-txt)', marginBottom: 8 }}>
-            {selected.properties?.category} · {selected.properties?.feature_type} · {selected.properties?.officiality}
-          </div>
-          {loadingDetail ? (
-            <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)', padding: '10px 0' }}>Loading details…</div>
-          ) : detail ? (
+          {categories.length > 0 && (
             <>
-              {detail.public_description && <div style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--ink-2)', marginBottom: 10 }}>{detail.public_description}</div>}
-              {detail.surface_note && <div style={{ fontSize: 12, color: 'var(--ink-2)', marginBottom: 6 }}><b>Surface:</b> {detail.surface_note}</div>}
-              {detail.risk_note && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 6 }}><b>Risk:</b> {detail.risk_note}</div>}
-              {detail.weather_sensitivity && <div style={{ fontSize: 12, color: 'var(--warn)', marginBottom: 6 }}><b>Weather:</b> {detail.weather_sensitivity}</div>}
-              {comments.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginBottom: 4 }}>Comments</div>
-                  {comments.slice(0, 5).map((c, i) => (
-                    <div key={i} style={{ fontSize: 12, color: 'var(--ink-2)', padding: '4px 0', borderBottom: '1px solid var(--line)' }}>
-                      <b>{c.author_name || 'Anonymous'}:</b> {c.body}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {checkpoints.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginBottom: 4 }}>Checkpoints</div>
-                  {checkpoints.slice(0, 5).map((k, i) => (
-                    <div key={i} style={{ fontSize: 12, color: 'var(--ink-2)' }}>
-                      {k.check_in_type} {k.note && `— ${k.note}`}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="legend-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Legend</span>
+                <button className="text-btn" onClick={toggleAll} style={{ fontSize: 11, color: 'var(--green)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                  {allActive ? 'Hide all' : 'Show all'}
+                </button>
+              </div>
+              <div className="legend-grid" style={{ display: 'grid', gap: 6 }}>
+                {categories.map(cat => (
+                  <button key={cat} onClick={() => toggleCat(cat)} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    textAlign: 'left', padding: '8px 10px', borderRadius: 10,
+                    border: '1px solid var(--line)', background: activeCats.includes(cat) ? 'var(--green-soft)' : 'var(--paper-2)',
+                    color: 'var(--ink)', cursor: 'pointer', fontSize: 12,
+                  }}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: CATEGORY_COLORS[cat] || DEFAULT_COLOR, flex: 'none' }} />
+                    <span style={{ flex: 1 }}>{cat}</span>
+                    <span style={{ fontSize: 10, color: 'var(--muted-txt)' }}>
+                      {features.filter(f => f.properties?.category === cat).length}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </>
-          ) : (
-            <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)' }}>No details available.</div>
           )}
-        </div>
+
+          {busy && <div className="mono" style={{ color: 'var(--muted-txt)', fontSize: 12, padding: '8px 0' }}>Loading map features…</div>}
+          {error && <div className="mono" style={{ color: 'var(--danger)', fontSize: 12, padding: '8px 0' }}>Failed to load curated features.</div>}
+
+          {selected && (
+            <div className="feature-card" style={{
+              marginTop: 8, padding: 14, borderRadius: 14,
+              background: 'var(--paper-2)', border: '1px solid var(--line)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <div className="nm" style={{ fontWeight: 600, fontFamily: 'var(--font-head)', fontSize: 15, color: 'var(--ink)' }}>
+                  {selected.properties?.name || selected.id}
+                </div>
+                <button className="text-btn" onClick={() => { setSelected(null); clearHighlight(); }} style={{ fontSize: 16, color: 'var(--muted-txt)', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+              </div>
+              <div className="mono" style={{ fontSize: 11, color: 'var(--muted-txt)', marginBottom: 8 }}>
+                {selected.properties?.category} · {selected.properties?.feature_type} · {selected.properties?.officiality}
+              </div>
+              {loadingDetail ? (
+                <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)', padding: '10px 0' }}>Loading details…</div>
+              ) : detail ? (
+                <>
+                  {detail.public_description && <div style={{ fontSize: 12.5, lineHeight: 1.5, color: 'var(--ink-2)', marginBottom: 10 }}>{detail.public_description}</div>}
+                  {detail.surface_note && <div style={{ fontSize: 12, color: 'var(--ink-2)', marginBottom: 6 }}><b>Surface:</b> {detail.surface_note}</div>}
+                  {detail.risk_note && <div style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 6 }}><b>Risk:</b> {detail.risk_note}</div>}
+                  {detail.weather_sensitivity && <div style={{ fontSize: 12, color: 'var(--warn)', marginBottom: 6 }}><b>Weather:</b> {detail.weather_sensitivity}</div>}
+                  {comments.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginBottom: 4 }}>Comments</div>
+                      {comments.slice(0, 5).map((c, i) => (
+                        <div key={i} style={{ fontSize: 12, color: 'var(--ink-2)', padding: '4px 0', borderBottom: '1px solid var(--line)' }}>
+                          <b>{c.author_name || 'Anonymous'}:</b> {c.body}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {checkpoints.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', marginBottom: 4 }}>Checkpoints</div>
+                      {checkpoints.slice(0, 5).map((k, i) => (
+                        <div key={i} style={{ fontSize: 12, color: 'var(--ink-2)' }}>
+                          {k.check_in_type} {k.note && `— ${k.note}`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)' }}>No details available.</div>
+              )}
+              <button className="pillbtn" style={{ marginTop: 10, width: '100%' }} onClick={() => user ? openEditEditor() : alert('Sign in to suggest an edit')}>
+                Suggest an edit
+              </button>
+            </div>
+          )}
+
+          {showReview && isModerator && (
+            <div style={{ marginTop: 8, padding: 12, borderRadius: 14, background: 'var(--paper-2)', border: '1px solid var(--line)' }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', marginBottom: 8 }}>Pending submissions</div>
+              {reviewLoading ? <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)' }}>Loading…</div> :
+                submissions.length === 0 ? <div className="mono" style={{ fontSize: 12, color: 'var(--muted-txt)' }}>No pending submissions</div> :
+                submissions.map((s) => (
+                  <div key={s.id} style={{ borderBottom: '1px solid var(--line)', padding: '8px 0' }}>
+                    <div style={{ fontWeight: 600, fontSize: 12.5, color: 'var(--ink)' }}>{s.name}</div>
+                    <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)' }}>
+                      {s.category} · {s.feature_type} · {s.target_feature_id ? `edit of ${s.target_feature_id}` : 'new'} · by {s.display_name || s.username || 'anon'}
+                    </div>
+                    {s.description && <div style={{ fontSize: 11.5, color: 'var(--ink-2)', marginTop: 3 }}>{s.description}</div>}
+                    {s.source_note && <div className="mono" style={{ fontSize: 10, color: 'var(--green)', marginTop: 2 }}>Source: {s.source_note}</div>}
+                    <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                      <button className="pillbtn" style={{ padding: '5px 9px', fontSize: 11 }} onClick={() => handleApprove(s.id)}>Approve</button>
+                      <button className="pillbtn" style={{ padding: '5px 9px', fontSize: 11, color: 'var(--danger)' }} onClick={() => handleReject(s.id)}>Reject</button>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          )}
+        </>
       )}
     </div>
   );

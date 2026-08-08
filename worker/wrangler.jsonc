@@ -85,6 +85,14 @@
 	"ai": {
 		"binding": "AI"
 	},
+	// ─── Email Service (transactional emails) ───────────────
+	"send_email": [
+		{
+			"name": "EMAIL",
+			"remote": true,
+			"allowed_sender_addresses": ["noreply@bikeroutes.org", "hello@bikeroutes.org"]
+		}
+	],
 	// ─── Durable Objects ──────────────────────────────────
 	"durable_objects": {
 		"bindings": [

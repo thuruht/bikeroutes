@@ -1,6 +1,30 @@
 import { Hono } from "hono";
+import { logger } from "../lib/logger";
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
+
+async function sendLoginCode(email: string, code: string, env: Env): Promise<boolean> {
+	try {
+		await env.EMAIL.send({
+			to: email,
+			from: { email: "noreply@bikeroutes.org", name: "BikeRoutes.org" },
+			replyTo: "hello@bikeroutes.org",
+			subject: `Your BikeRoutes login code: ${code}`,
+			text: `Your one-time login code is: ${code}\n\nIt expires in 15 minutes.\n\n— BikeRoutes.org`,
+			html: `<div style="font-family:system-ui,sans-serif;max-width:320px;margin:24px auto;">` +
+				`<h2 style="color:#7a9a8c;">BikeRoutes login code</h2>` +
+				`<p style="font-size:16px;">Your one-time code is:</p>` +
+				`<p style="font-size:28px;letter-spacing:4px;font-weight:700;">${code}</p>` +
+				`<p style="color:#666;font-size:13px;">It expires in 15 minutes.</p>` +
+				`<p style="color:#999;font-size:12px;">— BikeRoutes.org</p>` +
+				`</div>`,
+		});
+		return true;
+	} catch (error) {
+		logger.error("Failed to send login email", error, "EMAIL");
+		return false;
+	}
+}
 
 // Simple SHA-256 for email hashing to avoid storing plaintext PII
 async function hashEmail(email: string): Promise<string> {
@@ -27,15 +51,13 @@ authRoutes.post("/request", async (c) => {
 	// Store code in KV for 15 minutes
 	await c.env.SESSIONS.put(`login_code:${emailHash}`, code, { expirationTtl: 900 });
 
-	// In a real app, send an email here using Cloudflare Email Routing or SendGrid
-	// console.log(`Sending code ${code} to ${email}`);
-
+	const sent = await sendLoginCode(email, code, c.env);
 	const isLocalDev = c.req.header('origin')?.includes('localhost') ?? false;
 	const response: { message: string; dev_code?: string } = {
-		message: "Code generated. Check your email (or dev console)."
+		message: sent ? "Code emailed. Check your inbox." : "Email failed — use the dev code if available."
 	};
-	if (isLocalDev) {
-		response.dev_code = code; // only exposed for local development
+	if (isLocalDev || !sent) {
+		response.dev_code = code; // fallback for dev or email failure
 	}
 	return c.json(response);
 });

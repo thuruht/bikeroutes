@@ -328,3 +328,37 @@ export async function deletePost(id) {
   if (!r.ok) throw new Error("delete " + r.status);
   return r.json();
 }
+
+// ---- curated feature submissions -----------------------------------------
+export async function submitFeature(body) {
+  const r = await fetch("/api/curated-features/submissions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error("submit feature " + r.status);
+  return r.json();
+}
+
+export async function fetchSubmissions(status) {
+  const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+  const r = await fetch(`/api/curated-features/submissions${qs}`, { headers: authHeaders() });
+  if (!r.ok) throw new Error("submissions " + r.status);
+  return r.json();
+}
+
+export async function reviewSubmission(id, action, adminNote) {
+  const r = await fetch(`/api/curated-features/submissions/${id}/${action}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ admin_note: adminNote }),
+  });
+  if (!r.ok) throw new Error("review " + r.status);
+  return r.json();
+}
+
+export async function fetchSubmission(id) {
+  const r = await fetch(`/api/curated-features/submissions/${id}`, { headers: authHeaders() });
+  if (!r.ok) throw new Error("submission " + r.status);
+  return r.json();
+}

@@ -474,6 +474,188 @@ curatedFeatureRoutes.post("/:id/checkpoints", async (c) => {
 	return c.json({ id: result?.id, message: "Checkpoint logged" }, 201);
 });
 
+// ─── Submissions (public contribution / correction queue) ─────────
+const VALID_GEOM_TYPES = ["Point", "LineString"];
+
+function sanitize(text: unknown, max = 500): string | null {
+	if (typeof text !== "string") return null;
+	const s = text.trim();
+	if (s.length === 0) return null;
+	return s.slice(0, max);
+}
+
+function validateGeometry(geom: unknown): { ok: true; type: string; coords: number[][] } | { ok: false; reason: string } {
+	if (!geom || typeof geom !== "object") return { ok: false, reason: "Geometry missing" };
+	const g = geom as { type?: string; coordinates?: any };
+	if (!g.type || !VALID_GEOM_TYPES.includes(g.type)) return { ok: false, reason: "Geometry type must be Point or LineString" };
+	if (!Array.isArray(g.coordinates) || g.coordinates.length === 0) return { ok: false, reason: "Coordinates missing" };
+	if (g.type === "Point") {
+		const [lon, lat] = g.coordinates;
+		if (!Number.isFinite(lon) || !Number.isFinite(lat)) return { ok: false, reason: "Invalid point coordinates" };
+		return { ok: true, type: g.type, coords: g.coordinates };
+	}
+	// LineString
+	if (g.coordinates.length < 2) return { ok: false, reason: "Line needs at least 2 points" };
+	for (const pt of g.coordinates) {
+		if (!Array.isArray(pt) || !Number.isFinite(pt[0]) || !Number.isFinite(pt[1])) return { ok: false, reason: "Invalid line coordinates" };
+	}
+	return { ok: true, type: g.type, coords: g.coordinates };
+}
+
+// Create a new submission (auth required)
+curatedFeatureRoutes.post("/submissions", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user) return c.json({ error: "Sign in to contribute" }, 401);
+
+	const body = await c.req.json();
+	const name = sanitize(body.name, 140);
+	if (!name) return c.json({ error: "Name is required" }, 400);
+
+	const geometryResult = validateGeometry(body.geometry);
+	if (!geometryResult.ok) return c.json({ error: geometryResult.reason }, 400);
+
+	const targetId = typeof body.target_feature_id === "string" && body.target_feature_id
+		? body.target_feature_id
+		: null;
+	if (targetId) {
+		const exists = await c.env.DB.prepare("SELECT 1 FROM curated_features WHERE id = ?").bind(targetId).first();
+		if (!exists) return c.json({ error: "Target feature not found" }, 404);
+	}
+
+	const id = crypto.randomUUID();
+	const category = sanitize(body.category, 80) ?? "Ride anchors";
+	const description = sanitize(body.description, 2000);
+	const sourceNote = sanitize(body.source_note, 1000);
+	const featureType = geometryResult.type === "Point" ? "point" : "line";
+
+	try {
+		await c.env.DB.prepare(
+			`INSERT INTO curated_feature_submissions
+			 (id, user_id, target_feature_id, name, category, description, geom, source_note, feature_type)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		).bind(id, user.id, targetId, name, category, description, JSON.stringify(body.geometry), sourceNote, featureType).run();
+
+		const newCount = (user.contribution_count ?? 0) + 1;
+		await c.env.DB.prepare(
+			"UPDATE users SET contribution_count = ?, last_active = datetime('now') WHERE id = ?"
+		).bind(newCount, user.id).run();
+
+		return c.json({ id, message: targetId ? "Change submitted for review" : "Feature suggestion submitted" }, 201);
+	} catch (e) {
+		return c.json({ error: "Failed to save submission", message: String(e) }, 500);
+	}
+});
+
+// List submissions. Moderators see all with optional status filter; users see their own.
+curatedFeatureRoutes.get("/submissions", async (c) => {
+	const user = await getCurrentUser(c);
+	const isMod = isModerator(user);
+	const status = c.req.query("status");
+
+	let where = "WHERE user_id = ?";
+	const params: any[] = [user?.id ?? ""];
+	if (isMod) {
+		where = "WHERE 1=1";
+		params.pop();
+	}
+	if (status) {
+		where += isMod ? " AND status = ?" : " AND status = ?";
+		params.push(status);
+	}
+
+	const { results } = await c.env.DB.prepare(
+		`SELECT s.*, u.display_name, u.username
+		 FROM curated_feature_submissions s
+		 LEFT JOIN users u ON u.id = s.user_id
+		 ${where}
+		 ORDER BY s.created_at DESC`
+	).bind(...params).all();
+
+	return c.json({ submissions: results ?? [] });
+});
+
+// Get one submission (owner or moderator)
+curatedFeatureRoutes.get("/submissions/:id", async (c) => {
+	const user = await getCurrentUser(c);
+	const id = c.req.param("id");
+	const row = await c.env.DB.prepare(
+		`SELECT s.*, u.display_name, u.username FROM curated_feature_submissions s
+		 LEFT JOIN users u ON u.id = s.user_id WHERE s.id = ?`
+	).bind(id).first<any>();
+	if (!row) return c.json({ error: "Submission not found" }, 404);
+	if (!isModerator(user) && row.user_id !== user?.id) return c.json({ error: "Forbidden" }, 403);
+	return c.json({ submission: row });
+});
+
+// Approve (moderator only)
+curatedFeatureRoutes.post("/submissions/:id/approve", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user || !isModerator(user)) return c.json({ error: "Forbidden" }, 403);
+	const id = c.req.param("id");
+	const body = await c.req.json<{ admin_note?: string }>().catch(() => ({} as { admin_note?: string }));
+
+	const sub = await c.env.DB.prepare("SELECT * FROM curated_feature_submissions WHERE id = ?").bind(id).first<any>();
+	if (!sub) return c.json({ error: "Submission not found" }, 404);
+
+	try {
+		const geometry = JSON.parse(sub.geom);
+		let targetId = sub.target_feature_id;
+
+		if (targetId) {
+			// Update existing feature + geometry
+			await c.env.DB.prepare(
+				`UPDATE curated_features SET name = ?, category = ?, public_description = ?, updated_at = datetime('now') WHERE id = ?`
+			).bind(sub.name, sub.category, sub.description ?? null, targetId).run();
+			await c.env.DB.prepare(
+				"INSERT INTO curated_feature_geometries (feature_id, public_geometry) VALUES (?, ?) ON CONFLICT(feature_id) DO UPDATE SET public_geometry = excluded.public_geometry"
+			).bind(targetId, JSON.stringify(geometry)).run();
+		} else {
+			// Create new curated feature
+			const featureType = sub.feature_type || (geometry.type === "Point" ? "point" : "line");
+			const res = await c.env.DB.prepare(
+				`INSERT INTO curated_features
+				 (name, feature_type, category, public_description, visibility, officiality, owner_id)
+				 VALUES (?, ?, ?, ?, 'public', 'informal', ?) RETURNING id`
+			).bind(sub.name, featureType, sub.category, sub.description ?? null, user.id).first<{ id: string }>();
+			targetId = res?.id;
+			if (targetId) {
+				await c.env.DB.prepare(
+					"INSERT INTO curated_feature_geometries (feature_id, public_geometry) VALUES (?, ?)"
+				).bind(targetId, JSON.stringify(geometry)).run();
+			}
+		}
+
+		await c.env.DB.prepare(
+			`UPDATE curated_feature_submissions SET status = 'approved', admin_note = ?, updated_at = datetime('now') WHERE id = ?`
+		).bind(body.admin_note ?? null, id).run();
+
+		if (targetId) {
+			await recordRevision(c.env.DB, targetId, user.id, { status: sub.status }, { status: "approved" });
+		}
+
+		return c.json({ id, feature_id: targetId, message: "Submission approved" });
+	} catch (e) {
+		return c.json({ error: "Failed to approve submission", message: String(e) }, 500);
+	}
+});
+
+// Reject (moderator only)
+curatedFeatureRoutes.post("/submissions/:id/reject", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user || !isModerator(user)) return c.json({ error: "Forbidden" }, 403);
+	const id = c.req.param("id");
+	const body = await c.req.json<{ admin_note?: string }>().catch(() => ({} as { admin_note?: string }));
+
+	const sub = await c.env.DB.prepare("SELECT 1 FROM curated_feature_submissions WHERE id = ?").bind(id).first();
+	if (!sub) return c.json({ error: "Submission not found" }, 404);
+
+	await c.env.DB.prepare(
+		`UPDATE curated_feature_submissions SET status = 'rejected', admin_note = ?, updated_at = datetime('now') WHERE id = ?`
+	).bind(body.admin_note ?? null, id).run();
+
+	return c.json({ id, message: "Submission rejected" });
+});
+
 // ─── Badges ─────────────────────────────────────────────────────────
 curatedFeatureRoutes.get("/badges", async (c) => {
 	const { results } = await c.env.DB.prepare(
