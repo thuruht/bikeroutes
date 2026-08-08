@@ -23,7 +23,7 @@ function colorExpression() {
 }
 
 function categoryFilter(active) {
-  if (!active || active.length === 0) return ['boolean', false];
+  if (!active || active.length === 0) return ['boolean', true];
   return ['in', ['get', 'category'], ['literal', active]];
 }
 
@@ -212,6 +212,7 @@ export default function MapView({ mapObj }) {
     else map.once('load', load);
 
     const onClusterClick = async (e) => {
+      e.stopPropagation();
       const f = e.features[0];
       const clusterId = f.properties.cluster_id;
       const zoom = await new Promise((resolve, reject) => {
@@ -221,11 +222,13 @@ export default function MapView({ mapObj }) {
     };
 
     const onPointClick = (e) => {
+      e.stopPropagation();
       const f = e.features[0];
       selectFeature(f.properties.id || f.id);
     };
 
     const onLineClick = (e) => {
+      e.stopPropagation();
       const f = e.features[0];
       selectFeature(f.properties.id || f.id);
     };

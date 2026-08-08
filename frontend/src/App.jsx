@@ -508,8 +508,12 @@ export default function LiveApp() {
       const name = r.metadata?.name ?? r.name ?? "Result";
       if (lon == null || lat == null) return;
       const el = document.createElement("div");
-      el.style.cssText = "width:18px;height:18px;border-radius:50%;background:var(--orange);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;";
+      el.style.cssText = "width:20px;height:20px;border-radius:50%;background:var(--orange);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);cursor:pointer;z-index:20;";
       el.title = name;
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        map.flyTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 14), duration: 600 });
+      });
       const mk = new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map);
       exploreMarkers.current.push(mk);
     });
