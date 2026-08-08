@@ -205,6 +205,7 @@ export default function MapView({ mapObj }) {
 
     const load = () => {
       loadLayers();
+      updateData();
       setBusy(false);
     };
 
