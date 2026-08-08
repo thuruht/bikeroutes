@@ -148,6 +148,7 @@ export async function route(points, pref) {
       })
     });
     if (!r.ok) throw new Error("worker " + r.status);
+    const routeSource = r.headers.get("x-route-source") || "estimate";
     const data = await r.json();
     const trip = data.trip;
     if (!trip || !trip.legs || !trip.legs.length) throw new Error("no route");
@@ -207,7 +208,7 @@ export async function route(points, pref) {
       elev: buildElev(coords, totalDist),
       turns: allTurns,
       surface: { paved: 82, gravel: 18, est: true }, // Valhalla doesn't easily give surface breakdown
-      source: "valhalla",
+      source: routeSource,
       profile: pref,
       waypoints: pts.length,
     };

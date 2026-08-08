@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import * as BR from '../api';
 import FeatureSubmissionEditor from './FeatureSubmissionEditor';
+import TrailLegend from './TrailLegend';
 
 const CATEGORY_COLORS = {
   'Trail spines': '#7a9a8c',
@@ -439,6 +440,14 @@ export default function MapView({ mapObj }) {
               </div>
             </>
           )}
+
+          <div style={{ marginTop: 4, padding: 12, borderRadius: 14, background: 'var(--paper-2)', border: '1px solid var(--line)' }}>
+            <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Route shields</span>
+              <span style={{ fontSize: 9 }}> overlay</span>
+            </div>
+            <TrailLegend />
+          </div>
 
           {busy && <div className="mono" style={{ color: 'var(--muted-txt)', fontSize: 12, padding: '8px 0' }}>Loading map features…</div>}
           {error && <div className="mono" style={{ color: 'var(--danger)', fontSize: 12, padding: '8px 0' }}>Failed to load curated features.</div>}

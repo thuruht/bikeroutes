@@ -12,7 +12,7 @@ import { logger } from "../lib/logger";
 export const legendRoutes = new Hono<{ Bindings: Env }>();
 
 const BBOX = "38.8,-95.0,39.4,-94.2";
-const KV_KEY = "TRAIL_OVERLAY_LEGEND_V2";
+const KV_KEY = "TRAIL_OVERLAY_LEGEND_V3";
 const CACHE_TTL = 86400; // 24h
 
 const STREET_SUFFIX_RE = /\b(st|street|ave|avenue|rd|road|dr|drive|blvd|boulevard|ln|lane|way|cir|circle|ter|terrace|pl|place|ct|court|pkwy|parkway|run|loop)\b/i;
@@ -31,6 +31,8 @@ interface RouteInfo {
 	ref: string;
 	name: string;
 	network?: string;
+	displayName: string;
+	context?: string;
 }
 
 legendRoutes.get("/", async (c) => {
@@ -71,10 +73,35 @@ legendRoutes.get("/", async (c) => {
 		const key = `${ref || ""}|${name || ""}`;
 		if (seen.has(key)) continue;
 		seen.add(key);
+
+		// Build the most human-readable display name available.
+		let displayName = t.official_name?.trim()
+			|| name
+			|| t.description?.trim()
+			|| "";
+
+		// If the best name is just the ref abbreviation again, try description/from-to.
+		if (!displayName || displayName.toLowerCase() === (ref || "").toLowerCase()) {
+			displayName = t.description?.trim()
+				|| (t.from && t.to ? `${t.from.trim()} → ${t.to.trim()}` : "")
+				|| ref
+				|| "Unnamed route";
+		}
+
+		const contextParts: string[] = [];
+		if (t.network === "ncn") contextParts.push("national bike route");
+		else if (t.network === "rcn") contextParts.push("regional bike route");
+		else if (t.network === "lcn") contextParts.push("local bike route");
+		if (t.from && t.to && !displayName.includes("→")) {
+			contextParts.push(`${t.from.trim()} → ${t.to.trim()}`);
+		}
+
 		routes.push({
-			ref: ref || name || " unnamed",
+			ref: ref || name || "",
 			name: name || ref || "Unnamed route",
+			displayName,
 			network: t.network,
+			context: contextParts.join(" · ") || undefined,
 		});
 	}
 
@@ -86,7 +113,7 @@ legendRoutes.get("/", async (c) => {
 		const ra = networkRank[a.network as keyof typeof networkRank] ?? 4;
 		const rb = networkRank[b.network as keyof typeof networkRank] ?? 4;
 		if (ra !== rb) return ra - rb;
-		return a.ref.localeCompare(b.ref);
+		return a.displayName.localeCompare(b.displayName);
 	});
 
 	// Cache in KV

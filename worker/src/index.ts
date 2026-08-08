@@ -35,6 +35,7 @@ app.use("*", cors({
 	origin: ["https://bikeroutes.org", "http://localhost:5173"],
 	allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 	allowHeaders: ["Content-Type", "Authorization"],
+	exposeHeaders: ["X-Route-Source", "X-Route-Note"],
 	maxAge: 86400,
 }));
 
