@@ -55,8 +55,9 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 - [x] Legacy JKCBIKEMAP user accounts (6 users, including admin/jojo, burp, Q) migrated into bikeroutes.org `users` table, preserving roles, usernames, bios, badges, and public keys.
 - [x] Legacy jojo avatar copied from old `jkcbikemap-avatars` R2 bucket to `bikeroutes-assets` and wired to `manual-admin-2`.
 - [ ] Old JKCBIKEMAP reports, checkpoints, comments, and other gamification data do not exist in the live old database (counts are all zero), so nothing further to migrate from there.
-- [ ] Community: no map markers for posts yet. Posts have `lat`/`lon` but nothing renders them on the map.
-- [ ] Community: post location picker is just "use current map center"; no click-to-pin UI.
+- [x] Community posts now render as orange pin markers on the map; clicking a marker opens the post detail.
+- [x] Community post cards have a green map-pin button that flies the map to the post location.
+- [ ] Community: post location picker is still "use current map center"; click-to-pin UI not yet built.
 - [ ] Community: no notification system for replies/likes.
 - [ ] Community: no moderation queue or admin tools for reported posts.
 - [ ] Community: user profiles are bare (no avatar upload, bio editing, public profile page).
