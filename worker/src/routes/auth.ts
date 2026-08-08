@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { getCurrentUser } from "../lib/auth";
 import { logger } from "../lib/logger";
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
@@ -105,6 +106,19 @@ authRoutes.post("/verify", async (c) => {
 	});
 });
 
+// ─── Public user lookup by username ─────────────────────────────────
+authRoutes.get("/users/:username", async (c) => {
+	const username = c.req.param("username").toLowerCase().trim();
+	if (!username) return c.json({ error: "Username required" }, 400);
+
+	const user = await c.env.DB.prepare(
+		"SELECT id, username, display_name, avatar_url, bio, contribution_count FROM users WHERE username = ?"
+	).bind(username).first();
+
+	if (!user) return c.json({ error: "User not found" }, 404);
+	return c.json({ user });
+});
+
 // ─── Get Current User ──────────────────────────────────────────────
 authRoutes.get("/me", async (c) => {
 	const authHeader = c.req.header("Authorization");
@@ -120,7 +134,7 @@ authRoutes.get("/me", async (c) => {
 	}
 
 	const user = await c.env.DB.prepare(
-		"SELECT id, trust_level, display_name FROM users WHERE id = ?"
+		"SELECT id, email_hash, display_name, username, bio, avatar_url, social_links, trust_level, contribution_count, badges, role, created_at, last_active FROM users WHERE id = ?"
 	).bind(userId).first();
 
 	if (!user) {
@@ -128,4 +142,86 @@ authRoutes.get("/me", async (c) => {
 	}
 
 	return c.json({ user });
+});
+
+// ─── Update Profile ─────────────────────────────────────────────────
+authRoutes.put("/profile", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+	const body = await c.req.json<{
+		display_name?: string;
+		username?: string;
+		bio?: string;
+		social_links?: any;
+	}>();
+
+	const updates: Record<string, any> = {};
+	if (body.display_name !== undefined) updates.display_name = body.display_name.trim().slice(0, 80) || null;
+	if (body.username !== undefined) {
+		const username = body.username.trim().toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 30);
+		if (username) {
+			const taken = await c.env.DB.prepare("SELECT 1 FROM users WHERE username = ? AND id != ?").bind(username, user.id).first();
+			if (taken) return c.json({ error: "Username taken" }, 409);
+			updates.username = username;
+		} else {
+			updates.username = null;
+		}
+	}
+	if (body.bio !== undefined) updates.bio = body.bio.trim().slice(0, 500) || null;
+	if (body.social_links !== undefined) {
+		try { updates.social_links = JSON.stringify(body.social_links); }
+		catch { updates.social_links = null; }
+	}
+
+	if (Object.keys(updates).length === 0) {
+		return c.json({ error: "No fields to update" }, 400);
+	}
+
+	const setClause = Object.keys(updates).map(k => `${k} = ?`).join(", ");
+	await c.env.DB.prepare(`UPDATE users SET ${setClause} WHERE id = ?`).bind(...Object.values(updates), user.id).run();
+	return c.json({ message: "Profile updated" });
+});
+
+// ─── Upload Avatar ──────────────────────────────────────────────────
+authRoutes.post("/avatar", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+	let body: ArrayBuffer | null = null;
+	let fileName = "avatar";
+	let contentType = "application/octet-stream";
+
+	const contentTypeHeader = c.req.header("content-type") ?? "";
+	if (contentTypeHeader.includes("multipart/form-data")) {
+		const form = await c.req.formData();
+		const file = form.get("file");
+		if (!file || !(file instanceof File)) return c.json({ error: "No file" }, 400);
+		body = await file.arrayBuffer();
+		fileName = file.name;
+		contentType = file.type || "application/octet-stream";
+	} else {
+		body = await c.req.arrayBuffer();
+		fileName = c.req.header("x-file-name") ?? "avatar";
+		contentType = contentTypeHeader || "application/octet-stream";
+	}
+	if (!body || body.byteLength === 0) return c.json({ error: "Empty file" }, 400);
+	if (body.byteLength > 2 * 1024 * 1024) return c.json({ error: "Max 2MB" }, 413);
+
+	const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+	const allowed = new Set(["jpg", "jpeg", "png", "gif", "webp"]);
+	if (!allowed.has(ext) && !contentType.startsWith("image/")) {
+		return c.json({ error: "Images only" }, 415);
+	}
+
+	const key = `avatars/${user.id}/${crypto.randomUUID()}.${ext || "png"}`;
+	try {
+		await c.env.R2_ASSETS.put(key, body, { httpMetadata: { contentType }, customMetadata: { userId: user.id } });
+		const url = `/api/community/media/${encodeURIComponent(key)}`;
+		await c.env.DB.prepare("UPDATE users SET avatar_url = ? WHERE id = ?").bind(url, user.id).run();
+		return c.json({ success: true, url, key });
+	} catch (error) {
+		logger.error("Avatar upload failed", error, "AUTH");
+		return c.json({ error: "Upload failed" }, 500);
+	}
 });

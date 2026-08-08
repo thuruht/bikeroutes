@@ -4,10 +4,13 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import './index.css'
 import App from './App.jsx'
 import BrandSprite from './components/BrandSprite.jsx'
+import { AuthProvider } from './AuthContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrandSprite />
-    <App />
+    <AuthProvider>
+      <BrandSprite />
+      <App />
+    </AuthProvider>
   </StrictMode>,
 )

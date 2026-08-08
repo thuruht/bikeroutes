@@ -245,7 +245,7 @@ export const fmtTime = (s) => {
 };
 
 // ---- auth helpers -------------------------------------------
-function authHeaders() {
+export function authHeaders() {
   const token = localStorage.getItem("br-session");
   return token ? { Authorization: `Bearer ${token}` } : {};
 }

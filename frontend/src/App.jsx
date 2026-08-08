@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import * as BR from './api';
+import { useAuth } from './AuthContext';
 import './tokens.css';
 import './styles.css';
 import MapView from './components/MapView';
 import DonatePanel from './components/DonatePanel';
 
 import CommunityView from './components/CommunityView';
+import UserMenu from './components/UserMenu';
+import SignInModal from './components/SignInModal';
+import ProfileModal from './components/ProfileModal';
+import MessagesModal from './components/MessagesModal';
 
 /* ---- icons ---- */
 const Ic = {
@@ -273,6 +278,7 @@ function ElevLive({ elev, dist, onScrub }) {
 
 /* ============================ APP ============================ */
 export default function LiveApp() {
+  const { user } = useAuth();
   const [theme, setTheme] = useState(() => localStorage.getItem("br-theme") || "dark");
   const [pref, setPref] = useState("balanced");
   const [wps, setWps] = useState([]);
@@ -295,6 +301,9 @@ export default function LiveApp() {
   const [modalSection, setModalSection] = useState(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
 
   const mapRef = useRef(null);
   const longPressRef = useRef(null);
@@ -718,6 +727,7 @@ export default function LiveApp() {
           <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} title="Tactical dark" aria-label="Dark theme">{Ic.moon}</button>
         </div>
         <button className="pillbtn" onClick={() => setInfoOpen(true)} title="Info" style={{ padding: "9px 11px" }}>{Ic.info}</button>
+        <UserMenu onSignIn={() => setShowSignIn(true)} onProfile={() => setShowProfile(true)} onMessages={() => setShowMessages(true)} />
         <button className="pillbtn solid" style={{ userSelect: "none" }}
           title={wps.length > 0 ? "Click remove last stop · Long-press clear route" : (view !== "plan" ? "Switch to plan" : "New route")}
           onMouseDown={() => {
@@ -964,6 +974,10 @@ export default function LiveApp() {
         </div>
         <div className="coords mono">{readout.coords || hint}</div>
       </div>
+
+      {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+      {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
+      {showMessages && <MessagesModal onClose={() => setShowMessages(false)} />}
     </div>
   );
 }
