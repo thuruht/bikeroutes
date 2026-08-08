@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { getCurrentUser, isModerator } from "../lib/auth";
 import { logger } from "../lib/logger";
+import { createNotification } from "../lib/notifications";
 
 export const communityRoutes = new Hono<{ Bindings: Env }>();
 
@@ -314,6 +315,19 @@ communityRoutes.post("/posts/:id/comment", async (c) => {
     await c.env.DB.prepare(
       `UPDATE community_posts SET comment_count = (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?), \n                                      score = like_count * 1.0 + comment_count * 2.0 + strftime('%s', created_at) / 86400.0 \n       WHERE id = ?`
     ).bind(postId, postId).run();
+
+    // Notify post author (not self)
+    const post = await c.env.DB.prepare("SELECT user_id, title FROM community_posts WHERE id = ?").bind(postId).first<{ user_id: string; title: string | null }>();
+    if (post && post.user_id && post.user_id !== user?.id) {
+      await createNotification(c.env.DB, {
+        user_id: post.user_id,
+        type: "comment",
+        title: "New comment on your post",
+        body: `${user?.display_name || user?.username || "Someone"} commented: ${text.slice(0, 80)}${text.length > 80 ? "…" : ""}`,
+        link: `/community/post/${postId}`,
+      });
+    }
+
     return c.json({ comment: { id, body: text, createdAt: new Date().toISOString() } }, 201);
   } catch (error) {
     logger.error("Failed to add comment", error, "COMMUNITY");

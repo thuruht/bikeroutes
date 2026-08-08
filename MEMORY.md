@@ -52,14 +52,17 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 - [ ] `last_import: "never"` in `/api/health` is misleading; the daily cron is running but no heartbeat is written for it.
 
 ## Incomplete / stubs / lazy shortcuts
-- [x] Curated-feature contribution / correction UI with geometry editor added; still needs notifications on approve/reject.
+- [x] Curated-feature contribution / correction UI with geometry editor added; approve/reject notifications implemented.
 - [x] Legacy JKCBIKEMAP user accounts (6 users, including admin/jojo, burp, Q) migrated into bikeroutes.org `users` table, preserving roles, usernames, bios, badges, and public keys.
 - [x] Legacy jojo avatar copied from old `jkcbikemap-avatars` R2 bucket to `bikeroutes-assets` and wired to `manual-admin-2`.
 - [ ] Old JKCBIKEMAP reports, checkpoints, comments, and other gamification data do not exist in the live old database (counts are all zero), so nothing further to migrate from there.
 - [x] Community posts now render as orange pin markers on the map; clicking a marker opens the post detail.
 - [x] Community post cards have a green map-pin button that flies the map to the post location.
 - [ ] Community: post location picker is still "use current map center"; click-to-pin UI not yet built.
-- [ ] Community: no notification system for replies/likes.
+- [x] Notification system: backend `notifications` table + routes, frontend bell icon with unread badge and list.
+- [x] Community comments now create notifications for the post author.
+- [x] Curated feature submission approve/reject now create notifications for the submitter.
+- [ ] Community: no notification for likes (kept quiet by design for now).
 - [ ] Community: no moderation queue or admin tools for reported posts.
 - [ ] Community: user profiles are bare (no avatar upload, bio editing, public profile page).
 - [ ] Valhalla container is **not running in production** because the build machine has no Docker. FOSSGIS fallback handles routing for now.

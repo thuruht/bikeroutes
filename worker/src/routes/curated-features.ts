@@ -8,6 +8,7 @@
 
 import { Hono } from "hono";
 import { getCurrentUser, canEditCurated, isModerator } from "../lib/auth";
+import { createNotification } from "../lib/notifications";
 
 export const curatedFeatureRoutes = new Hono<{ Bindings: Env }>();
 
@@ -646,12 +647,24 @@ curatedFeatureRoutes.post("/submissions/:id/reject", async (c) => {
 	const id = c.req.param("id");
 	const body = await c.req.json<{ admin_note?: string }>().catch(() => ({} as { admin_note?: string }));
 
-	const sub = await c.env.DB.prepare("SELECT 1 FROM curated_feature_submissions WHERE id = ?").bind(id).first();
+	const sub = await c.env.DB.prepare(
+		"SELECT user_id, name FROM curated_feature_submissions WHERE id = ?"
+	).bind(id).first<{ user_id: string; name: string }>();
 	if (!sub) return c.json({ error: "Submission not found" }, 404);
 
 	await c.env.DB.prepare(
 		`UPDATE curated_feature_submissions SET status = 'rejected', admin_note = ?, updated_at = datetime('now') WHERE id = ?`
 	).bind(body.admin_note ?? null, id).run();
+
+	if (sub.user_id && sub.user_id !== user.id) {
+		await createNotification(c.env.DB, {
+			user_id: sub.user_id,
+			type: "submission_rejected",
+			title: "Your feature suggestion was not approved",
+			body: `${sub.name} was reviewed and not added.${body.admin_note ? " Note: " + body.admin_note : ""}`,
+			link: `/map`,
+		});
+	}
 
 	return c.json({ id, message: "Submission rejected" });
 });

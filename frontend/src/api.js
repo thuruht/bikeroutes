@@ -363,3 +363,21 @@ export async function fetchSubmission(id) {
   if (!r.ok) throw new Error("submission " + r.status);
   return r.json();
 }
+
+export async function fetchNotifications() {
+  const r = await fetch("/api/notifications", { headers: authHeaders() });
+  if (!r.ok) throw new Error("notifications " + r.status);
+  return r.json();
+}
+
+export async function markNotificationRead(id) {
+  const r = await fetch(`/api/notifications/${id}/read`, { method: "POST", headers: authHeaders() });
+  if (!r.ok) throw new Error("mark read " + r.status);
+  return r.json();
+}
+
+export async function markAllNotificationsRead() {
+  const r = await fetch("/api/notifications/read-all", { method: "POST", headers: authHeaders() });
+  if (!r.ok) throw new Error("mark all read " + r.status);
+  return r.json();
+}
