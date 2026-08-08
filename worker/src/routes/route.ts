@@ -104,21 +104,21 @@ routeRoutes.post("/", async (c) => {
 		}, 400);
 	}
 
-	const cacheKey = `route:${await sha256(body)}`;
+	const cacheKey = `route:v2:${await sha256(body)}`;
 
 	// 1. Check KV cache
-	const cached = await c.env.ROUTE_CACHE.get(cacheKey, "json");
-	if (cached) {
-		return c.json(cached, 200, {
+	const cached = await c.env.ROUTE_CACHE.get(cacheKey, "json") as { data?: unknown; source?: string } | null;
+	if (cached && cached.data && cached.source) {
+		return c.json(cached.data, 200, {
 			"X-Cache": "HIT",
-			"X-Route-Source": "cache",
+			"X-Route-Source": cached.source,
 			"X-Route-Note": "cached",
 		});
 	}
 
 	// 2. Try Valhalla Container (edge)
 	let routeData;
-	let source = "edge";
+	let source = "fallback";
 	let userMessage = "";
 
 	try {
@@ -135,14 +135,13 @@ routeRoutes.post("/", async (c) => {
 
 		if (valhallaResp.ok) {
 			routeData = await valhallaResp.json();
+			source = "valhalla";
 		} else {
 			const errText = await valhallaResp.text();
 			console.warn(`[Valhalla Edge Offline] Status: ${valhallaResp.status}. Error: ${errText}.`, "ROUTING");
-			source = "fallback";
 		}
 	} catch (error) {
 		console.warn("[Valhalla Edge Error] Exception:", error, "ROUTING");
-		source = "fallback";
 	}
 
 	// 3. Fallback to FOSSGIS Valhalla
@@ -210,7 +209,7 @@ routeRoutes.post("/", async (c) => {
 	// 5. Cache & Return
 	if (routeData) {
 		c.executionCtx.waitUntil(
-			c.env.ROUTE_CACHE.put(cacheKey, JSON.stringify(routeData), {
+			c.env.ROUTE_CACHE.put(cacheKey, JSON.stringify({ data: routeData, source }), {
 				expirationTtl: 86400,
 			})
 		);
@@ -224,7 +223,7 @@ routeRoutes.post("/", async (c) => {
 		return c.json(routeData, 200, {
 			"X-Cache": "MISS",
 			"X-Route-Source": source,
-			"X-Route-Note": source === "edge" ? "fresh" : source === "fossgis" ? "via FOSSGIS" : "via BRouter",
+			"X-Route-Note": source === "valhalla" ? "fresh" : source === "fossgis" ? "via FOSSGIS" : "via BRouter",
 		});
 	}
 

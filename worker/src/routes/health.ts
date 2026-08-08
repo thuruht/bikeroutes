@@ -32,9 +32,9 @@ healthRoutes.get("/", async (c) => {
 		checks.r2_tiles = "ok";
 	} catch { checks.r2_tiles = "ok"; }
 
-	// Last import
-	const lastImport = await c.env.ROUTE_CACHE.get("LAST_IMPORT_TRIGGER");
-	checks.last_import = lastImport || "never";
+	// Last scheduled run
+	const lastCron = await c.env.ROUTE_CACHE.get("LAST_CRON_TRIGGER");
+	checks.last_cron = lastCron || "never";
 
 	const allOk = Object.values(checks).every((v) => v !== "error");
 

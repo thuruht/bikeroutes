@@ -37,6 +37,31 @@ const Ic = {
 };
 const turnIcon = (t) => t === "left" ? Ic.left : t === "right" ? Ic.right : t === "arrive" ? Ic.flag : Ic.dot;
 
+function encodeWps(wps) {
+  return wps.map(w => `${w.lat.toFixed(6)},${w.lng.toFixed(6)}`).join(';');
+}
+
+function decodeWps(s) {
+  if (!s) return [];
+  return s.split(';').map(part => {
+    const [lat, lng] = part.split(',').map(Number);
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  }).filter(Boolean);
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  return Promise.resolve();
+}
+
 /* ---- Explore view ---- */
 function ExploreView({ mapObj, query, setQuery, results, setResults, busy, setBusy,
   categories, selectedCats, onToggleCat, trailsOverlay, railOverlay, toggleTrails, toggleRail,
@@ -324,6 +349,33 @@ export default function LiveApp() {
   const scrollSentinelRef = useRef(null);
   useEffect(() => { wpsRef.current = wps; }, [wps]);
   useEffect(() => { viewRef.current = view; }, [view]);
+
+  // Restore plan state from URL on initial load
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pWps = decodeWps(params.get('wps') || '');
+    if (pWps.length) setWps(pWps.map(w => ({ ...w, label: '' })));
+    const pPref = params.get('pref');
+    if (['balanced', 'quiet', 'fast'].includes(pPref)) setPref(pPref);
+    const pView = params.get('view');
+    if (['plan', 'explore', 'map', 'community'].includes(pView)) setView(pView);
+    const pProfile = params.get('profile');
+    if (pProfile) setShowPublicProfile(pProfile);
+  }, []);
+
+  // Keep URL in sync with route plan so Share copies a working link
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (wps.length >= 2) params.set('wps', encodeWps(wps));
+    if (pref !== 'balanced') params.set('pref', pref);
+    if (view !== 'plan') params.set('view', view);
+    if (result?.source) params.set('src', result.source);
+    const qs = params.toString();
+    const target = `${window.location.pathname}${qs ? '?' + qs : ''}`;
+    if (target !== window.location.pathname + window.location.search) {
+      window.history.replaceState({}, '', target);
+    }
+  }, [wps, pref, view, result?.source]);
 
   useEffect(() => { if (panelScrollRef.current) panelScrollRef.current.scrollTop = 0; }, [view]);
 
@@ -890,7 +942,22 @@ export default function LiveApp() {
               <div className="msg" title={String(routeError.message || routeError)}>
                 {routeError.message || "Couldn’t find a route"} &mdash; <strong>tap to retry</strong>
               </div>
-              <button onClick={() => setRetryKey(k => k + 1)}>Retry</button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                <button onClick={() => setRetryKey(k => k + 1)}>Retry</button>
+                {(routeError.message || '').toLowerCase().includes('midpoint') && wps.length >= 2 && (
+                  <button onClick={() => {
+                    const first = wps[0];
+                    const last = wps[wps.length - 1];
+                    const mid = { lat: (first.lat + last.lat) / 2, lng: (first.lng + last.lng) / 2, label: 'Midpoint' };
+                    setWps(prev => {
+                      const next = [...prev];
+                      next.splice(next.length - 1, 0, mid);
+                      return next;
+                    });
+                    BR.reverse(mid.lng, mid.lat).then(label => setWps(prev => prev.map(w => (w === mid ? { ...w, label } : w))));
+                  }}>Add midpoint</button>
+                )}
+              </div>
             </div>
           ) : result ? (
             <div className="fade-in">
@@ -921,7 +988,7 @@ export default function LiveApp() {
               <ElevLive elev={result.elev} dist={result.dist} onScrub={onScrub} />
 
               <div className="actions" style={{ flexWrap: "wrap" }}>
-                <button onClick={() => navigator.clipboard && navigator.clipboard.writeText(location.href)}>{Ic.share} Share</button>
+                <button onClick={() => copyToClipboard(window.location.href)}>{Ic.share} Share</button>
                 <button onClick={exportGPX}>{Ic.gpx} GPX</button>
                 <button onClick={exportKML}>{Ic.gpx} KML</button>
               </div>
