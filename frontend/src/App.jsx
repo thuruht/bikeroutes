@@ -930,9 +930,7 @@ export default function LiveApp() {
                 result={result}
                 wps={wps}
                 costing={pref}
-                onLoad={(r) => {
-                  setWps(r.waypoints.map(w => ({ lat: w.lat, lon: w.lon, label: w.label || '' })));
-                }}
+                onLoad={(r) => { setWps(r.waypoints); }}
               />
 
               {result.source === "estimated" && <div style={{ marginTop: 14, padding: "14px 12px", background: "var(--orange-soft)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>

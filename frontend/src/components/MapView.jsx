@@ -60,9 +60,11 @@ export default function MapView({ mapObj }) {
   const markerRef = useRef(null);
   const listeners = useRef([]);
   const editorOpenRef = useRef(false);
+  const featuresRef = useRef(features);
 
   useEffect(() => { BR.fetchMe().then(setUser); }, []);
   useEffect(() => { editorOpenRef.current = editorOpen; }, [editorOpen]);
+  useEffect(() => { featuresRef.current = features; }, [features]);
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(features.map(f => f.properties?.category).filter(Boolean)));
@@ -321,7 +323,7 @@ export default function MapView({ mapObj }) {
 
   const selectFeature = (id) => {
     if (!id) return;
-    const f = features.find(x => x.id === id);
+    const f = featuresRef.current.find(x => x.id === id);
     setSelected(f || null);
     if (f) highlight(f.geometry);
     setDetail(null);

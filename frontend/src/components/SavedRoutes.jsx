@@ -73,7 +73,12 @@ export default function SavedRoutes({ result, wps, costing, onLoad }) {
   };
 
   const handleLoad = (r) => {
-    onLoad(r);
+    const waypoints = (r.waypoints || []).map(w => ({
+      lat: w.lat,
+      lng: w.lon ?? w.lng,
+      label: w.label || '',
+    }));
+    onLoad({ ...r, waypoints });
   };
 
   return (
