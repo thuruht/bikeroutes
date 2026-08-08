@@ -347,9 +347,9 @@ export default function LiveApp() {
     map.addSource("trails", { type: "raster", tiles: [BR.TILES.trailsOverlay], tileSize: 256, attribution: BR.TILES.trailsAttribution });
     map.addLayer({
       id: "trails", type: "raster", source: "trails",
-      minzoom: 12,
+      minzoom: 8,
       paint: {
-        "raster-opacity": ["interpolate", ["linear"], ["zoom"], 11, 0, 12, 0.7, 14, 1],
+        "raster-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.35, 10, 0.65, 12, 0.85, 14, 1],
       },
       layout: { visibility: trailsOverlay ? "visible" : "none" },
     }, "route-casing");
