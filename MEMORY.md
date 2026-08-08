@@ -5,13 +5,16 @@
 
 ## Recently landed
 - [x] MapView: de-cluster curated points sooner, add hover popups and cluster feature list.
+- [x] Map curated features load correctly; rail/trails overlay layers re-added after theme/style changes.
 - [x] `jojomap.kcmo.xyz` and `www.jojomap.kcmo.xyz` attached as custom domains and 301-redirected to `https://bikeroutes.org`.
 - [x] Worker `run_worker_first` changed to `/*` so custom-domain redirects work while SPA assets still fall through.
 - [x] Community/social MVP: posts, images/videos via R2, likes, comments, auth via magic-link codes.
+- [x] Real transactional email sending for magic-link login codes via Cloudflare Email Service (`noreply@bikeroutes.org`).
 - [x] D1 migration `0019_community_posts.sql` applied to production.
 - [x] Community categories cleaned up: removed nonsensical "Mud/snake", split into `Mud` and `Wildlife`, relabeled `Trail report`.
-- [x] Rail + trails overlay layers are now re-added after theme/style changes (previously disappeared when toggling light/dark mode).
 - [x] "New post" plus icon sized correctly instead of scaling to fill the button.
+- [x] Curated feature submission/review flow: users can suggest new points/lines or request edits to existing features; moderators approve/reject from the Map panel.
+- [x] D1 migration `0020_curated_submissions.sql` applied to production.
 
 ## Regression guard policy (must follow)
 These rules exist because `main` is production. Every change below has to pass before commit/push:
@@ -37,12 +40,13 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 
 ## Bugs / errors / typos
 - [x] `mudosnake` post category removed → replaced with `mud` and `wildlife` categories.
-- [ ] Community auth request endpoint does not send email in production (`console.log` only returns dev code). Need a real email sender (Cloudflare Email, SendGrid, Postmark, etc.) before non-dev sign-ups work.
+- [x] Real email sending implemented for magic-link codes.
 - [ ] Magic-link codes stored in KV with hash key but never rate-limited; brute-force possible.
 - [ ] Workers AI model names (`@cf/baai/bge-base-en-v1.5`) can change and break `/api/search`; needs monitoring/dashboard check.
 - [ ] `last_import: "never"` in `/api/health` is misleading; the daily cron is running but no heartbeat is written for it.
 
 ## Incomplete / stubs / lazy shortcuts
+- [x] Curated-feature contribution / correction UI with geometry editor added; still needs notifications on approve/reject.
 - [ ] Community: no map markers for posts yet. Posts have `lat`/`lon` but nothing renders them on the map.
 - [ ] Community: post location picker is just "use current map center"; no click-to-pin UI.
 - [ ] Community: no notification system for replies/likes.
