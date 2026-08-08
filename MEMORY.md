@@ -46,7 +46,8 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 ## Bugs / errors / typos
 - [x] `mudosnake` post category removed → replaced with `mud` and `wildlife` categories.
 - [x] Real email sending implemented for magic-link codes; dev_code fallback removed (email only).
-- [ ] Magic-link codes stored in KV with hash key but never rate-limited; brute-force possible.
+- [x] Magic-link `request` and `verify` endpoints now rate-limited per IP (token bucket via KV).
+- [x] Failed code attempts are tracked per email hash; after 10 failures the code is invalidated.
 - [ ] Workers AI model names (`@cf/baai/bge-base-en-v1.5`) can change and break `/api/search`; needs monitoring/dashboard check.
 - [ ] `last_import: "never"` in `/api/health` is misleading; the daily cron is running but no heartbeat is written for it.
 
