@@ -89,10 +89,17 @@ app.post("/api/admin/sync-gis", async (c) => {
 	}
 });
 
-// ─── Fallthrough to static assets ─────────────────────
-// With run_worker_first: ["/api/*"], the Worker only runs for API routes.
-// If a request somehow reaches here (e.g. /api/unknown), return 404.
-app.all("/*", (c) => {
+// ─── Fallthrough to static assets (SPA) ─────────────────
+// Worker runs first for all routes, so unknown non-API paths fall through
+// to the Vite-built SPA assets. This also lets us handle custom-domain
+// redirects (e.g. jojomap.kcmo.xyz) before static assets are served.
+app.all("/*", async (c) => {
+	try {
+		const asset = await c.env.ASSETS.fetch(c.req.raw);
+		if (asset && asset.status !== 404) return asset;
+	} catch {
+		// ignore
+	}
 	return c.json({
 		error: "Trail not found",
 		message: "That API endpoint doesn't exist. Try /api/health?",
