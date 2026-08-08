@@ -52,7 +52,9 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 
 ## Incomplete / stubs / lazy shortcuts
 - [x] Curated-feature contribution / correction UI with geometry editor added; still needs notifications on approve/reject.
-- [ ] Old JKCBIKEMAP reports, checkpoints, comments, and gamification data were not migrated (only schema + 62 curated features exist in the local repo; there is no dump of user-generated content).
+- [x] Legacy JKCBIKEMAP user accounts (6 users, including admin/jojo, burp, Q) migrated into bikeroutes.org `users` table, preserving roles, usernames, bios, badges, and public keys.
+- [x] Legacy jojo avatar copied from old `jkcbikemap-avatars` R2 bucket to `bikeroutes-assets` and wired to `manual-admin-2`.
+- [ ] Old JKCBIKEMAP reports, checkpoints, comments, and other gamification data do not exist in the live old database (counts are all zero), so nothing further to migrate from there.
 - [ ] Community: no map markers for posts yet. Posts have `lat`/`lon` but nothing renders them on the map.
 - [ ] Community: post location picker is just "use current map center"; no click-to-pin UI.
 - [ ] Community: no notification system for replies/likes.
