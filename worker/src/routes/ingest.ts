@@ -300,6 +300,7 @@ ingestRoutes.post("/", async (c) => {
 		);
 
 		const now = new Date().toISOString();
+		const d1Errors: string[] = [];
 		for (const d of docs) {
 			const osmId = d.id.split(":").pop() || "";
 			try {
@@ -311,8 +312,8 @@ ingestRoutes.post("/", async (c) => {
 					d.meta.description, "approved", now
 				).run();
 				insertedD1++;
-			} catch (e) {
-				// duplicate id, ignore
+			} catch (e: any) {
+				if (d1Errors.length < 5) d1Errors.push(`${d.id}: ${e.message || String(e)}`);
 			}
 			// Also insert into pois for backward compatibility (point-based search)
 			try {
@@ -330,6 +331,7 @@ ingestRoutes.post("/", async (c) => {
 			deduplicated: unique.length,
 			indexed: totalEmbedded,
 			insertedToD1: insertedD1,
+			d1Errors,
 			bbox,
 			types: osmTypes,
 		});
