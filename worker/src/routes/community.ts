@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { getCurrentUser, isModerator } from "../lib/auth";
 import { logger } from "../lib/logger";
 import { createNotification } from "../lib/notifications";
+import { checkRateLimit, getClientIP } from "../lib/rate-limit";
 
 export const communityRoutes = new Hono<{ Bindings: Env }>();
 
@@ -82,7 +83,7 @@ async function getMediaRows(
   return map;
 }
 
-function serializePost(row: PostRow, mediaMap: Map<string, any>) {
+function serializePost(row: PostRow, mediaMap: Map<string, any>, likedByMe = false) {
   return {
     id: row.id,
     userId: row.user_id,
@@ -95,6 +96,7 @@ function serializePost(row: PostRow, mediaMap: Map<string, any>) {
     score: row.score,
     likeCount: row.like_count,
     commentCount: row.comment_count,
+    likedByMe,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     author: {
@@ -158,7 +160,18 @@ communityRoutes.get("/posts", async (c) => {
     const { results } = await db.prepare(sql).bind(...params).all<PostRow>();
     const ids = results?.map(r => r.id) ?? [];
     const mediaMap = await getMediaRows(db, ids);
-    const posts = results?.map(r => serializePost(r, mediaMap)) ?? [];
+
+    const me = await getCurrentUser(c);
+    let likedIds: Set<string> = new Set();
+    if (me && ids.length > 0) {
+      const placeholders = ids.map(() => "?").join(",");
+      const { results: liked } = await db.prepare(
+        `SELECT post_id FROM community_post_likes WHERE post_id IN (${placeholders}) AND user_id = ?`
+      ).bind(...ids, me.id).all<{ post_id: string }>();
+      likedIds = new Set(liked?.map(r => r.post_id) ?? []);
+    }
+
+    const posts = results?.map(r => serializePost(r, mediaMap, likedIds.has(r.id))) ?? [];
 
     const totalRow = await db.prepare(
       `SELECT COUNT(*) as total FROM community_posts p WHERE ${whereParts.join(" AND ")}`
@@ -189,7 +202,7 @@ communityRoutes.get("/posts/:id", async (c) => {
   const likedByMe = await isLikedByMe(c, id);
 
   return c.json({
-    post: serializePost(row, mediaMap),
+    post: serializePost(row, mediaMap, likedByMe),
     comments: comments.results?.map(r => ({
       id: r.id,
       userId: r.user_id,
@@ -232,17 +245,23 @@ communityRoutes.post("/posts", async (c) => {
   const lon = typeof body.lon === "number" ? body.lon : null;
 
   try {
-    await c.env.DB.prepare(
-      `INSERT INTO community_posts (id, user_id, title, body, category, lat, lon, score) \n       VALUES (?, ?, ?, ?, ?, ?, ?, 0)`
-    ).bind(id, user.id, title, postBody, finalCategory, lat, lon).run();
+    const stmts = [
+      c.env.DB.prepare(
+        `INSERT INTO community_posts (id, user_id, title, body, category, lat, lon, score) \n         VALUES (?, ?, ?, ?, ?, ?, ?, 0)`
+      ).bind(id, user.id, title, postBody, finalCategory, lat, lon),
+    ];
 
     if (body.mediaKeys?.length) {
       for (let i = 0; i < body.mediaKeys.length; i++) {
-        await c.env.DB.prepare(
-          `UPDATE community_post_media SET post_id = ?, sort_order = ? WHERE id = ? AND user_id = ?`
-        ).bind(id, i, body.mediaKeys[i], user.id).run();
+        stmts.push(
+          c.env.DB.prepare(
+            `UPDATE community_post_media SET post_id = ?, sort_order = ? WHERE id = ? AND user_id = ?`
+          ).bind(id, i, body.mediaKeys[i], user.id)
+        );
       }
     }
+
+    await c.env.DB.batch(stmts);
 
     return c.json({ post: { id, title, body: postBody, category: finalCategory, lat, lon, createdAt: new Date().toISOString() } }, 201);
   } catch (error) {
@@ -279,15 +298,24 @@ communityRoutes.post("/posts/:id/report", async (c) => {
   const reason = sanitizeString(body.reason, 500);
   if (!reason) return c.json({ error: "Reason is required" }, 400);
 
+  const ip = getClientIP(c);
+  const { allowed: reportAllowed } = await checkRateLimit(c.env.RATE_LIMITS, `report:${ip}`, 10, 60_000);
+  if (!reportAllowed) return c.json({ error: "Too many reports. Slow down." }, 429);
+
   const post = await c.env.DB.prepare("SELECT 1 FROM community_posts WHERE id = ?").bind(postId).first();
   if (!post) return c.json({ error: "Post not found" }, 404);
+
+  const existing = await c.env.DB.prepare(
+    "SELECT 1 FROM community_reports WHERE post_id = ? AND reporter_id = ? AND status = 'open'"
+  ).bind(postId, user.id).first();
+  if (existing) return c.json({ error: "You already have an open report for this post" }, 409);
 
   try {
     await c.env.DB.prepare(
       "INSERT INTO community_reports (post_id, reporter_id, reason) VALUES (?, ?, ?)"
     ).bind(postId, user.id, reason).run();
 
-    await notifyModerators(c.env.DB, "New community report", `${user.display_name || user.username} reported a post: ${reason.slice(0, 80)}`);
+    c.executionCtx.waitUntil(notifyModerators(c.env.DB, "New community report", `${user.display_name || user.username} reported a post: ${reason.slice(0, 80)}`));
     return c.json({ success: true });
   } catch (error) {
     logger.error("Failed to report post", error, "COMMUNITY");
@@ -340,16 +368,17 @@ communityRoutes.post("/posts/:id/unlike", async (c) => {
 // ─── Comment ────────────────────────────────────────────────────────
 communityRoutes.post("/posts/:id/comment", async (c) => {
   const user = await getCurrentUser(c);
+  if (!user) return c.json({ error: "Sign in to comment" }, 401);
   const postId = c.req.param("id");
-  const { body, anonymous } = await c.req.json<{ body?: string; anonymous?: boolean }>();
-  const text = sanitizeString(body, 2000);
+  const body = await c.req.json<{ body?: string }>();
+  const text = sanitizeString(body.body, 2000);
   if (!text) return c.json({ error: "Comment body required" }, 400);
 
   try {
     const id = uuidv4();
     await c.env.DB.prepare(
       "INSERT INTO community_post_comments (id, post_id, user_id, author_name, body) VALUES (?, ?, ?, ?, ?)"
-    ).bind(id, postId, user?.id ?? null, user && !anonymous ? user.display_name : null, text).run();
+    ).bind(id, postId, user.id, user.display_name, text).run();
     await c.env.DB.prepare(
       `UPDATE community_posts SET comment_count = (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?),\n                                      score = (SELECT COUNT(*) FROM community_post_likes WHERE post_id = ?) * 1.0\n                                            + (SELECT COUNT(*) FROM community_post_comments WHERE post_id = ?) * 2.0\n                                            + strftime('%s', created_at) / 86400.0\n       WHERE id = ?`
     ).bind(postId, postId, postId, postId).run();
@@ -382,15 +411,24 @@ communityRoutes.post("/comments/:id/report", async (c) => {
   const reason = sanitizeString(body.reason, 500);
   if (!reason) return c.json({ error: "Reason is required" }, 400);
 
+  const ip = getClientIP(c);
+  const { allowed: reportAllowed } = await checkRateLimit(c.env.RATE_LIMITS, `report:${ip}`, 10, 60_000);
+  if (!reportAllowed) return c.json({ error: "Too many reports. Slow down." }, 429);
+
   const comment = await c.env.DB.prepare("SELECT 1 FROM community_post_comments WHERE id = ?").bind(commentId).first();
   if (!comment) return c.json({ error: "Comment not found" }, 404);
+
+  const existing = await c.env.DB.prepare(
+    "SELECT 1 FROM community_reports WHERE comment_id = ? AND reporter_id = ? AND status = 'open'"
+  ).bind(commentId, user.id).first();
+  if (existing) return c.json({ error: "You already have an open report for this comment" }, 409);
 
   try {
     await c.env.DB.prepare(
       "INSERT INTO community_reports (comment_id, reporter_id, reason) VALUES (?, ?, ?)"
     ).bind(commentId, user.id, reason).run();
 
-    await notifyModerators(c.env.DB, "New comment report", `${user.display_name || user.username} reported a comment: ${reason.slice(0, 80)}`);
+    c.executionCtx.waitUntil(notifyModerators(c.env.DB, "New comment report", `${user.display_name || user.username} reported a comment: ${reason.slice(0, 80)}`));
     return c.json({ success: true });
   } catch (error) {
     logger.error("Failed to report comment", error, "COMMUNITY");

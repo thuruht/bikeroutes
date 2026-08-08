@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import * as BR from '../api';
+import { useAuth } from '../AuthContext';
 import FeatureSubmissionEditor from './FeatureSubmissionEditor';
 import TrailLegend from './TrailLegend';
 
@@ -53,7 +54,7 @@ export default function MapView({ mapObj }) {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorFeature, setEditorFeature] = useState(null);
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [showReview, setShowReview] = useState(false);
   const [submissions, setSubmissions] = useState([]);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -62,7 +63,6 @@ export default function MapView({ mapObj }) {
   const editorOpenRef = useRef(false);
   const featuresRef = useRef(features);
 
-  useEffect(() => { BR.fetchMe().then(setUser); }, []);
   useEffect(() => { editorOpenRef.current = editorOpen; }, [editorOpen]);
   useEffect(() => { featuresRef.current = features; }, [features]);
 

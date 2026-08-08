@@ -387,6 +387,7 @@ export default function CommunityView({ mapObj }) {
   const perPage = 20;
   const markersRef = useRef([]);
   const pickHandlerRef = useRef(null);
+  const postsReqId = useRef(0);
 
   const clearMarkers = () => {
     markersRef.current.forEach(m => m.remove());
@@ -435,11 +436,13 @@ export default function CommunityView({ mapObj }) {
   }, [pickingLocation]);
 
   const loadPosts = async (reset = false, cat = category) => {
-    setLoading(true);
+    const curReqId = ++postsReqId.current;
     const curOffset = reset ? 0 : offset;
+    setLoading(true);
     try {
       const d = await BR.fetchPosts({ limit: perPage, offset: curOffset, category: cat || undefined });
-      setPosts(reset ? d.posts : [...posts, ...d.posts]);
+      if (curReqId !== postsReqId.current) return;
+      setPosts(prev => reset ? d.posts : [...prev, ...(d.posts || [])]);
       setTotal(d.total);
       setOffset(curOffset + (d.posts?.length || 0));
     } catch (e) { console.error(e); }
@@ -450,7 +453,7 @@ export default function CommunityView({ mapObj }) {
 
   useEffect(() => { loadPosts(true); }, [category]);
 
-  const onMutate = () => { loadPosts(true, category); };
+  const onMutate = () => { postsReqId.current++; setPosts([]); setOffset(0); loadPosts(true, category); };
 
   return (
     <div>

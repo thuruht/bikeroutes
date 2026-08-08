@@ -5,6 +5,7 @@
 import { Hono } from "hono";
 import { getCurrentUser } from "../lib/auth";
 import { logger } from "../lib/logger";
+import { checkRateLimit } from "../lib/rate-limit";
 
 export const savedRouteRoutes = new Hono<{ Bindings: Env }>();
 
@@ -55,6 +56,9 @@ savedRouteRoutes.post("/", async (c) => {
 	const user = await getCurrentUser(c);
 	if (!user) return c.json({ error: "Unauthorized" }, 401);
 
+	const { allowed } = await checkRateLimit(c.env.RATE_LIMITS, `saved_route:${user.id}`, 20, 60_000);
+	if (!allowed) return c.json({ error: "Too many saved routes. Slow down." }, 429);
+
 	const body = await c.req.json<{
 		name?: string;
 		description?: string;
@@ -65,7 +69,7 @@ savedRouteRoutes.post("/", async (c) => {
 		durationMin?: number;
 	}>();
 
-	const name = (body.name || " Saved route").trim().slice(0, 120);
+	const name = (body.name || "Saved route").trim().slice(0, 120);
 	if (!name) return c.json({ error: "Route name required" }, 400);
 	if (!Array.isArray(body.waypoints) || body.waypoints.length < 2) {
 		return c.json({ error: "At least two waypoints required" }, 400);
