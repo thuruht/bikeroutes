@@ -11,7 +11,7 @@ export default function ModerationModal({ onClose }) {
   const [status, setStatus] = useState('open');
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [note, setNote] = useState('');
+  const [notes, setNotes] = useState({});
   const [busy, setBusy] = useState(null);
 
   const load = async () => {
@@ -28,10 +28,11 @@ export default function ModerationModal({ onClose }) {
   const act = async (id, action) => {
     setBusy(id + action);
     try {
+      const note = notes[id] || '';
       if (action === 'resolve') await BR.resolveReport(id, note);
       else if (action === 'dismiss') await BR.dismissReport(id, note);
       await load();
-      setNote('');
+      setNotes(prev => ({ ...prev, [id]: '' }));
     } catch (e) { alert('Action failed'); console.error(e); }
     setBusy(null);
   };
@@ -79,8 +80,8 @@ export default function ModerationModal({ onClose }) {
 
               <input
                 placeholder="Moderator note (optional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
+                value={notes[r.id] || ''}
+                onChange={(e) => setNotes(prev => ({ ...prev, [r.id]: e.target.value }))}
                 style={{ marginBottom: 8, fontSize: 12 }}
               />
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
