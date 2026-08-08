@@ -1,0 +1,6 @@
+# Placeholder Valhalla container image for Cloudflare Workers Containers alpha.
+# This image is intentionally minimal because production routing currently falls
+# back to FOSSGIS / BRouter when the container is not rolled out.
+# To use a real Valhalla container, replace this with a proper build using
+# official Valhalla tiles and configuration.
+FROM ghcr.io/valhalla/valhalla:latest

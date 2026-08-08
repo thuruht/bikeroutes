@@ -16,8 +16,10 @@ worker/public/
 .env*
 !.env.example
 
-# Local routing container build (Valhalla Docker)
-routing/
+# Local routing container build (Valhalla Docker) — ignore build outputs, keep the source Dockerfile
+routing/**
+!routing/valhalla/
+!routing/valhalla/Dockerfile.valhalla
 
 # Local snapshot / scratch directory (untracked redesign exploration backup)
 clud/
