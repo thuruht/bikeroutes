@@ -13,8 +13,9 @@
 - [x] D1 migration `0019_community_posts.sql` applied to production.
 - [x] Community categories cleaned up: removed nonsensical "Mud/snake", split into `Mud` and `Wildlife`, relabeled `Trail report`.
 - [x] "New post" plus icon sized correctly instead of scaling to fill the button.
-- [x] Route legend filtered to remove generic street-name local bike relations; now shows real named routes/trails and uses theme colors.
+- [x] Route legend moved from hidden info modal to visible Map panel; filtered street-name noise; added display names and network context.
 - [x] Curated feature submission/review flow: users can suggest new points/lines or request edits to existing features; moderators approve/reject from the Map panel.
+- [x] Route source badge now reads the real provider from the worker's `X-Route-Source` header instead of always claiming Valhalla.
 - [x] D1 migration `0020_curated_submissions.sql` applied to production.
 
 ## Regression guard policy (must follow)
@@ -54,7 +55,8 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 - [ ] Community: no moderation queue or admin tools for reported posts.
 - [ ] Community: user profiles are bare (no avatar upload, bio editing, public profile page).
 - [ ] Valhalla container is **not running in production** because the build machine has no Docker. FOSSGIS fallback handles routing for now.
-- [ ] Route source badge still says "live · Valhalla" even when the worker used FOSSGIS/BRouter. Frontend `api.js` hard-codes `source: "valhalla"`.
+- [x] Route source badge fixed to show actual source (Valhalla/FOSSGIS/BRouter) from response header.
+- [ ] Old JKCBIKEMAP reports, checkpoints, comments, and gamification data were not migrated.
 - [ ] Route "Save" button is just a local state toggle; saved routes are not persisted to D1.
 - [ ] Tile proxy `/api/tiles/*.pmtiles` 404s if no `.pmtiles` file is in R2 yet.
 - [ ] North Star / KC2026 pages (`docs/north_star`) mention placeholder leaderboard and scout route submission UI; not implemented.
