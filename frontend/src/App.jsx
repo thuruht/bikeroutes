@@ -291,7 +291,7 @@ export default function LiveApp() {
   const [hoverTurn, setHoverTurn] = useState(null);
   const [readout, setReadout] = useState({ scale: null, coords: null });
   const [infoOpen, setInfoOpen] = useState(false);
-  const [view, setView] = useState("map");
+  const [view, setView] = useState("plan");
   const [exploreQuery, setExploreQuery] = useState("");
   const [exploreResults, setExploreResults] = useState([]);
   const [exploreBusy, setExploreBusy] = useState(false);

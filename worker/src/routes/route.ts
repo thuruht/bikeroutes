@@ -119,6 +119,7 @@ routeRoutes.post("/", async (c) => {
 	// 2. Try Valhalla Container (edge)
 	let routeData;
 	let source = "edge";
+	let userMessage = "";
 
 	try {
 		const container = getContainer(c.env.VALHALLA, "valhalla-router");
@@ -163,10 +164,14 @@ routeRoutes.post("/", async (c) => {
 			}
 			routeData = await fossgisResp.json();
 			source = "fossgis";
-		} catch (fallbackError) {
-			console.warn("[FOSSGIS Fallback Failed]", fallbackError, "ROUTING");
-			source = "brouter";
+	} catch (fallbackError) {
+		console.warn("[FOSSGIS Fallback Failed]", fallbackError, "ROUTING");
+		const msg = String(fallbackError);
+		if (msg.includes("max distance limit") || msg.includes("Path distance exceeds")) {
+			userMessage = "This route is longer than the free FOSSGIS engine allows (~200 km). Add a midpoint or split the trip.";
 		}
+		source = "brouter";
+	}
 	}
 
 	// 4. Tertiary fallback to BRouter

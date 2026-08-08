@@ -69,12 +69,8 @@ export default function MapView({ mapObj }) {
     return cats;
   }, [features]);
 
-  // Ensure all categories are active by default once loaded
-  useEffect(() => {
-    if (activeCats.length === 0 && categories.length > 0) {
-      setActiveCats(categories);
-    }
-  }, [categories, activeCats.length]);
+  // Curated features are hidden by default; user must toggle categories on.
+
 
   const clearHighlight = () => {
     if (markerRef.current) { markerRef.current.remove(); markerRef.current = null; }
