@@ -574,3 +574,22 @@ button.primary.is-busy::after, .pillbtn.solid.is-busy::after { color: #fff; }
   .mapctl .ctlbtn .ctl-label { display: none; }
   .stat-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* Map hover popups need explicit dark text so they stay readable against the default white popup background */
+.hover-popup .maplibregl-popup-content {
+  background: #fff !important;
+  color: #111 !important;
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.25);
+}
+.hover-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.hover-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.hover-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: #fff !important;
+}
+.hover-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.hover-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.hover-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: #fff !important;
+}
