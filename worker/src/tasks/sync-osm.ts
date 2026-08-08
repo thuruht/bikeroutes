@@ -38,6 +38,21 @@ const RAIL_QUERIES = `
   node["railway"="junction"](${BBOX});
 `;
 
+function centroid(e: any): { lat: number; lon: number } | null {
+	let lat = e.center?.lat ?? e.lat;
+	let lon = e.center?.lon ?? e.lon;
+	if (lat == null || lon == null) {
+		if (e.geometry && Array.isArray(e.geometry) && e.geometry.length) {
+			let sumLat = 0, sumLon = 0;
+			for (const n of e.geometry) { sumLon += n.lon; sumLat += n.lat; }
+			lon = sumLon / e.geometry.length;
+			lat = sumLat / e.geometry.length;
+		}
+	}
+	if (lat == null || lon == null) return null;
+	return { lat, lon };
+}
+
 function buildGeom(e: any): { geom: any; category: string } {
 	const t = e.tags;
 	let category = "trail";
@@ -56,37 +71,37 @@ function buildGeom(e: any): { geom: any; category: string } {
 		const coords = e.geometry.map((n: any) => [n.lon, n.lat]);
 		return { geom: { type: "LineString", coordinates: coords }, category };
 	}
-	const lat = e.center?.lat ?? e.lat;
-	const lon = e.center?.lon ?? e.lon;
-	return { geom: { type: "Point", coordinates: [lon, lat] }, category };
+	const c = centroid(e);
+	return { geom: { type: "Point", coordinates: [c?.lon ?? e.lon, c?.lat ?? e.lat] }, category };
 }
 
 export async function syncOsmData(env: Env, types = "trail,rail") {
 	logger.info("Starting OSM data sync", { bbox: BBOX, types }, "CRON");
 
-	const queries: string[] = [];
 	const typeList = types.split(",").map(s => s.trim());
-	if (typeList.includes("trail")) queries.push(TRAIL_QUERIES);
-	if (typeList.includes("rail")) queries.push(RAIL_QUERIES);
-	if (!queries.length) {
-		logger.warn("No valid types for OSM sync", { types }, "CRON");
-		return;
+
+	const fetchOverpass = async (q: string, output: string) => {
+		const query = `[out:json][timeout:180];(${q});${output};`;
+		const res = await fetch(OVERPASS_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
+			body: new URLSearchParams({ data: query }),
+		});
+		if (!res.ok) {
+			const text = await res.text().catch(() => "");
+			throw new Error(`Overpass API failed: ${res.status} ${text.slice(0, 200)}`);
+		}
+		const data = await res.json() as { elements?: any[] };
+		return data.elements || [];
+	};
+
+	let allElements: any[] = [];
+	if (typeList.includes("trail")) {
+		allElements = allElements.concat(await fetchOverpass(TRAIL_QUERIES, "out center 500"));
 	}
-
-	const query = `[out:json][timeout:120];(${queries.join("")});out center 500;`;
-	const res = await fetch(OVERPASS_URL, {
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
-		body: new URLSearchParams({ data: query }),
-	});
-
-	if (!res.ok) {
-		logger.error("Overpass API failed in cron", { status: res.status }, "CRON");
-		return;
+	if (typeList.includes("rail")) {
+		allElements = allElements.concat(await fetchOverpass(RAIL_QUERIES, "out geom"));
 	}
-
-	const overpassData = await res.json() as { elements?: any[] };
-	const allElements = (overpassData.elements || []);
 
 	// Rail features rarely have name tags — use fallback display names.
 	// Trail features must have a name to be useful.
@@ -99,9 +114,8 @@ export async function syncOsmData(env: Env, types = "trail,rail") {
 	const seen = new Set<string>();
 	const unique: any[] = [];
 	for (const e of elements) {
-		const lat = e.center?.lat ?? e.lat;
-		const lon = e.center?.lon ?? e.lon;
-		if (!lat || !lon) continue;
+		const c = centroid(e);
+		if (!c) continue;
 		const key = `${e.type}:${e.id}`;
 		if (!seen.has(key)) { seen.add(key); unique.push(e); }
 	}
@@ -114,8 +128,7 @@ export async function syncOsmData(env: Env, types = "trail,rail") {
 	// Build docs for Vectorize + D1
 	const docs = unique.map((e) => {
 		const t = e.tags;
-		const lat = e.center?.lat ?? e.lat;
-		const lon = e.center?.lon ?? e.lon;
+		const c = centroid(e) || { lat: e.lat, lon: e.lon };
 		const { geom, category } = buildGeom(e);
 		const surface = t.surface || t.tracktype || "";
 		const length = t.length || t.distance || "";
@@ -131,8 +144,8 @@ export async function syncOsmData(env: Env, types = "trail,rail") {
 			meta: {
 				name,
 				category,
-				lat,
-				lon,
+				lat: c.lat,
+				lon: c.lon,
 				description: t.description || "",
 				surface,
 				length_m: parseFloat(length) || null,
@@ -162,33 +175,41 @@ export async function syncOsmData(env: Env, types = "trail,rail") {
 		totalEmbedded += vectors.length;
 	}
 
-	// Insert into D1
+	// Insert into D1 (replace so re-syncing updates geometries)
 	const now = new Date().toISOString();
 	const insertTrail = env.DB.prepare(
-		"INSERT OR IGNORE INTO trails (id, source, source_type, source_id, name, category, geom, lat, lon, surface, length_m, difficulty, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		"INSERT OR REPLACE INTO trails (id, source, source_type, source_id, name, category, geom, lat, lon, surface, length_m, difficulty, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	);
 	const insertPoi = env.DB.prepare(
 		"INSERT OR IGNORE INTO pois (id, name, category, lat, lon, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 	);
+
+	const BATCH_D1 = 100;
 	let inserted = 0;
-	for (const d of docs) {
-		try {
-			await insertTrail.bind(
+	for (let i = 0; i < docs.length; i += BATCH_D1) {
+		const batch = docs.slice(i, i + BATCH_D1);
+		const trailStmts = batch.map((d) =>
+			insertTrail.bind(
 				d.id, "osm", d.meta.source, d.id.replace("osm:", ""),
 				d.meta.name, d.meta.category, d.geom,
 				d.meta.lat, d.meta.lon,
 				d.meta.surface, d.meta.length_m, d.meta.difficulty,
 				d.meta.description, "approved", now
-			).run();
-			inserted++;
-		} catch { /* dup */ }
-		try {
-			await insertPoi.bind(
+			)
+		);
+		const poiStmts = batch.map((d) =>
+			insertPoi.bind(
 				d.id, d.meta.name, d.meta.category,
 				d.meta.lat, d.meta.lon, d.meta.description,
 				"indexed", now
-			).run();
-		} catch { /* dup */ }
+			)
+		);
+		try {
+			await env.DB.batch([...trailStmts, ...poiStmts]);
+			inserted += batch.length;
+		} catch (error) {
+			logger.error("D1 batch insert failed", { error, batch: i }, "CRON");
+		}
 	}
 
 	logger.info("OSM sync complete", {
