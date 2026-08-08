@@ -13,6 +13,7 @@ import SignInModal from './components/SignInModal';
 import ProfileModal from './components/ProfileModal';
 import MessagesModal from './components/MessagesModal';
 import SavedRoutes from './components/SavedRoutes';
+import PublicProfile from './components/PublicProfile';
 
 /* ---- icons ---- */
 const Ic = {
@@ -304,6 +305,10 @@ export default function LiveApp() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [showPublicProfile, setShowPublicProfile] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('profile') || null;
+  });
 
   const mapRef = useRef(null);
   const longPressRef = useRef(null);
@@ -986,6 +991,17 @@ export default function LiveApp() {
       {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
       {showMessages && <MessagesModal onClose={() => setShowMessages(false)} />}
+      {showPublicProfile && (
+        <PublicProfile
+          username={showPublicProfile}
+          onClose={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('profile');
+            window.history.replaceState({}, '', url.pathname + url.search);
+            setShowPublicProfile(null);
+          }}
+        />
+      )}
     </div>
   );
 }
