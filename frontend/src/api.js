@@ -381,3 +381,31 @@ export async function markAllNotificationsRead() {
   if (!r.ok) throw new Error("mark all read " + r.status);
   return r.json();
 }
+
+export async function fetchSavedRoutes() {
+  const r = await fetch("/api/saved-routes", { headers: authHeaders() });
+  if (!r.ok) throw new Error("saved routes " + r.status);
+  return r.json();
+}
+
+export async function fetchSavedRoute(id) {
+  const r = await fetch(`/api/saved-routes/${id}`, { headers: authHeaders() });
+  if (!r.ok) throw new Error("saved route " + r.status);
+  return r.json();
+}
+
+export async function saveRoute(body) {
+  const r = await fetch("/api/saved-routes", {
+    method: "POST",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error("save route " + r.status);
+  return r.json();
+}
+
+export async function deleteSavedRoute(id) {
+  const r = await fetch(`/api/saved-routes/${id}`, { method: "DELETE", headers: authHeaders() });
+  if (!r.ok) throw new Error("delete route " + r.status);
+  return r.json();
+}

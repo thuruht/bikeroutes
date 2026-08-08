@@ -12,6 +12,7 @@ import UserMenu from './components/UserMenu';
 import SignInModal from './components/SignInModal';
 import ProfileModal from './components/ProfileModal';
 import MessagesModal from './components/MessagesModal';
+import SavedRoutes from './components/SavedRoutes';
 
 /* ---- icons ---- */
 const Ic = {
@@ -286,7 +287,6 @@ export default function LiveApp() {
   const [loading, setLoading] = useState(false);
   const [routeError, setRouteError] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
-  const [saved, setSaved] = useState(false);
   const [hoverTurn, setHoverTurn] = useState(null);
   const [readout, setReadout] = useState({ scale: null, coords: null });
   const [infoOpen, setInfoOpen] = useState(false);
@@ -914,11 +914,19 @@ export default function LiveApp() {
               <ElevLive elev={result.elev} dist={result.dist} onScrub={onScrub} />
 
               <div className="actions" style={{ flexWrap: "wrap" }}>
-                <button className={saved ? "primary" : ""} onClick={() => setSaved(s => !s)}>{Ic.save}{saved ? "Saved" : "Save"}</button>
                 <button onClick={() => navigator.clipboard && navigator.clipboard.writeText(location.href)}>{Ic.share} Share</button>
                 <button onClick={exportGPX}>{Ic.gpx} GPX</button>
                 <button onClick={exportKML}>{Ic.gpx} KML</button>
               </div>
+
+              <SavedRoutes
+                result={result}
+                wps={wps}
+                costing={pref}
+                onLoad={(r) => {
+                  setWps(r.waypoints.map(w => ({ lat: w.lat, lon: w.lon, label: w.label || '' })));
+                }}
+              />
 
               {result.source === "estimated" && <div style={{ marginTop: 14, padding: "14px 12px", background: "var(--orange-soft)", border: "1px solid var(--line)", borderRadius: 12, fontSize: 13, color: "var(--ink-2)", lineHeight: 1.45 }}>
                 Trail signal is weak here — showing a best-estimate route.
