@@ -292,6 +292,7 @@ export default function LiveApp() {
   const [railOverlay, setRailOverlay] = useState(() => localStorage.getItem("br-rail") === "on");
   const [modalSection, setModalSection] = useState(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   const mapRef = useRef(null);
   const longPressRef = useRef(null);
@@ -427,7 +428,7 @@ export default function LiveApp() {
     });
     mapObj.current = map;
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-    map.on("load", () => { addRouteLayers(); addTrailsOverlay(); addRailLayer(); updateScale(); });
+    map.on("load", () => { addRouteLayers(); addTrailsOverlay(); addRailLayer(); updateScale(); setMapReady(true); });
     map.on("move", updateScale);
     map.on("mousemove", (e) => setReadout(r => ({ ...r, coords: `${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}` })));
     map.on("click", async (e) => {
@@ -903,7 +904,7 @@ export default function LiveApp() {
             trailsOverlay={trailsOverlay} railOverlay={railOverlay}
             toggleTrails={toggleTrails} toggleRail={toggleRail}
             clearExploreMarkers={clearExploreMarkers} setExploreMarkers={setExploreMarkers} />}
-          {view === "map" && <MapView mapObj={mapObj} />}
+          {view === "map" && mapReady && <MapView mapObj={mapObj} />}
           <div ref={scrollSentinelRef} style={{ height: 1 }} />
           <div className={"panel-fade" + (showScrollHint ? " show" : "")}>
             <span className="scroll-arrow">&darr; more</span>
