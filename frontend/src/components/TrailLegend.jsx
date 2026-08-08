@@ -12,6 +12,15 @@ const NETWORK_LABEL = {
   lcn: 'local',
 };
 
+function badgeText(r) {
+  // Prefer OSM ref because Waymarked Trails renders the ref in the shield.
+  if (r.ref) return r.ref;
+  // If there is no ref, the tile renderer shows a truncated version of the name.
+  const name = r.displayName || r.name || '';
+  if (!name) return '?';
+  return name.slice(0, 5);
+}
+
 export default function TrailLegend() {
   const [routes, setRoutes] = useState(null);
   const [err, setErr] = useState(false);
@@ -28,14 +37,14 @@ export default function TrailLegend() {
   if (routes.length === 0) return <div className="mono" style={{ fontSize: 11, color: 'var(--muted-txt)' }}>No signed routes found in overlay.</div>;
 
   return (
-    <div style={{ display: 'grid', gap: 6, maxHeight: 240, overflowY: 'auto', paddingRight: 4 }}>
+    <div style={{ display: 'grid', gap: 5, maxHeight: 240, overflowY: 'auto', paddingRight: 4 }}>
       {routes.map((r, i) => {
-        const badge = r.ref || r.name || '?';
+        const badge = badgeText(r);
         const fullName = r.displayName || r.name;
         return (
           <div
             key={i}
-            title={`${badge}${fullName && badge !== fullName ? ' · ' + fullName : ''}${r.context ? ' · ' + r.context : ''}`}
+            title={fullName || badge}
             style={{ display: 'flex', alignItems: 'center', gap: 10 }}
           >
             <span className="mono" style={{
@@ -49,14 +58,9 @@ export default function TrailLegend() {
               textAlign: 'center',
               textTransform: 'uppercase', letterSpacing: '.03em',
             }}>{badge}</span>
-            <div style={{ minWidth: 0, lineHeight: 1.3 }}>
-              {fullName && badge.toLowerCase() !== fullName.toLowerCase() && (
-                <div style={{ fontSize: 11, color: 'var(--ink-2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName}</div>
-              )}
-              <div className="mono" style={{ fontSize: 9.5, color: 'var(--muted-txt)' }}>
-                {NETWORK_LABEL[r.network] || r.network || 'bike route'}
-                {r.context ? ` · ${r.context}` : ''}
-              </div>
+            <div className="mono" style={{ fontSize: 9.5, color: 'var(--muted-txt)', lineHeight: 1.3 }}>
+              {NETWORK_LABEL[r.network] || r.network || 'bike route'}
+              {r.context ? ` · ${r.context}` : ''}
             </div>
           </div>
         );
