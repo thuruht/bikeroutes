@@ -301,28 +301,32 @@ ingestRoutes.post("/", async (c) => {
 
 		const now = new Date().toISOString();
 		const d1Errors: string[] = [];
-		for (const d of docs) {
-			const osmId = d.id.split(":").pop() || "";
-			try {
-				await insertTrail.bind(
+		const BATCH_D1 = 100;
+		for (let i = 0; i < docs.length; i += BATCH_D1) {
+			const batch = docs.slice(i, i + BATCH_D1);
+			const trailStmts = batch.map((d) => {
+				const osmId = d.id.split(":").pop() || "";
+				return insertTrail.bind(
 					d.id, "osm", d.meta.source, osmId,
 					d.meta.name, d.meta.category, d.geom,
 					d.meta.lat, d.meta.lon,
 					d.meta.surface, d.meta.length_m, d.meta.difficulty,
 					d.meta.description, "approved", now
-				).run();
-				insertedD1++;
-			} catch (e: any) {
-				if (d1Errors.length < 5) d1Errors.push(`${d.id}: ${e.message || String(e)}`);
-			}
-			// Also insert into pois for backward compatibility (point-based search)
-			try {
-				await insertPoi.bind(
+				);
+			});
+			const poiStmts = batch.map((d) =>
+				insertPoi.bind(
 					d.id, d.meta.name, d.meta.category,
 					d.meta.lat, d.meta.lon, d.meta.description,
 					"indexed", now
-				).run();
-			} catch { /* ignore dupes */ }
+				)
+			);
+			try {
+				await c.env.DB.batch([...trailStmts, ...poiStmts]);
+				insertedD1 += batch.length;
+			} catch (e: any) {
+				if (d1Errors.length < 5) d1Errors.push(`batch ${i}: ${e.message || String(e)}`);
+			}
 		}
 
 		return c.json({
