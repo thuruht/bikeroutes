@@ -95,12 +95,12 @@ function AuthModal({ onClose, onUser }) {
   );
 }
 
-function CreatePostModal({ onClose, mapObj, onCreated }) {
+function CreatePostModal({ onClose, mapObj, draftLocation, onPickLocationStart, onCreated }) {
   const [user, setUser] = useState(null);
   const [body, setBody] = useState('');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('general');
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(draftLocation || null);
   const [media, setMedia] = useState([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -108,11 +108,13 @@ function CreatePostModal({ onClose, mapObj, onCreated }) {
 
   useEffect(() => {
     BR.fetchMe().then(setUser);
-    if (mapObj.current) {
+    if (draftLocation) {
+      setLocation(draftLocation);
+    } else if (mapObj.current) {
       const c = mapObj.current.getCenter();
       setLocation({ lat: c.lat, lon: c.lng });
     }
-  }, [mapObj]);
+  }, [mapObj, draftLocation]);
 
   const pickFile = async (e) => {
     const file = e.target.files?.[0];
@@ -165,9 +167,10 @@ function CreatePostModal({ onClose, mapObj, onCreated }) {
           </div>
 
           {location && (
-            <div style={{ fontSize: 12, color: 'var(--muted-txt)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--muted-txt)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
               {Ic.pin} Pin at {location.lat.toFixed(4)}, {location.lon.toFixed(4)}
               <button type="button" className="pillbtn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => { const c = mapObj.current?.getCenter(); if (c) setLocation({ lat: c.lat, lon: c.lng }); }}>Use map center</button>
+              <button type="button" className="pillbtn" style={{ padding: '4px 8px', fontSize: 11 }} onClick={onPickLocationStart}>Pick on map</button>
             </div>
           )}
 
@@ -345,8 +348,11 @@ export default function CommunityView({ mapObj }) {
   const [showCreate, setShowCreate] = useState(false);
   const [detailId, setDetailId] = useState(null);
   const [offset, setOffset] = useState(0);
+  const [pickingLocation, setPickingLocation] = useState(false);
+  const [draftLocation, setDraftLocation] = useState(null);
   const perPage = 20;
   const markersRef = useRef([]);
+  const pickHandlerRef = useRef(null);
 
   const clearMarkers = () => {
     markersRef.current.forEach(m => m.remove());
@@ -381,6 +387,19 @@ export default function CommunityView({ mapObj }) {
     return () => clearMarkers();
   }, [posts]);
 
+  useEffect(() => {
+    const map = mapObj.current;
+    if (!map || !pickingLocation) return;
+    const handler = (e) => {
+      setDraftLocation({ lat: e.lngLat.lat, lon: e.lngLat.lng });
+      setPickingLocation(false);
+      setShowCreate(true);
+    };
+    map.on('click', handler);
+    pickHandlerRef.current = handler;
+    return () => { if (map && pickHandlerRef.current) map.off('click', pickHandlerRef.current); };
+  }, [pickingLocation]);
+
   const loadUser = async () => { setUser(await BR.fetchMe()); };
 
   const loadPosts = async (reset = false, cat = category) => {
@@ -403,6 +422,12 @@ export default function CommunityView({ mapObj }) {
 
   return (
     <div>
+      {pickingLocation && (
+        <div style={{ position: 'fixed', top: 76, left: '50%', transform: 'translateX(-50%)', zIndex: 80, display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: 'var(--panel-solid)', border: '1px solid var(--line)', borderRadius: 12, boxShadow: 'var(--shadow)', fontSize: 13, color: 'var(--ink)' }}>
+          <span>Click the map to place your pin.</span>
+          <button className="pillbtn" onClick={() => { setPickingLocation(false); if (pickHandlerRef.current && mapObj.current) mapObj.current.off('click', pickHandlerRef.current); }} style={{ padding: '4px 10px', fontSize: 12 }}>Cancel</button>
+        </div>
+      )}
       <div style={{ marginBottom: 12, fontSize: 12.5, color: 'var(--muted-txt)', lineHeight: 1.4 }}>
         Trail reports, ride brags, mud holes, snakes, meetups, and gear talk. Be kind.
       </div>
@@ -441,7 +466,15 @@ export default function CommunityView({ mapObj }) {
       </div>
 
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onUser={(u) => { setUser(u); setShowAuth(false); loadUser(); }} />}
-      {showCreate && <CreatePostModal mapObj={mapObj} onClose={() => setShowCreate(false)} onCreated={onMutate} />}
+      {showCreate && (
+        <CreatePostModal
+          mapObj={mapObj}
+          draftLocation={draftLocation}
+          onClose={() => { setShowCreate(false); setDraftLocation(null); }}
+          onPickLocationStart={() => { setDraftLocation(null); setShowCreate(false); setPickingLocation(true); }}
+          onCreated={onMutate}
+        />
+      )}
       {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} />}
     </div>
   );
