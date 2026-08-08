@@ -1,8 +1,15 @@
 import { Hono } from "hono";
 import { getCurrentUser } from "../lib/auth";
 import { logger } from "../lib/logger";
+import { checkRateLimit, getClientIP } from "../lib/rate-limit";
 
 export const authRoutes = new Hono<{ Bindings: Env }>();
+
+const MAX_LOGIN_REQUESTS = 5; // per IP per window
+const LOGIN_REQUEST_WINDOW_MS = 15 * 60 * 1000;
+const MAX_VERIFY_ATTEMPTS = 20; // per IP per window
+const VERIFY_WINDOW_MS = 15 * 60 * 1000;
+const MAX_FAILED_ATTEMPTS_PER_EMAIL = 10; // after this, delete code
 
 async function sendLoginCode(email: string, code: string, env: Env): Promise<boolean> {
 	try {
@@ -39,13 +46,26 @@ async function hashEmail(email: string): Promise<string> {
 authRoutes.post("/request", async (c) => {
 	const body = await c.req.json();
 	const email = body.email;
+	const ip = getClientIP(c);
 
 	if (!email || !email.includes("@")) {
 		return c.json({ error: "Invalid email" }, 400);
 	}
 
+	const { allowed, remaining } = await checkRateLimit(
+		c.env.RATE_LIMITS,
+		`login_request:${ip}`,
+		MAX_LOGIN_REQUESTS,
+		LOGIN_REQUEST_WINDOW_MS,
+	);
+	if (!allowed) {
+		return c.json({ error: "Too many login attempts. Try again later." }, 429, {
+			"Retry-After": String(LOGIN_REQUEST_WINDOW_MS / 1000),
+		});
+	}
+
 	const emailHash = await hashEmail(email);
-	
+
 	// Generate a 6-digit code
 	const code = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -56,7 +76,7 @@ authRoutes.post("/request", async (c) => {
 	if (!sent) {
 		return c.json({ error: "Could not send email. Try again later." }, 502);
 	}
-	return c.json({ message: "Code emailed. Check your inbox." });
+	return c.json({ message: "Code emailed. Check your inbox.", remaining });
 });
 
 // ─── Verify Magic Code ────────────────────────────────────────────
@@ -64,17 +84,42 @@ authRoutes.post("/verify", async (c) => {
 	const body = await c.req.json();
 	const email = body.email;
 	const code = body.code;
+	const ip = getClientIP(c);
 
 	if (!email || !code) {
 		return c.json({ error: "Missing email or code" }, 400);
 	}
 
+	const { allowed } = await checkRateLimit(
+		c.env.RATE_LIMITS,
+		`login_verify:${ip}`,
+		MAX_VERIFY_ATTEMPTS,
+		VERIFY_WINDOW_MS,
+	);
+	if (!allowed) {
+		return c.json({ error: "Too many verification attempts. Try again later." }, 429, {
+			"Retry-After": String(VERIFY_WINDOW_MS / 1000),
+		});
+	}
+
 	const emailHash = await hashEmail(email);
-	
+
 	const storedCode = await c.env.SESSIONS.get(`login_code:${emailHash}`);
 	if (!storedCode || storedCode !== code) {
+		const failKey = `login_fail:${emailHash}`;
+		const raw = await c.env.SESSIONS.get(failKey, "json") as { count: number } | null;
+		const count = (raw?.count || 0) + 1;
+		if (count >= MAX_FAILED_ATTEMPTS_PER_EMAIL) {
+			await c.env.SESSIONS.delete(`login_code:${emailHash}`);
+			await c.env.SESSIONS.delete(failKey);
+			logger.warn(`Login code invalidated after ${count} failed attempts`, { emailHash: emailHash.slice(0, 8) }, "AUTH");
+			return c.json({ error: "Too many failed attempts. Request a new code." }, 429);
+		}
+		await c.env.SESSIONS.put(failKey, JSON.stringify({ count }), { expirationTtl: 900 });
 		return c.json({ error: "Invalid or expired code" }, 401);
 	}
+
+	await c.env.SESSIONS.delete(`login_fail:${emailHash}`);
 
 	// Delete the code so it can't be reused
 	await c.env.SESSIONS.delete(`login_code:${emailHash}`);
