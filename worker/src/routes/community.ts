@@ -451,8 +451,9 @@ communityRoutes.post("/media", async (c) => {
 });
 
 // ─── Serve media ────────────────────────────────────────────────────
-communityRoutes.get("/media/*", async (c) => {
-  const key = decodeURIComponent(c.req.param("*") ?? "");
+communityRoutes.get("/media/:key{.+}", async (c) => {
+  const raw = c.req.param("key") ?? "";
+  const key = decodeURIComponent(raw);
   try {
     const obj = await c.env.R2_ASSETS.get(key);
     if (!obj) return c.json({ error: "Not found" }, 404);
