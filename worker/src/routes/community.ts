@@ -136,7 +136,7 @@ communityRoutes.get("/posts", async (c) => {
     params.push(userId);
   }
   if (q) {
-    const term = q.trim();
+    const term = q.trim().replace(/[^a-zA-Z0-9\s\-]/g, " ").trim();
     if (term.length > 0) {
       whereParts.push("p.id IN (SELECT rowid FROM community_posts_search WHERE community_posts_search MATCH ?)");
       params.push(term + "*");
