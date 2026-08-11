@@ -9,14 +9,14 @@ const TIERS = [
 ];
 
 let paypalScriptPromise = null;
-function loadPayPalScript(clientId) {
+function loadPayPalScript(clientId, host = 'https://www.paypal.com') {
   if (paypalScriptPromise) return paypalScriptPromise;
   paypalScriptPromise = new Promise((resolve, reject) => {
     const existing = document.getElementById('paypal-sdk');
     if (existing) { resolve(window.paypal); return; }
     const script = document.createElement('script');
     script.id = 'paypal-sdk';
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
+    script.src = `${host}/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
     script.async = true;
     script.onload = () => resolve(window.paypal);
     script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
@@ -47,7 +47,7 @@ export default function DonatePanel() {
     if (buttonsInstance.current) { buttonsInstance.current.close(); buttonsInstance.current = null; }
 
     let cancelled = false;
-    loadPayPalScript(config.clientId).then((paypal) => {
+    loadPayPalScript(config.clientId, config.sdkHost).then((paypal) => {
       if (cancelled) return;
       buttonsInstance.current = paypal.Buttons({
         style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' },

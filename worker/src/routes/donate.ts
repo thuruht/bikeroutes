@@ -9,16 +9,51 @@ import { checkRateLimit, getClientIP } from "../lib/rate-limit";
 
 export const donateRoutes = new Hono<{ Bindings: Env }>();
 
+function hasPayPalCredentials(env: Env): boolean {
+	return Boolean(env.PAYPAL_CLIENT_ID && env.PAYPAL_CLIENT_SECRET);
+}
+
+function isSandbox(env: Env): boolean {
+	return env.PAYPAL_ENVIRONMENT === "sandbox";
+}
+
 function getPayPalBase(env: Env): string {
-	return env.PAYPAL_ENVIRONMENT === "sandbox"
+	return isSandbox(env)
 		? "https://api-m.sandbox.paypal.com"
 		: "https://api-m.paypal.com";
+}
+
+function getPayPalSDKHost(env: Env): string {
+	return isSandbox(env)
+		? "https://www.sandbox.paypal.com"
+		: "https://www.paypal.com";
+}
+
+interface PayPalError {
+	error?: string;
+	error_description?: string;
+	message?: string;
+	details?: Array<{ issue?: string; description?: string }>;
+}
+
+function ppError(data: PayPalError): string {
+	if (data.error_description) return data.error_description;
+	if (data.error) return data.error;
+	if (data.message) return data.message;
+	if (Array.isArray(data.details) && data.details.length > 0) {
+		return data.details.map(d => `${d.issue}: ${d.description}`).join("; ");
+	}
+	return "PayPal request failed";
 }
 
 /**
  * Get PayPal access token using client credentials
  */
 async function getPayPalToken(env: Env): Promise<string> {
+	if (!hasPayPalCredentials(env)) {
+		throw new Error("PayPal credentials are not configured");
+	}
+
 	const auth = btoa(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`);
 	const base = getPayPalBase(env);
 	const resp = await fetch(`${base}/v1/oauth2/token`, {
@@ -30,7 +65,13 @@ async function getPayPalToken(env: Env): Promise<string> {
 		body: "grant_type=client_credentials",
 	});
 
-	const data = await resp.json() as { access_token: string };
+	const data = (await resp.json()) as { access_token?: string } & PayPalError;
+	if (!resp.ok) {
+		throw new Error(`PayPal token error: ${ppError(data)}`);
+	}
+	if (!data.access_token) {
+		throw new Error("PayPal token response missing access_token");
+	}
 	return data.access_token;
 }
 
@@ -39,10 +80,13 @@ async function getPayPalToken(env: Env): Promise<string> {
  * Public PayPal client ID for the frontend SDK (safe to expose).
  */
 donateRoutes.get("/config", async (c) => {
+	const clientId = c.env.PAYPAL_CLIENT_ID || null;
 	return c.json({
-		clientId: c.env.PAYPAL_CLIENT_ID || null,
+		clientId,
 		currency: "USD",
-		environment: c.env.PAYPAL_ENVIRONMENT === "sandbox" ? "sandbox" : "production",
+		environment: isSandbox(c.env) ? "sandbox" : "production",
+		ready: hasPayPalCredentials(c.env),
+		sdkHost: getPayPalSDKHost(c.env),
 	});
 });
 
@@ -51,6 +95,10 @@ donateRoutes.get("/config", async (c) => {
  * Body: { amount: number, tier: string }
  */
 donateRoutes.post("/create-order", async (c) => {
+	if (!hasPayPalCredentials(c.env)) {
+		return c.json({ error: "PayPal is not configured on this server" }, 503);
+	}
+
 	const ip = getClientIP(c);
 	const { allowed } = await checkRateLimit(c.env.RATE_LIMITS, `donate:${ip}`, 10, 60_000);
 	if (!allowed) return c.json({ error: "Too many donation attempts. Slow down." }, 429);
@@ -85,11 +133,18 @@ donateRoutes.post("/create-order", async (c) => {
 			}),
 		});
 
-		const order = await resp.json() as { id: string };
+		const order = (await resp.json()) as { id?: string } & PayPalError;
+		if (!resp.ok) {
+			logger.error("PayPal create-order failed", { status: resp.status, error: ppError(order) }, "PAYPAL");
+			return c.json({ error: `PayPal order failed: ${ppError(order)}` }, 502);
+		}
+		if (!order.id) {
+			return c.json({ error: "PayPal order response missing ID" }, 502);
+		}
 		return c.json({ orderID: order.id });
 	} catch (error) {
-		console.error("PayPal create-order error:", error);
-		return c.json({ error: "Failed to create order" }, 500);
+		logger.error("PayPal create-order error", error, "PAYPAL");
+		return c.json({ error: error instanceof Error ? error.message : "Failed to create order" }, 500);
 	}
 });
 
@@ -98,6 +153,10 @@ donateRoutes.post("/create-order", async (c) => {
  * Body: { orderID: string, tier: string }
  */
 donateRoutes.post("/capture-order", async (c) => {
+	if (!hasPayPalCredentials(c.env)) {
+		return c.json({ error: "PayPal is not configured on this server" }, 503);
+	}
+
 	const { orderID, tier } = await c.req.json<{ orderID: string; tier: string }>();
 
 	if (!orderID || typeof orderID !== "string" || orderID.length > 80) {
@@ -115,15 +174,20 @@ donateRoutes.post("/capture-order", async (c) => {
 			},
 		});
 
-		const capture = await resp.json() as {
-			status: string;
-			purchase_units: Array<{
-				payments: { captures: Array<{ amount: { value: string } }> };
+		const capture = (await resp.json()) as {
+			status?: string;
+			purchase_units?: Array<{
+				payments?: { captures?: Array<{ amount?: { value?: string } }> };
 			}>;
-		};
+		} & PayPalError;
+
+		if (!resp.ok) {
+			logger.error("PayPal capture-order failed", { status: resp.status, error: ppError(capture) }, "PAYPAL");
+			return c.json({ error: `PayPal capture failed: ${ppError(capture)}` }, 502);
+		}
 
 		if (capture.status === "COMPLETED") {
-			const amountValue = capture.purchase_units[0]?.payments?.captures[0]?.amount?.value;
+			const amountValue = capture.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value;
 
 			// Record donation in D1
 			await c.env.DB.prepare(
@@ -155,7 +219,7 @@ donateRoutes.post("/capture-order", async (c) => {
 		return c.json({ status: capture.status, error: "Capture not completed" }, 400);
 	} catch (error) {
 		logger.error("PayPal capture-order failure", error, "PAYPAL");
-		return c.json({ error: "Failed to capture order" }, 500);
+		return c.json({ error: error instanceof Error ? error.message : "Failed to capture order" }, 500);
 	}
 });
 
