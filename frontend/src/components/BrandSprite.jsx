@@ -19,7 +19,7 @@
 const SPRITE = `
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <symbol id="mark-b" viewBox="0 0 40 40">
-    <g fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round">
+    <g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
       <path d="M12.5 7 L12.5 32"/>
       <circle cx="21.5" cy="24.5" r="8"/>
       <path d="M28 19 L33 13.5"/>

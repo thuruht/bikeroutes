@@ -32,6 +32,7 @@
   margin-inline-end: .04em;
   color: var(--ink);
   --ac: var(--green);
+  transform: translateY(0.08em);
 }
 .wordmark .tld { color: var(--muted-txt); font-weight: var(--fw-medium); }
 .wordmark .i-slot { position: relative; display: inline-block; width: .2em; height: .74em; vertical-align: baseline; }
