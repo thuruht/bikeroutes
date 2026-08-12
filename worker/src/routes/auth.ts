@@ -151,6 +151,33 @@ authRoutes.post("/verify", async (c) => {
 	});
 });
 
+// ─── Search public users ───────────────────────────────────────────
+authRoutes.get("/users/search", async (c) => {
+	const q = c.req.query("q")?.trim().toLowerCase();
+	if (!q || q.length < 1) return c.json({ users: [] });
+
+	const { results } = await c.env.DB.prepare(
+		`SELECT id, username, display_name, avatar_url, public_key FROM users
+		 WHERE username IS NOT NULL AND (username LIKE ? OR display_name LIKE ?)
+		 ORDER BY username ASC LIMIT 10`
+	).bind(`%${q}%`, `%${q}%`).all();
+
+	return c.json({ users: results ?? [] });
+});
+
+// ─── Public user lookup by id ───────────────────────────────────────
+authRoutes.get("/users/id/:id", async (c) => {
+	const id = c.req.param("id").trim();
+	if (!id) return c.json({ error: "User id required" }, 400);
+
+	const user = await c.env.DB.prepare(
+		"SELECT id, username, display_name, avatar_url, bio, contribution_count, public_key FROM users WHERE id = ?"
+	).bind(id).first();
+
+	if (!user) return c.json({ error: "User not found" }, 404);
+	return c.json({ user });
+});
+
 // ─── Public user lookup by username ─────────────────────────────────
 authRoutes.get("/users/:username", async (c) => {
 	const username = c.req.param("username").toLowerCase().trim();

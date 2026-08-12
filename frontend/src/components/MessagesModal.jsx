@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../AuthContext';
+import * as BR from '../api';
 import { ensureKeys, encryptMessage, decryptMessage } from '../lib/crypto';
 
 const Ic = {
@@ -21,11 +22,14 @@ export default function MessagesModal({ onClose, initialUsername = null }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [newUsername, setNewUsername] = useState(initialUsername || '');
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestLoading, setSuggestLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
   const [secureReady, setSecureReady] = useState(false);
   const startedInitial = useRef(false);
+  const searchTimer = useRef(null);
   const bottomRef = useRef(null);
 
   const loadConversations = async () => {
@@ -122,26 +126,39 @@ export default function MessagesModal({ onClose, initialUsername = null }) {
     }
   };
 
-  const startConversation = async (username) => {
-    if (!username?.trim() || !user) return;
+  const startConversation = async (target) => {
+    if (!user) return;
+    let resolved = target;
+    if (typeof target === 'string') {
+      const username = target.trim();
+      if (!username) return;
+      setStarting(true); setError('');
+      try {
+        const lookup = await fetch(`/api/auth/users/${encodeURIComponent(username)}`, { headers: authHeaders() });
+        if (!lookup.ok) throw new Error('User not found');
+        resolved = (await lookup.json()).user;
+      } catch (err) {
+        setError(err.message || 'Start failed');
+        setStarting(false);
+        return;
+      }
+    }
     setStarting(true); setError('');
     try {
-      const lookup = await fetch(`/api/auth/users/${encodeURIComponent(username.trim())}`, { headers: authHeaders() });
-      if (!lookup.ok) throw new Error('User not found');
-      const { user: target } = await lookup.json();
       const r = await fetch('/api/community/conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-        body: JSON.stringify({ target_user_id: target.id }),
+        body: JSON.stringify({ target_user_id: resolved.id }),
       });
       if (!r.ok) throw new Error('Could not start conversation');
       const { conversation_id } = await r.json();
-      const list = await loadConversations();
+      await loadConversations();
       setActiveId(conversation_id);
       setNewUsername('');
+      setSuggestions([]);
       // merge target public_key in case this conversation was returned but missing key
       setConversations((prev) => prev.map((c) => c.id === conversation_id && !c.other_public_key
-        ? { ...c, other_public_key: target.public_key }
+        ? { ...c, other_public_key: resolved.public_key }
         : c));
     } catch (err) {
       setError(err.message || 'Start failed');
@@ -161,6 +178,21 @@ export default function MessagesModal({ onClose, initialUsername = null }) {
     }
   }, [initialUsername, user?.id]);
 
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    const q = newUsername.trim();
+    if (q.length < 2) { setSuggestions([]); return; }
+    setSuggestLoading(true);
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const d = await BR.searchUsers(q);
+        setSuggestions((d.users || []).filter((u) => u.id !== user?.id));
+      } catch { setSuggestions([]); }
+      setSuggestLoading(false);
+    }, 200);
+    return () => { if (searchTimer.current) clearTimeout(searchTimer.current); };
+  }, [newUsername, user?.id]);
+
   const activeConv = conversations.find((c) => c.id === activeId);
 
   return (
@@ -169,10 +201,33 @@ export default function MessagesModal({ onClose, initialUsername = null }) {
         <button className="modal-close" onClick={onClose}>{Ic.x}</button>
         <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 12, color: 'var(--ink)' }}>Messages</div>
 
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
-          <input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="Enter username to message" style={{ flex: 1 }} />
-          <button className="pillbtn" onClick={handleStartSubmit} disabled={starting || !newUsername.trim()}>Start</button>
-        </div>
+        <form onSubmit={handleStartSubmit} style={{ position: 'relative', marginBottom: 10 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="Search riders to message…" style={{ flex: 1 }} />
+            <button type="submit" className="pillbtn" disabled={starting || !newUsername.trim()}>Start</button>
+          </div>
+          {(suggestions.length > 0 || suggestLoading) && (
+            <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 60, background: 'var(--panel-solid)', border: '1px solid var(--line)', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+              {suggestLoading && <div className="mono" style={{ padding: 8, fontSize: 11, color: 'var(--muted-txt)' }}>Searching…</div>}
+              {suggestions.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => startConversation(u)}
+                  style={{ width: '100%', textAlign: 'left', padding: '8px 10px', border: 0, borderBottom: '1px solid var(--line)', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                >
+                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--ink)', fontSize: 11, fontWeight: 600, border: '1px solid var(--line)', flex: 'none' }}>
+                    {u.avatar_url ? <img src={u.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.display_name?.[0] || u.username?.[0] || '?')}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink)' }}>{u.display_name || u.username || 'User'}</div>
+                    <div className="mono" style={{ fontSize: 10, color: 'var(--muted-txt)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{u.username}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </form>
 
         <div style={{ display: 'flex', flex: 1, minHeight: 0, border: '1px solid var(--line)', borderRadius: 12, overflow: 'hidden' }}>
           <div style={{ width: 180, borderRight: '1px solid var(--line)', overflowY: 'auto', background: 'var(--paper-2)' }}>

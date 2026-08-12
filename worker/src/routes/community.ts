@@ -100,6 +100,7 @@ function serializePost(row: PostRow, mediaMap: Map<string, any>, likedByMe = fal
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     author: {
+      userId: row.user_id,
       displayName: row.display_name,
       username: row.username,
       avatarUrl: row.avatar_url,
@@ -207,6 +208,7 @@ communityRoutes.get("/posts/:id", async (c) => {
       id: r.id,
       userId: r.user_id,
       author: {
+        userId: r.user_id,
         displayName: r.display_name ?? r.author_name ?? "Anonymous",
         username: r.username,
         avatarUrl: r.avatar_url,

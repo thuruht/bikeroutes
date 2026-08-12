@@ -486,3 +486,15 @@ export async function fetchPublicUser(username) {
   if (!r.ok) throw new Error("user " + r.status);
   return r.json();
 }
+
+export async function fetchPublicUserById(id) {
+  const r = await fetch(`/api/auth/users/id/${encodeURIComponent(id)}`);
+  if (!r.ok) throw new Error("user " + r.status);
+  return r.json();
+}
+
+export async function searchUsers(q) {
+  const r = await fetch(`/api/auth/users/search?q=${encodeURIComponent(q)}`, { headers: authHeaders() });
+  if (!r.ok) throw new Error("search " + r.status);
+  return r.json();
+}

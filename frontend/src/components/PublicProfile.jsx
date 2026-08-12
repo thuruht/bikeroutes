@@ -22,7 +22,7 @@ const Ic = {
   message: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 6H2v12h20V6z"/><path d="M2 8l10 7 10-7"/></svg>,
 };
 
-export default function PublicProfile({ username, onClose, onMessage }) {
+export default function PublicProfile({ username, userId, onClose, onMessage }) {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -31,10 +31,14 @@ export default function PublicProfile({ username, onClose, onMessage }) {
 
   useEffect(() => {
     setLoading(true); setError(null);
-    BR.fetchPublicUser(username)
-      .then(d => { setProfile(d.user); setLoading(false); })
+    const load = username
+      ? BR.fetchPublicUser(username)
+      : userId
+        ? BR.fetchPublicUserById(userId)
+        : Promise.reject(new Error('No user specified'));
+    load.then(d => { setProfile(d.user); setLoading(false); })
       .catch(e => { setError(e.message || 'Could not load profile'); setLoading(false); });
-  }, [username]);
+  }, [username, userId]);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -77,24 +81,26 @@ export default function PublicProfile({ username, onClose, onMessage }) {
                 type="button"
                 className="primary"
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 10 }}
-                onClick={() => { onMessage?.(profile.username); onClose?.(); }}
+                onClick={() => { onMessage?.(profile.username || profile.id); onClose?.(); }}
               >
                 {Ic.message} Message
               </button>
             )}
 
-            <button
-              type="button"
-              className="pillbtn"
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-              onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('profile', profile.username);
-                copyToClipboard(url.toString()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
-              }}
-            >
-              {Ic.link} {copied ? 'Link copied' : 'Direct link'}
-            </button>
+            {profile.username && (
+              <button
+                type="button"
+                className="pillbtn"
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set('profile', profile.username);
+                  copyToClipboard(url.toString()).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); });
+                }}
+              >
+                {Ic.link} {copied ? 'Link copied' : 'Direct link'}
+              </button>
+            )}
           </div>
         )}
       </div>

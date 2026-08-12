@@ -224,13 +224,13 @@ function PostCard({ post, me, onOpen, onMutate, mapObj, onShowProfile, onReport 
   return (
     <div className="trail" style={{ display: 'block', padding: 14, cursor: 'pointer' }} onClick={() => onOpen(post.id)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <button onClick={(e) => { e.stopPropagation(); post.author?.username && onShowProfile?.(post.author.username); }} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
+          <button onClick={(e) => { e.stopPropagation(); (post.author?.username || post.author?.userId) && onShowProfile?.(post.author.username, post.author.userId); }} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
             {post.author?.avatarUrl ? <img src={post.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : Ic.user}
           </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <button
             className="text-btn"
-            onClick={(e) => { e.stopPropagation(); post.author?.username && onShowProfile?.(post.author.username); }}
+            onClick={(e) => { e.stopPropagation(); (post.author?.username || post.author?.userId) && onShowProfile?.(post.author.username, post.author.userId); }}
             style={{ fontWeight: 600, fontSize: 13, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
           >{post.author?.displayName ?? post.author?.username ?? 'Anonymous'}</button>
           <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)' }}>{timeAgo(post.createdAt)} ago · {CATEGORIES.find((c) => c.id === post.category)?.label ?? post.category}</div>
@@ -306,12 +306,12 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile, onReport }) {
         <button className="modal-close" onClick={onClose}>{Ic.x}</button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flex: 'none' }}>
-          <button onClick={() => p.author?.username && onShowProfile?.(p.author.username)} style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
+          <button onClick={() => (p.author?.username || p.author?.userId) && onShowProfile?.(p.author.username, p.author.userId)} style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
             {p.author?.avatarUrl ? <img src={p.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : Ic.user}
           </button>
           <div>
             <button
-              onClick={() => p.author?.username && onShowProfile?.(p.author.username)}
+              onClick={() => (p.author?.username || p.author?.userId) && onShowProfile?.(p.author.username, p.author.userId)}
               style={{ display: 'block', fontWeight: 700, fontSize: 13, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
             >{p.author?.displayName ?? p.author?.username ?? 'Anonymous'}</button>
             <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)' }}>{timeAgo(p.createdAt)} ago · {CATEGORIES.find((c) => c.id === p.category)?.label ?? p.category}</div>
@@ -346,7 +346,7 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile, onReport }) {
               <div key={c.id} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
                 <button
                   className="text-btn"
-                  onClick={() => c.author?.username && onShowProfile?.(c.author.username)}
+                  onClick={() => (c.author?.username || c.author?.userId) && onShowProfile?.(c.author.username, c.author.userId)}
                   style={{ fontWeight: 600, fontSize: 12, color: 'var(--ink)', padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}
                 >{c.author?.displayName ?? 'Anonymous'}</button>
                 <div style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.4, whiteSpace: 'pre-wrap' }}>{c.body}</div>
@@ -383,7 +383,13 @@ export default function CommunityView({ mapObj, onMessage }) {
   const [pickingLocation, setPickingLocation] = useState(false);
   const [draftLocation, setDraftLocation] = useState(null);
   const [profileUsername, setProfileUsername] = useState(null);
+  const [profileUserId, setProfileUserId] = useState(null);
   const [reportTarget, setReportTarget] = useState(null);
+
+  const showProfile = (username, userId) => {
+    setProfileUserId(userId || null);
+    setProfileUsername(username || null);
+  };
   const perPage = 20;
   const markersRef = useRef([]);
   const pickHandlerRef = useRef(null);
@@ -487,7 +493,7 @@ export default function CommunityView({ mapObj, onMessage }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {posts.map((p) => (
-          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} mapObj={mapObj} onShowProfile={setProfileUsername} onReport={setReportTarget} />
+          <PostCard key={p.id} post={{ ...p, likedByMe: p.likedByMe }} me={user} onOpen={setDetailId} onMutate={onMutate} mapObj={mapObj} onShowProfile={showProfile} onReport={setReportTarget} />
         ))}
         {loading && <div className="trail" style={{ padding: 20, textAlign: 'center', color: 'var(--muted-txt)' }}><span className="spin">{Ic.spinner}</span></div>}
         {!loading && posts.length === 0 && (
@@ -510,8 +516,8 @@ export default function CommunityView({ mapObj, onMessage }) {
           onCreated={onMutate}
         />
       )}
-      {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} onShowProfile={setProfileUsername} onReport={setReportTarget} />}
-      {profileUsername && <PublicProfile username={profileUsername} onClose={() => setProfileUsername(null)} onMessage={(username) => { setProfileUsername(null); onMessage?.(username); }} />}
+      {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} onShowProfile={showProfile} onReport={setReportTarget} />}
+      {(profileUsername || profileUserId) && <PublicProfile username={profileUsername} userId={profileUserId} onClose={() => { setProfileUsername(null); setProfileUserId(null); }} onMessage={(username) => { setProfileUsername(null); setProfileUserId(null); onMessage?.(username); }} />}
       {reportTarget && (
         <ReportModal
           targetType={reportTarget.type}
