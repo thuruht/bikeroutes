@@ -17,6 +17,7 @@ type UserRow = {
 	avatar_url: string | null;
 	social_links: string | null;
 	public_key: string | null;
+	encrypted_private_key: string | null;
 	created_at: string;
 	last_active: string;
 };

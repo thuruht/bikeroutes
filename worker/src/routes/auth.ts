@@ -179,7 +179,7 @@ authRoutes.get("/me", async (c) => {
 	}
 
 	const user = await c.env.DB.prepare(
-		"SELECT id, email_hash, display_name, username, bio, avatar_url, social_links, trust_level, contribution_count, badges, role, created_at, last_active, public_key FROM users WHERE id = ?"
+		"SELECT id, email_hash, display_name, username, bio, avatar_url, social_links, trust_level, contribution_count, badges, role, created_at, last_active, public_key, encrypted_private_key FROM users WHERE id = ?"
 	).bind(userId).first();
 
 	if (!user) {
@@ -203,6 +203,36 @@ authRoutes.put("/public-key", async (c) => {
 
 	await c.env.DB.prepare("UPDATE users SET public_key = ? WHERE id = ?").bind(key, user.id).run();
 	return c.json({ message: "Public key updated" });
+});
+
+// ─── Get encrypted private-key backup ───────────────────────────────
+authRoutes.get("/key-backup", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user) return c.json({ error: "Unauthorized" }, 401);
+	return c.json({ encrypted_private_key: user.encrypted_private_key || null });
+});
+
+// ─── Store encrypted private-key backup ─────────────────────────────
+authRoutes.put("/key-backup", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+	const body = await c.req.json<{ encrypted_private_key?: string }>();
+	const backup = typeof body.encrypted_private_key === "string" ? body.encrypted_private_key.trim() : "";
+	if (!backup || backup.length < 64 || backup.length > 8192) {
+		return c.json({ error: "Invalid backup" }, 400);
+	}
+
+	await c.env.DB.prepare("UPDATE users SET encrypted_private_key = ? WHERE id = ?").bind(backup, user.id).run();
+	return c.json({ message: "Backup stored" });
+});
+
+// ─── Delete encrypted private-key backup ──────────────────────────
+authRoutes.delete("/key-backup", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user) return c.json({ error: "Unauthorized" }, 401);
+	await c.env.DB.prepare("UPDATE users SET encrypted_private_key = NULL WHERE id = ?").bind(user.id).run();
+	return c.json({ message: "Backup deleted" });
 });
 
 // ─── Update Profile ─────────────────────────────────────────────────

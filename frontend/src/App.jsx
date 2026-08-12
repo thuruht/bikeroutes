@@ -425,47 +425,26 @@ export default function LiveApp() {
     const vis = trailsOverlay ? "visible" : "none";
     if (!map.getSource("trails")) {
       map.addSource("trails", {
-        type: "vector",
-        tiles: [BR.TILES.vectorMidwestBike],
-        minzoom: 6,
-        maxzoom: 16,
-        attribution: "© OpenStreetMap contributors",
+        type: "raster",
+        tiles: ["https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png"],
+        tileSize: 256,
+        attribution: BR.TILES.trailsAttribution,
+        minzoom: 1,
+        maxzoom: 18,
       });
     }
-
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark" || theme === "dark";
-    const lineColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(11,12,8,0.8)";
-
-    const layerDefs = [
-      { id: "bike-protected", filter: ["==", ["get", "facility_type"], "protected_bikelane"], color: isDark ? "#4ade80" : "#16a34a", width: 5, dash: [1, 0] },
-      { id: "bike-separated", filter: ["==", ["get", "facility_type"], "separated_bikelane"], color: isDark ? "#34d399" : "#15803d", width: 4, dash: [1, 0] },
-      { id: "bike-shared", filter: ["==", ["get", "facility_type"], "shared_use_path"], color: isDark ? "#a3e635" : "#65a30d", width: 3, dash: [2, 1] },
-      { id: "bike-lane", filter: ["==", ["get", "facility_type"], "bike_lane"], color: isDark ? "#60a5fa" : "#2563eb", width: 2, dash: [1, 1] },
-      { id: "bike-route", filter: ["in", ["get", "facility_type"], ["literal", ["cycle_route", "mtb_route"]]], color: isDark ? "#fb923c" : "#ea580c", width: 2.5, dash: [1, 0] },
-      { id: "bike-track", filter: ["in", ["get", "facility_type"], ["literal", ["track", "path"]]], color: isDark ? "#d4d4d8" : "#52525b", width: 2, dash: [2, 2] },
-    ];
-
-    for (const l of layerDefs) {
-      if (!map.getLayer(l.id)) {
-        map.addLayer({
-          id: l.id,
-          type: "line",
-          source: "trails",
-          "source-layer": "bikeinfra",
-          filter: l.filter,
-          paint: {
-            "line-color": l.color,
-            "line-width": ["interpolate", ["linear"], ["zoom"], 6, l.width * 0.3, 12, l.width, 16, l.width * 1.6],
-            "line-opacity": 0.9,
-            "line-dasharray": l.dash,
-          },
-          layout: { "line-cap": "round", "line-join": "round", visibility: vis },
-        }, "route-casing");
-      } else {
-        map.setLayoutProperty(l.id, "visibility", vis);
-      }
+    if (!map.getLayer("trails")) {
+      map.addLayer({
+        id: "trails",
+        type: "raster",
+        source: "trails",
+        paint: { "raster-opacity": 0.85 },
+        layout: { visibility: vis },
+      }, "route-casing");
+    } else {
+      map.setLayoutProperty("trails", "visibility", vis);
     }
-  }, [trailsOverlay, theme]);
+  }, [trailsOverlay]);
 
   const addRailLayer = useCallback(() => {
     const map = mapObj.current; if (!map) return;
