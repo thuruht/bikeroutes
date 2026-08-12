@@ -807,11 +807,11 @@ export default function LiveApp() {
       <div className="topbar">
         <div className="brand">
           <span className="app-tile" aria-hidden="true">
-            <img src="/byn3.png" alt="" style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4 }} />
+            <svg viewBox="0 0 40 40"><use href="#mark-b" /></svg>
           </span>
           <div className="brand-txt">
             <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
-              b<span className="i-slot"><span className="head"><svg viewBox="0 0 40 40"><use href="#brand-dot" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+              <svg className="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true"><use href="#mark-b" /></svg>ikeroutes<span className="tld">.org</span>
             </div>
             <div className="tag mono">open cycling maps · midwest</div>
           </div>
@@ -854,7 +854,7 @@ export default function LiveApp() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setInfoOpen(false)}>{Ic.x}</button>
             <div className="wordmark" aria-label="bikeroutes.org">
-              b<span className="i-slot"><span className="head"><svg viewBox="0 0 40 40"><use href="#brand-dot" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+              <svg className="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true"><use href="#mark-b" /></svg>ikeroutes<span className="tld">.org</span>
             </div>
             <div className="modal-nav">
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("plan"); setInfoOpen(false); }}>Plan</a>

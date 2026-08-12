@@ -8,7 +8,7 @@
       #mark-b        b-wheel logomark (stroke)
       #mark-b-solid  b-wheel logomark (filled, for favicons/small)
       #pin-wing      caduceus-wing destination pin
-      #brand-dot     simple bike-wheel dot for the wordmark i
+      #mark-b is used as the leading letter in the wordmark and as the app tile mark
 
 
    Kept as raw SVG markup (dangerouslySetInnerHTML) so the
@@ -46,11 +46,6 @@ const SPRITE = `
       <path d="M20 35.8 L19.1 33 L19.1 14 Q20 12 20.9 14 L20.9 33 Z"/>
       <circle cx="20" cy="10.4" r="2.4"/>
     </g>
-  </symbol>
-  <symbol id="brand-dot" viewBox="0 0 40 40">
-    <circle cx="20" cy="20" r="18" fill="currentColor"/>
-    <circle cx="20" cy="20" r="9" fill="var(--panel, #0b0c08)"/>
-    <circle cx="20" cy="20" r="4" fill="var(--ac, #7a9a8c)"/>
   </symbol>
 </svg>`;
 

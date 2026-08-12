@@ -416,17 +416,6 @@ h1, h2, h3, h4,
 
 .modal .wordmark { font-size: 28px; display: flex; justify-content: center; }
 
-/* Brand mark wordmark dot — interactive subtle bob */
-.wordmark .i-slot .head {
-  cursor: default;
-  animation: hat-bob 3s ease-in-out infinite;
-}
-.wordmark .i-slot .head:hover { animation: none; filter: brightness(1.2); }
-@keyframes hat-bob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-1px); }
-}
-
 /* moving map dot for elevation scrub */
 .scrub-dot { pointer-events: none; }
 
