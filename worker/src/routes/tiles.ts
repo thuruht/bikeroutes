@@ -100,11 +100,11 @@ tileRoutes.get("/:filename{.+\\.pmtiles}", async (c) => {
  * GET /api/tiles/vector/:layer/:z/:x/:y.mvt
  * Serves individual vector tiles from a PMTiles archive stored in R2.
  */
-tileRoutes.get("/vector/:layer/:z/:x/:y.mvt", async (c) => {
+tileRoutes.get("/vector/:layer/:z/:x/:y", async (c) => {
 	const layer = c.req.param("layer");
 	const z = parseInt(c.req.param("z") || "");
 	const x = parseInt(c.req.param("x") || "");
-	const y = parseInt(c.req.param("y") || "");
+	const y = parseInt((c.req.param("y") || "").replace(/\.mvt$/, ""));
 
 	if (!layer || isNaN(z) || isNaN(x) || isNaN(y)) {
 		return c.json({ error: "Invalid tile parameters" }, 400);

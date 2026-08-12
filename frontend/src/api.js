@@ -95,7 +95,7 @@ export const TILES = {
   light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
   attribution: "© OpenStreetMap · © CARTO",
   // Midwest bike-infrastructure vector tiles, generated from OSM by the data pipeline.
-  vectorMidwestBike: "/api/tiles/vector/osm-midwest-bike/{z}/{x}/{y}.mvt",
+  vectorMidwestBike: "/api/tiles/vector/osm-midwest-bike/{z}/{x}/{y}",
   trailsAttribution: "© waymarkedtrails.org, OpenStreetMap",
 };
 
