@@ -8,7 +8,7 @@
       #mark-b        b-wheel logomark (stroke)
       #mark-b-solid  b-wheel logomark (filled, for favicons/small)
       #pin-wing      caduceus-wing destination pin
-      #mark-b is also used as the dot of the i in the wordmark
+      #brand-dot     simple bike-wheel dot for the wordmark i
 
 
    Kept as raw SVG markup (dangerouslySetInnerHTML) so the
@@ -46,6 +46,11 @@ const SPRITE = `
       <path d="M20 35.8 L19.1 33 L19.1 14 Q20 12 20.9 14 L20.9 33 Z"/>
       <circle cx="20" cy="10.4" r="2.4"/>
     </g>
+  </symbol>
+  <symbol id="brand-dot" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="18" fill="currentColor"/>
+    <circle cx="20" cy="20" r="9" fill="var(--panel, #0b0c08)"/>
+    <circle cx="20" cy="20" r="4" fill="var(--ac, #7a9a8c)"/>
   </symbol>
 </svg>`;
 
