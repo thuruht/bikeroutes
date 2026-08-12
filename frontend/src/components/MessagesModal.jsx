@@ -89,7 +89,8 @@ export default function MessagesModal({ onClose, initialUsername = null }) {
     }
 
     try {
-      await ensureKeys(user);
+      const keyState = await ensureKeys(user);
+      if (keyState?.needsRestore) throw new Error('Restore your secure messaging backup in Profile');
       if (!user.public_key) throw new Error('Your encryption keys are not ready');
 
       const encrypted = await encryptMessage(

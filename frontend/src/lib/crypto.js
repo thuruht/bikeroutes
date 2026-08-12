@@ -50,6 +50,11 @@ async function saveStoredPair(pair) {
   });
 }
 
+export async function hasStoredKeys() {
+  const pair = await getStoredPair();
+  return !!(pair?.privateKey && pair?.publicKey);
+}
+
 async function generateIdentityKeys() {
   const pair = await crypto.subtle.generateKey(
     { name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' },
@@ -61,34 +66,7 @@ async function generateIdentityKeys() {
   return { pair, publicB64 };
 }
 
-/** Ensure this device has keys and they match the server's stored public key. */
-export async function ensureKeys(user) {
-  if (!user) return null;
-  const stored = await getStoredPair();
-
-  if (stored?.publicKey) {
-    const localB64 = ab2b64(await crypto.subtle.exportKey('spki', stored.publicKey));
-    if (user.public_key && user.public_key === localB64) return { pair: stored, publicB64: localB64 };
-    // Keys don't match server; update server with local key.
-    await uploadPublicKey(localB64);
-    return { pair: stored, publicB64: localB64 };
-  }
-
-  if (user.public_key) {
-    // Server has a key but this device does not have the private half.
-    // For true per-device security we issue a new device key and overwrite the public key.
-    // Messages sent before this login were encrypted for the old public key and cannot be decrypted here.
-    const { pair, publicB64 } = await generateIdentityKeys();
-    await uploadPublicKey(publicB64);
-    return { pair, publicB64 };
-  }
-
-  const { pair, publicB64 } = await generateIdentityKeys();
-  await uploadPublicKey(publicB64);
-  return { pair, publicB64 };
-}
-
-async function uploadPublicKey(b64) {
+export async function uploadPublicKey(b64) {
   const token = localStorage.getItem('br-session');
   if (!token) return;
   const r = await fetch('/api/auth/public-key', {
@@ -99,6 +77,41 @@ async function uploadPublicKey(b64) {
   if (!r.ok) throw new Error('failed to upload public key');
 }
 
+/** Ensure this device has keys. Returns { pair, publicB64 } or { needsRestore: true }.
+ *  If the server has a backup but this device has no matching local keys, we do not
+ *  overwrite the server key; the user must restore from backup. */
+export async function ensureKeys(user) {
+  if (!user) return null;
+  const stored = await getStoredPair();
+
+  if (stored?.publicKey) {
+    const localB64 = ab2b64(await crypto.subtle.exportKey('spki', stored.publicKey));
+    if (user.public_key && user.public_key === localB64) return { pair: stored, publicB64: localB64 };
+    // Server has a different public key and possibly a backup. Don't overwrite blindly.
+    if (user.public_key && user.encrypted_private_key) {
+      return { needsRestore: true };
+    }
+    // No backup or no server key: publish local key.
+    await uploadPublicKey(localB64);
+    return { pair: stored, publicB64: localB64 };
+  }
+
+  if (user.public_key) {
+    // Server has a key but this device does not have the private half.
+    if (user.encrypted_private_key) {
+      return { needsRestore: true };
+    }
+    // Legacy: no backup available. Generate a fresh device key.
+    const { pair, publicB64 } = await generateIdentityKeys();
+    await uploadPublicKey(publicB64);
+    return { pair, publicB64 };
+  }
+
+  const { pair, publicB64 } = await generateIdentityKeys();
+  await uploadPublicKey(publicB64);
+  return { pair, publicB64 };
+}
+
 async function importPublicKey(b64) {
   return crypto.subtle.importKey(
     'spki',
@@ -107,6 +120,61 @@ async function importPublicKey(b64) {
     false,
     ['wrapKey']
   );
+}
+
+async function deriveKey(passphrase, saltBuffer) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), { name: 'PBKDF2' }, false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: saltBuffer, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/** Export local identity keys as an encrypted backup payload. */
+export async function exportBackup(passphrase) {
+  const pair = await getStoredPair();
+  if (!pair?.privateKey || !pair?.publicKey) throw new Error('No local keys to back up');
+  const pubB64 = ab2b64(await crypto.subtle.exportKey('spki', pair.publicKey));
+  const privB64 = ab2b64(await crypto.subtle.exportKey('pkcs8', pair.privateKey));
+  const plaintext = new TextEncoder().encode(JSON.stringify({ publicKey: pubB64, privateKey: privB64 }));
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const aesKey = await deriveKey(passphrase, salt);
+  const cipherBuffer = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, plaintext);
+  return JSON.stringify({ v: 1, salt: ab2b64(salt), iv: ab2b64(iv), ct: ab2b64(cipherBuffer) });
+}
+
+/** Restore identity keys from an encrypted backup payload. Returns the public key base64. */
+export async function importBackup(passphrase, backupJson) {
+  const payload = JSON.parse(backupJson);
+  if (payload.v !== 1 || !payload.ct || !payload.iv || !payload.salt) throw new Error('Invalid backup');
+  const aesKey = await deriveKey(passphrase, b642ab(payload.salt));
+  const plainBuffer = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: b642ab(payload.iv) },
+    aesKey,
+    b642ab(payload.ct)
+  );
+  const plain = JSON.parse(new TextDecoder().decode(plainBuffer));
+  const publicKey = await crypto.subtle.importKey(
+    'spki',
+    b642ab(plain.publicKey),
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    true,
+    ['wrapKey']
+  );
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8',
+    b642ab(plain.privateKey),
+    { name: 'RSA-OAEP', hash: 'SHA-256' },
+    true,
+    ['unwrapKey']
+  );
+  await saveStoredPair({ publicKey, privateKey });
+  return ab2b64(await crypto.subtle.exportKey('spki', publicKey));
 }
 
 /** Encrypt a plaintext message for both sender and recipient. */

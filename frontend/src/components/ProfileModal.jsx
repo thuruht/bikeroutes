@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../AuthContext';
+import * as BR from '../api';
+import { hasStoredKeys, exportBackup, importBackup, uploadPublicKey } from '../lib/crypto';
 
 const Ic = {
   x: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>,
@@ -7,12 +9,18 @@ const Ic = {
 };
 
 export default function ProfileModal({ onClose }) {
-  const { user, updateProfile, uploadAvatar, refreshUser } = useAuth();
+  const { user, updateProfile, uploadAvatar, refreshUser, keysNeedRestore, setKeysNeedRestore } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [hasKeys, setHasKeys] = useState(false);
+  const [backupPass, setBackupPass] = useState('');
+  const [backupConfirm, setBackupConfirm] = useState('');
+  const [backupMsg, setBackupMsg] = useState('');
+  const [restorePass, setRestorePass] = useState('');
+  const [restoreMsg, setRestoreMsg] = useState('');
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -22,6 +30,10 @@ export default function ProfileModal({ onClose }) {
       setBio(user.bio || '');
     }
   }, [user]);
+
+  useEffect(() => {
+    hasStoredKeys().then(setHasKeys);
+  }, []);
 
   const save = async (e) => {
     e.preventDefault();
@@ -46,6 +58,53 @@ export default function ProfileModal({ onClose }) {
       setMsg('Avatar upload failed');
     }
     setBusy(false);
+  };
+
+  const createBackup = async (e) => {
+    e.preventDefault();
+    setBackupMsg('');
+    if (backupPass.length < 8) return setBackupMsg('Use at least 8 characters');
+    if (backupPass !== backupConfirm) return setBackupMsg('Passphrases do not match');
+    try {
+      if (!await hasStoredKeys()) return setBackupMsg('No local keys found. Sign out and back in.');
+      const blob = await exportBackup(backupPass);
+      await BR.updateKeyBackup(blob);
+      setBackupMsg('Backup created');
+      setBackupPass(''); setBackupConfirm('');
+      await refreshUser();
+    } catch (err) {
+      setBackupMsg(err.message || 'Backup failed');
+    }
+  };
+
+  const restoreBackup = async (e) => {
+    e.preventDefault();
+    setRestoreMsg('');
+    if (!restorePass) return;
+    try {
+      const { encrypted_private_key } = await BR.getKeyBackup();
+      if (!encrypted_private_key) return setRestoreMsg('No backup found on server');
+      const pubB64 = await importBackup(restorePass, encrypted_private_key);
+      await uploadPublicKey(pubB64);
+      setHasKeys(true);
+      setKeysNeedRestore?.(false);
+      setRestoreMsg('Keys restored');
+      setRestorePass('');
+      await refreshUser();
+    } catch (err) {
+      setRestoreMsg(err.message || 'Restore failed — wrong passphrase?');
+    }
+  };
+
+  const removeBackup = async () => {
+    if (!confirm('Delete the encrypted key backup from the server? Local keys stay on this device.')) return;
+    try {
+      await BR.deleteKeyBackup();
+      setBackupMsg('Backup deleted');
+      await refreshUser();
+    } catch (err) {
+      setBackupMsg(err.message || 'Delete failed');
+    }
   };
 
   if (!user) return null;
@@ -80,6 +139,39 @@ export default function ProfileModal({ onClose }) {
 
           <button type="submit" className="primary" style={{ width: '100%', marginTop: 14 }} disabled={busy}>{busy ? 'Saving…' : 'Save profile'}</button>
         </form>
+
+        <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--line)' }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            Secure messaging key
+            {keysNeedRestore && <span className="mono" style={{ fontSize: 9, color: '#fff', background: 'var(--danger)', padding: '2px 6px', borderRadius: 10 }}>restore needed</span>}
+          </div>
+          <div className="mono" style={{ fontSize: 10.5, color: 'var(--muted-txt)', marginBottom: 12, lineHeight: 1.4 }}>
+            {user.encrypted_private_key
+              ? 'An encrypted backup of your message key is stored on the server.'
+              : 'Back up your key with a passphrase so you can restore it on another device.'}
+          </div>
+
+          {(!hasKeys || keysNeedRestore) ? (
+            <form onSubmit={restoreBackup}>
+              <label style={{ fontSize: 12, color: 'var(--muted-txt)', display: 'block', marginBottom: 4 }}>Restore from backup passphrase</label>
+              <input type="password" value={restorePass} onChange={(e) => setRestorePass(e.target.value)} placeholder="Your backup passphrase" />
+              {restoreMsg && <div className={restoreMsg.startsWith('Keys') ? 'mono' : 'field-error'} style={{ marginTop: 6, fontSize: 12 }}>{restoreMsg}</div>}
+              <button type="submit" className="primary" style={{ width: '100%', marginTop: 8 }}>Restore keys</button>
+            </form>
+          ) : (
+            <form onSubmit={createBackup}>
+              <label style={{ fontSize: 12, color: 'var(--muted-txt)', display: 'block', marginBottom: 4 }}>Passphrase</label>
+              <input type="password" value={backupPass} onChange={(e) => setBackupPass(e.target.value)} placeholder="At least 8 characters" />
+              <label style={{ fontSize: 12, color: 'var(--muted-txt)', display: 'block', margin: '8px 0 4px' }}>Confirm passphrase</label>
+              <input type="password" value={backupConfirm} onChange={(e) => setBackupConfirm(e.target.value)} placeholder="Repeat passphrase" />
+              {backupMsg && <div className={backupMsg.startsWith('Backup') ? 'mono' : 'field-error'} style={{ marginTop: 6, fontSize: 12 }}>{backupMsg}</div>}
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button type="submit" className="primary" style={{ flex: 1 }}>{user.encrypted_private_key ? 'Update backup' : 'Create backup'}</button>
+                {user.encrypted_private_key && <button type="button" className="pillbtn" onClick={removeBackup}>Delete</button>}
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

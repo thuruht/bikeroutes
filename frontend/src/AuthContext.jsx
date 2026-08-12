@@ -7,6 +7,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [keysNeedRestore, setKeysNeedRestore] = useState(false);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -25,8 +26,10 @@ export function AuthProvider({ children }) {
   }, [refreshUser]);
 
   useEffect(() => {
-    if (!user) return;
-    ensureKeys(user).catch((err) => console.error('key setup failed', err));
+    if (!user) { setKeysNeedRestore(false); return; }
+    ensureKeys(user)
+      .then((res) => setKeysNeedRestore(res?.needsRestore === true))
+      .catch((err) => console.error('key setup failed', err));
   }, [user]);
 
   const signOut = useCallback(() => {
@@ -55,7 +58,7 @@ export function AuthProvider({ children }) {
   }, [refreshUser]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, refreshUser, signOut, updateProfile, uploadAvatar }}>
+    <AuthContext.Provider value={{ user, loading, keysNeedRestore, setKeysNeedRestore, refreshUser, signOut, updateProfile, uploadAvatar }}>
       {children}
     </AuthContext.Provider>
   );

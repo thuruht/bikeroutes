@@ -498,3 +498,35 @@ export async function searchUsers(q) {
   if (!r.ok) throw new Error("search " + r.status);
   return r.json();
 }
+
+export async function updatePublicKey(public_key) {
+  const r = await fetch("/api/auth/public-key", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ public_key }),
+  });
+  if (!r.ok) throw new Error("public key update " + r.status);
+  return r.json();
+}
+
+export async function getKeyBackup() {
+  const r = await fetch("/api/auth/key-backup", { headers: authHeaders() });
+  if (!r.ok) throw new Error("key backup " + r.status);
+  return r.json();
+}
+
+export async function updateKeyBackup(encrypted_private_key) {
+  const r = await fetch("/api/auth/key-backup", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ encrypted_private_key }),
+  });
+  if (!r.ok) throw new Error("key backup update " + r.status);
+  return r.json();
+}
+
+export async function deleteKeyBackup() {
+  const r = await fetch("/api/auth/key-backup", { method: "DELETE", headers: authHeaders() });
+  if (!r.ok) throw new Error("key backup delete " + r.status);
+  return r.json();
+}
