@@ -1,6 +1,5 @@
-# Valhalla container with baked Midwest tile extract.
-# The CI pipeline generates valhalla.json and tiles.tar and copies them into
-# this directory before `wrangler deploy` builds the image.
+# Valhalla container baked with Midwest tiles.
+# The CI pipeline copies valhalla.json and tiles.tar here before wrangler deploy.
 FROM ghcr.io/valhalla/valhalla:latest
 
 ENV LD_LIBRARY_PATH=/usr/local/lib

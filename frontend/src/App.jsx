@@ -423,21 +423,48 @@ export default function LiveApp() {
     const map = mapObj.current; if (!map) return;
     const vis = trailsOverlay ? "visible" : "none";
     if (!map.getSource("trails")) {
-      map.addSource("trails", { type: "raster", tiles: [BR.TILES.trailsOverlay], tileSize: 256, attribution: BR.TILES.trailsAttribution });
+      map.addSource("trails", {
+        type: "vector",
+        tiles: [BR.TILES.vectorMidwestBike],
+        minzoom: 6,
+        maxzoom: 16,
+        attribution: "© OpenStreetMap contributors",
+      });
     }
-    if (!map.getLayer("trails")) {
-      map.addLayer({
-        id: "trails", type: "raster", source: "trails",
-        minzoom: 8,
-        paint: {
-          "raster-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.35, 10, 0.65, 12, 0.85, 14, 1],
-        },
-        layout: { visibility: vis },
-      }, "route-casing");
-    } else {
-      map.setLayoutProperty("trails", "visibility", vis);
+
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark" || theme === "dark";
+    const lineColor = isDark ? "rgba(255,255,255,0.7)" : "rgba(11,12,8,0.8)";
+
+    const layerDefs = [
+      { id: "bike-protected", filter: ["==", ["get", "facility_type"], "protected_bikelane"], color: isDark ? "#4ade80" : "#16a34a", width: 5, dash: [1, 0] },
+      { id: "bike-separated", filter: ["==", ["get", "facility_type"], "separated_bikelane"], color: isDark ? "#34d399" : "#15803d", width: 4, dash: [1, 0] },
+      { id: "bike-shared", filter: ["==", ["get", "facility_type"], "shared_use_path"], color: isDark ? "#a3e635" : "#65a30d", width: 3, dash: [2, 1] },
+      { id: "bike-lane", filter: ["==", ["get", "facility_type"], "bike_lane"], color: isDark ? "#60a5fa" : "#2563eb", width: 2, dash: [1, 1] },
+      { id: "bike-route", filter: ["in", ["get", "facility_type"], ["literal", ["cycle_route", "mtb_route"]]], color: isDark ? "#fb923c" : "#ea580c", width: 2.5, dash: [1, 0] },
+      { id: "bike-track", filter: ["in", ["get", "facility_type"], ["literal", ["track", "path"]]], color: isDark ? "#d4d4d8" : "#52525b", width: 2, dash: [2, 2] },
+    ];
+
+    for (const l of layerDefs) {
+      if (!map.getLayer(l.id)) {
+        map.addLayer({
+          id: l.id,
+          type: "line",
+          source: "trails",
+          "source-layer": "bikeinfra",
+          filter: l.filter,
+          paint: {
+            "line-color": l.color,
+            "line-width": ["interpolate", ["linear"], ["zoom"], 6, l.width * 0.3, 12, l.width, 16, l.width * 1.6],
+            "line-opacity": 0.9,
+            "line-dasharray": l.dash,
+          },
+          layout: { "line-cap": "round", "line-join": "round", visibility: vis },
+        }, "route-casing");
+      } else {
+        map.setLayoutProperty(l.id, "visibility", vis);
+      }
     }
-  }, [trailsOverlay]);
+  }, [trailsOverlay, theme]);
 
   const addRailLayer = useCallback(() => {
     const map = mapObj.current; if (!map) return;
@@ -715,12 +742,17 @@ export default function LiveApp() {
     );
   };
 
+  const BIKE_LAYER_IDS = ["bike-protected", "bike-separated", "bike-shared", "bike-lane", "bike-route", "bike-track"];
+
   const toggleTrails = () => {
     const map = mapObj.current;
     const next = !trailsOverlay;
     setTrailsOverlay(next);
     localStorage.setItem("br-trails", next ? "on" : "off");
-    if (map && map.getLayer("trails")) map.setLayoutProperty("trails", "visibility", next ? "visible" : "none");
+    if (!map) return;
+    BIKE_LAYER_IDS.forEach(id => {
+      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", next ? "visible" : "none");
+    });
   };
 
   const toggleRail = () => {
@@ -779,7 +811,7 @@ export default function LiveApp() {
           </span>
           <div className="brand-txt">
             <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
-              b<span className="i-slot"><span className="head"><svg viewBox="0 0 120 80"><use href="#cowboy-hat" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+              b<span className="i-slot"><span className="head"><svg viewBox="0 0 40 40"><use href="#mark-b" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
             </div>
             <div className="tag mono">open cycling maps · midwest</div>
           </div>
@@ -822,7 +854,7 @@ export default function LiveApp() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setInfoOpen(false)}>{Ic.x}</button>
             <div className="wordmark" aria-label="bikeroutes.org">
-              b<span className="i-slot"><span className="head"><svg viewBox="0 0 120 80"><use href="#cowboy-hat" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
+              b<span className="i-slot"><span className="head"><svg viewBox="0 0 40 40"><use href="#mark-b" /></svg></span><span className="stem" /></span>keroutes<span className="tld">.org</span>
             </div>
             <div className="modal-nav">
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("plan"); setInfoOpen(false); }}>Plan</a>
@@ -837,11 +869,11 @@ export default function LiveApp() {
               <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
                 <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>Map data sources</div>
                 <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />CARTO Voyager / Dark Matter tiles (R2-hosted tiles coming soon)</div>
-                  <div><b style={{ color: "var(--ink)" }}>Cycling overlay</b><br />Waymarked Trails cycling map &mdash; &copy; waymarkedtrails.org. Purple lines are signed bike routes; the route-shield legend is in the Map panel when the overlay is on.</div>
-                  <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors</div>
+                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />CARTO Voyager / Dark Matter tiles</div>
+                  <div><b style={{ color: "var(--ink)" }}>Cycling infrastructure (Midwest)</b><br />OpenStreetMap contributors (ODbL). Updated twice weekly from Geofabrik extracts. Green = protected/separated facilities; blue dashed = painted bike lanes; orange = signed routes.</div>
+                  <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors, USGS National Transportation Dataset, and state/local open data portals.</div>
                   <div><b style={{ color: "var(--ink)" }}>Geocoding</b><br />OpenStreetMap Nominatim</div>
-                  <div><b style={{ color: "var(--ink)" }}>Routing</b><br />Valhalla (bicycle profile) with FOSSGIS &amp; BRouter fallback</div>
+                  <div><b style={{ color: "var(--ink)" }}>Routing</b><br />Self-hosted Valhalla (Midwest) with FOSSGIS &amp; BRouter fallback</div>
                 </div>
 
               </div>
@@ -854,10 +886,10 @@ export default function LiveApp() {
               <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
                 <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>About BikeRoutes.org</div>
                 <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div>Open cycling route planner and trail explorer for the Kansas City metro and Midwest.</div>
-                  <div>Built with MapLibre GL JS, Cloudflare Workers, D1, and Vectorize. No tracking, no ads, no accounts required.</div>
+                  <div>Open cycling route planner and trail explorer for the Midwest, expanding nationwide.</div>
+                  <div>Built with MapLibre GL JS, OpenStreetMap, Cloudflare Workers, D1, Vectorize, and self-hosted Valhalla routing.</div>
                   <div>Source code available on GitHub. Contributions welcome.</div>
-                  <div className="mono" style={{ fontSize: 10.5, color: "var(--muted-txt)" }}>v0.9 RC &middot; open cycling maps &middot; midwest</div>
+                  <div className="mono" style={{ fontSize: 10.5, color: "var(--muted-txt)" }}>v0.9 RC &middot; open cycling maps</div>
                 </div>
               </div>
             ) : (

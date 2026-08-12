@@ -84,6 +84,20 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 - Migrations are run manually (`npm run db:migrate:remote`) because shortcuts bypassed the `predeploy` hook.
 - `worker/.dev.vars` contains `ADMIN_SECRET`; do not commit or deploy it.
 
+## Data expansion rollout (2026-08-11)
+Pipeline for regional OSM extracts → PMTiles + D1 + Vectorize + baked Valhalla container is implemented for Midwest first. Outstanding items:
+
+- [ ] Apply migration `worker/migrations/0028_expand_trails_and_imports.sql` to production D1.
+- [ ] Run `scripts/run-local-midwest.sh` on a machine with osmium/tippecanoe/Docker to build and deploy the first Midwest dataset.
+- [ ] (Optional) Use the `.github/workflows/data-pipeline.yml` GitHub Actions workflow if local machine lacks disk/memory.
+- [ ] Verify `/api/tiles/vector/osm-midwest-bike/{z}/{x}/{y}.mvt` returns MVT tiles after upload to R2.
+- [ ] Verify frontend bike-infrastructure overlay renders with distinct colors for protected / separated / shared / lane / route / track.
+- [ ] Verify a Midwest route request uses the baked Valhalla container (`X-Route-Source: valhalla`, `X-Route-Region: midwest`).
+- [ ] After first container deploy, measure image size and cold-start; decide next region.
+- [ ] Add USFS + state/local ArcGIS layers once Midwest OSM baseline is stable.
+- [ ] Monitor D1 size and Vectorize vector count/costs after first GeoJSON import.
+- [ ] Commit + push all cleanup + data-expansion changes.
+
 ## Files to keep an eye on
 - `worker/src/index.ts` — routing, custom-domain redirect, asset fallthrough.
 - `worker/src/routes/community.ts` — social feed backend.
@@ -91,3 +105,6 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 - `frontend/src/App.jsx` — map layer setup, overlays, rail layer.
 - `worker/src/routes/curated-features.ts` — where the "Suggest correction" feature should live.
 - `worker/migrations/0019_community_posts.sql` — community schema.
+- `data-pipeline/run.sh` — Midwest OSM → PMTiles + Valhalla orchestration.
+- `worker/src/routes/tiles.ts` — vector tile endpoint for PMTiles.
+- `worker/src/routes/ingest.ts` — CI-driven GeoJSON → D1 + Vectorize.

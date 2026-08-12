@@ -130,7 +130,7 @@ All endpoints on `gis2.marc2.org` support `f=geojson&outSR=4326` for WGS84 outpu
 - **Ingest deduplication** uses `INSERT OR IGNORE` by name+coords to avoid duplicates.
 - **Daily cron** (3AM UTC) runs MARC GIS sync + KML construction import + OSM data sync to keep trails, bridges, rail, construction fresh.
 - **Bridges & construction**: Overpass query covers footbridges, mixed-use bridges (`bridge=yes` + `highway=path/cycleway`), and construction sites (`highway=construction` + `construction=cycleway/path/footbridge`). New segments get picked up daily.
-- **KML construction import** (`sync-kml-construction.ts`): Parsed from Improve I-70 KC.kml — stores Polygon/LineString/Point features with phase/year info in D1 `trails` table as category `construction`.
+- **KML construction import** (`sync-kml-construction.ts`): Features sourced from `data/Improve I-70 KC.kml` — stored as Polygon/LineString/Point features with phase/year info in D1 `trails` table as category `construction`.
 - **CSP** must allow `static.cloudflareinsights.com` (script-src) and `cloudflareinsights.com` (connect-src) for Cloudflare Web Analytics. Both `frontend/public/_headers` and `worker/public/_headers` must stay in sync.
 
 ## Testing Production

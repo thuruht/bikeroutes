@@ -5,10 +5,11 @@
    any mark anywhere with:  <svg><use href="#mark-b" /></svg>
 
    Symbols:
-     #mark-b        b-wheel logomark (stroke)
-     #mark-b-solid  b-wheel logomark (filled, for favicons/small)
-     #pin-wing      caduceus-wing destination pin
-     #cowboy-hat    hat mark used as the dot of the i in the wordmark
+      #mark-b        b-wheel logomark (stroke)
+      #mark-b-solid  b-wheel logomark (filled, for favicons/small)
+      #pin-wing      caduceus-wing destination pin
+      #mark-b is also used as the dot of the i in the wordmark
+
 
    Kept as raw SVG markup (dangerouslySetInnerHTML) so the
    hand-tuned paths/attributes survive verbatim without a
@@ -44,16 +45,6 @@ const SPRITE = `
       <ellipse cx="23.5" cy="17.8" rx="2.8" ry="7" transform="rotate(30 23.5 17.8)"/>
       <path d="M20 35.8 L19.1 33 L19.1 14 Q20 12 20.9 14 L20.9 33 Z"/>
       <circle cx="20" cy="10.4" r="2.4"/>
-    </g>
-  </symbol>
-  <symbol id="cowboy-hat" viewBox="0 0 120 80">
-    <g fill="currentColor" stroke="none">
-      <!-- crown -->
-      <path d="M38 50 C38 22 55 14 74 14 C93 14 104 24 98 50 Z" />
-      <!-- brim -->
-      <path d="M14 52 C14 44 42 44 74 42 C106 44 114 44 114 52 C114 64 90 72 64 74 C38 72 14 64 14 52 Z" />
-      <!-- hat band -->
-      <rect x="42" y="42" width="52" height="6" rx="2" fill="#fff" opacity="0.25" />
     </g>
   </symbol>
 </svg>`;

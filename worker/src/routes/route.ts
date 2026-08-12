@@ -12,6 +12,36 @@ export const routeRoutes = new Hono<{ Bindings: Env }>();
 const BROUTER_URL = "https://brouter.de/brouter";
 const UA = "bikeroutes.org/1.0 (contact@bikeroutes.org)";
 
+// Regional container coverage. As we add regions beyond Midwest, add entries here.
+const ROUTING_REGIONS = [
+	{ name: "midwest", binding: "VALHALLA", minLat: 36, maxLat: 50, minLon: -104, maxLon: -80 },
+];
+
+// Pick the smallest region that fully contains the requested route.
+// Returns null when no regional container covers the area (will fall back to FOSSGIS/BRouter).
+function pickRoutingRegion(locations: any[], c: any): { binding: any; name: string } | null {
+	if (!locations || locations.length < 2) return null;
+	const lats = locations.map((l: any) => l.lat);
+	const lons = locations.map((l: any) => l.lon);
+	const minLat = Math.min(...lats);
+	const maxLat = Math.max(...lats);
+	const minLon = Math.min(...lons);
+	const maxLon = Math.max(...lons);
+
+	for (const r of ROUTING_REGIONS) {
+		if (
+			minLat >= r.minLat && maxLat <= r.maxLat &&
+			minLon >= r.minLon && maxLon <= r.maxLon
+		) {
+			return {
+				binding: c.env[r.binding as keyof Env],
+				name: r.name,
+			};
+		}
+	}
+	return null;
+}
+
 // SHA-256 hash for cache keys
 async function sha256(data: string): Promise<string> {
 	const buf = await crypto.subtle.digest("SHA-256",
@@ -117,6 +147,10 @@ routeRoutes.post("/", async (c) => {
 		return c.json({ error: "Too many route requests. Slow down." }, 429);
 	}
 
+	const picked = pickRoutingRegion(parsed.locations, c);
+	const containerBinding = picked?.binding ?? null;
+	const routeRegion = picked?.name ?? null;
+
 	const cacheKey = `route:v2:${await sha256(body)}`;
 
 	// 1. Check KV cache
@@ -125,36 +159,41 @@ routeRoutes.post("/", async (c) => {
 		return c.json(cached.data, 200, {
 			"X-Cache": "HIT",
 			"X-Route-Source": cached.source,
+			"X-Route-Region": cached.source === "valhalla" ? (routeRegion || "unknown") : "none",
 			"X-Route-Note": "cached",
 		});
 	}
 
-	// 2. Try Valhalla Container (edge)
 	let routeData;
 	let source = "fallback";
 	let userMessage = "";
 
-	try {
-		const container = getContainer(c.env.VALHALLA, "valhalla-router");
-		const valhallaResp = await container.fetch(new Request("http://localhost:8002/route", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				...parsed,
-				shape_format: "geojson",
-				directions_options: { units: "kilometers", language: "en-US" },
-			}),
-		}));
+	// 2. Try Valhalla Container (edge)
+	if (containerBinding) {
+		try {
+			const container = getContainer(containerBinding, "valhalla-router");
+			const valhallaResp = await container.fetch(new Request("http://localhost:8002/route", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					...parsed,
+					shape_format: "geojson",
+					directions_options: { units: "kilometers", language: "en-US" },
+				}),
+			}));
 
-		if (valhallaResp.ok) {
-			routeData = await valhallaResp.json();
-			source = "valhalla";
-		} else {
-			const errText = await valhallaResp.text();
-			console.warn(`[Valhalla Edge Offline] Status: ${valhallaResp.status}. Error: ${errText}.`, "ROUTING");
+			if (valhallaResp.ok) {
+				routeData = await valhallaResp.json();
+				source = "valhalla";
+			} else {
+				const errText = await valhallaResp.text();
+				console.warn(`[Valhalla Edge Offline] Status: ${valhallaResp.status}. Error: ${errText}.`, "ROUTING");
+			}
+		} catch (error) {
+			console.warn("[Valhalla Edge Error] Exception:", error, "ROUTING");
 		}
-	} catch (error) {
-		console.warn("[Valhalla Edge Error] Exception:", error, "ROUTING");
+	} else {
+		console.log("[Routing] No regional Valhalla container covers this request; using public fallback.", "ROUTING");
 	}
 
 	// 3. Fallback to FOSSGIS Valhalla
@@ -236,6 +275,7 @@ routeRoutes.post("/", async (c) => {
 		return c.json(routeData, 200, {
 			"X-Cache": "MISS",
 			"X-Route-Source": source,
+			"X-Route-Region": source === "valhalla" ? (routeRegion || "unknown") : "none",
 			"X-Route-Note": source === "valhalla" ? "fresh" : source === "fossgis" ? "via FOSSGIS" : "via BRouter",
 		});
 	}

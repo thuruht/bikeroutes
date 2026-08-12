@@ -18,8 +18,8 @@ export class ValhallaContainer extends Container<Env> {
 	envVars = {
 		// Use the bike costing model by default
 		DEFAULT_COSTING: "bicycle",
-		// Serve the Midwest region
-		TILE_EXTRACT: "midwest.osm.pbf",
+		// Tiles are baked into the container image at /data/valhalla/tiles.tar
+		VALHALLA_CONFIG: "/data/valhalla/valhalla.json",
 	};
 
 	override async onStart(): Promise<void> {

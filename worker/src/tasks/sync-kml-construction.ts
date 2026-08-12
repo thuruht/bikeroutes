@@ -1,6 +1,6 @@
 /**
  * KML construction data sync — ingests I-70 improvement project features
- * from the Improve I-70 KC.kml file into D1 trails table.
+ * from `data/Improve I-70 KC.kml` into D1 trails table.
  */
 
 import { logger } from "../lib/logger";

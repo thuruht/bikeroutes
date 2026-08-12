@@ -25,6 +25,55 @@ async function checkAdmin(c: any) {
 	return secret === expected;
 }
 
+interface GeoJSONGeometry {
+	type: string;
+	coordinates?: any;
+	geometries?: GeoJSONGeometry[];
+}
+
+interface GeoJSONFeature {
+	type: "Feature";
+	geometry: GeoJSONGeometry | null;
+	properties: Record<string, any>;
+}
+
+interface GeoJSONFeatureCollection {
+	type: "FeatureCollection";
+	features: GeoJSONFeature[];
+}
+
+function centroidOfGeometry(geom: GeoJSONGeometry | null): { lat: number; lon: number } | null {
+	if (!geom) return null;
+	if (geom.type === "Point") {
+		const [lon, lat] = geom.coordinates as number[];
+		return { lat, lon };
+	}
+
+	const coords: number[][] = [];
+	function walk(g: GeoJSONGeometry) {
+		if (g.type === "Point") coords.push(g.coordinates as number[]);
+		else if (g.type === "LineString") (g.coordinates as number[][]).forEach(p => coords.push(p));
+		else if (g.type === "MultiLineString" || g.type === "Polygon") (g.coordinates as number[][][]).forEach(r => r.forEach(p => coords.push(p)));
+		else if (g.type === "MultiPolygon") (g.coordinates as number[][][][]).forEach(p => p.forEach(r => r.forEach(q => coords.push(q))));
+		else if (g.type === "GeometryCollection" && g.geometries) g.geometries.forEach(walk);
+	}
+	walk(geom);
+
+	if (!coords.length) return null;
+	let sumLon = 0, sumLat = 0;
+	for (const [lon, lat] of coords) { sumLon += lon; sumLat += lat; }
+	return { lat: sumLat / coords.length, lon: sumLon / coords.length };
+}
+
+function hashFeature(region: string, feat: GeoJSONFeature): string {
+	const c = centroidOfGeometry(feat.geometry);
+	const key = `${region}:${feat.properties?.name || ""}:${feat.properties?.facility_type || ""}:${c?.lat ?? 0}:${c?.lon ?? 0}`;
+	// Simple stable numeric hash
+	let h = 0;
+	for (let i = 0; i < key.length; i++) h = (h << 5) - h + key.charCodeAt(i);
+	return Math.abs(h).toString(16).padStart(8, "0");
+}
+
 // ─── D1 → Vectorize ──────────────────────────────────
 ingestRoutes.post("/", async (c) => {
 	if (!(await checkAdmin(c))) {
@@ -341,5 +390,158 @@ ingestRoutes.post("/", async (c) => {
 		});
 	}
 
-	return c.json({ error: `Unknown source: ${source}. Use 'd1' or 'osm'.` }, 400);
+	// ── Source: GeoJSON (from CI pipeline) ─────────
+	if (source === "geojson") {
+		const region = url.searchParams.get("region") || "";
+		if (!region) {
+			return c.json({ error: "Missing region param. Use ?source=geojson&region=midwest" }, 400);
+		}
+
+		logger.info("Ingesting GeoJSON features", { region }, "ADMIN");
+		const startedAt = new Date().toISOString();
+
+		const jobId = crypto.randomUUID();
+		await c.env.DB.prepare(
+			`INSERT INTO import_jobs (id, source, region, job_type, started_at, status) VALUES (?, ?, ?, ?, ?, ?)`
+		).bind(jobId, "geojson", region, "d1", startedAt, "running").run();
+
+		let collection: GeoJSONFeatureCollection;
+		try {
+			collection = await c.req.json() as GeoJSONFeatureCollection;
+			if (!Array.isArray(collection.features)) {
+				throw new Error("Invalid GeoJSON: features array missing");
+			}
+		} catch (parseErr) {
+			await c.env.DB.prepare("UPDATE import_jobs SET status = ?, error_message = ?, finished_at = ? WHERE id = ?")
+				.bind("failed", String(parseErr), new Date().toISOString(), jobId).run();
+			return c.json({ error: "Invalid GeoJSON", message: String(parseErr) }, 400);
+		}
+
+		const now = new Date().toISOString();
+		const BATCH_AI = 100;
+		const BATCH_VX = 100;
+		const BATCH_D1 = 100;
+
+		// Build docs
+		interface IngestDoc {
+			id: string;
+			text: string;
+			geom: string;
+			meta: Record<string, any>;
+		}
+		const docs: IngestDoc[] = [];
+
+		for (const feat of collection.features) {
+			if (!feat.geometry) continue;
+			const p = feat.properties || {};
+			const c = centroidOfGeometry(feat.geometry);
+			if (!c) continue;
+			const id = p.id || `pipeline:${region}:${hashFeature(region, feat)}`;
+			const name = p.name || p.ref || p.route_ref || "Unnamed feature";
+			const category = p.facility_type || p.category || "trail";
+			const text = `${name}. ${category}. ${p.surface || ""} ${p.description || ""}`.trim().slice(0, 512);
+			docs.push({
+				id,
+				text,
+				geom: JSON.stringify(feat.geometry),
+				meta: {
+					name,
+					category,
+					facility_type: p.facility_type || "",
+					region,
+					network: p.network || "",
+					route_ref: p.route_ref || "",
+					lat: c.lat,
+					lon: c.lon,
+					description: p.description || "",
+					surface: p.surface || "",
+					length_m: typeof p.length_m === "number" ? p.length_m : null,
+					difficulty: p.difficulty || "",
+					source: `pipeline:${region}`,
+					is_searchable: 1,
+					tile_layer: `osm-${region}-bike`,
+				},
+			});
+		}
+
+		// Embed + upsert to Vectorize
+		let totalEmbedded = 0;
+		for (let i = 0; i < docs.length; i += BATCH_AI) {
+			const batch = docs.slice(i, i + BATCH_AI);
+			const texts = batch.map(d => d.text);
+			const emb = await c.env.AI.run("@cf/baai/bge-base-en-v1.5", { text: texts }) as { data: number[][] };
+			const vectors = emb.data.map((values, idx) => ({
+				id: batch[idx].id,
+				values,
+				metadata: batch[idx].meta as Record<string, any>,
+			}));
+			for (let j = 0; j < vectors.length; j += BATCH_VX) {
+				await c.env.TRAIL_SEARCH.upsert(vectors.slice(j, j + BATCH_VX));
+			}
+			totalEmbedded += vectors.length;
+		}
+
+		// Insert into D1 trails + pois
+		const insertTrail = c.env.DB.prepare(
+			`INSERT OR REPLACE INTO trails
+			 (id, source, source_type, source_id, name, category, facility_type, geom, lat, lon,
+			  region, network, route_ref, surface, length_m, difficulty, description,
+			  is_searchable, tile_layer, status, created_at)
+			 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		);
+		const insertPoi = c.env.DB.prepare(
+			`INSERT OR IGNORE INTO pois (id, name, category, lat, lon, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		);
+
+		let insertedD1 = 0;
+		const errors: string[] = [];
+		for (let i = 0; i < docs.length; i += BATCH_D1) {
+			const batch = docs.slice(i, i + BATCH_D1);
+			const trailStmts = batch.map(d =>
+				insertTrail.bind(
+					d.id, "pipeline", "geojson", d.id.replace(/^pipeline:[^:]+:/, ""),
+					d.meta.name, d.meta.category, d.meta.facility_type, d.geom,
+					d.meta.lat, d.meta.lon, d.meta.region, d.meta.network, d.meta.route_ref,
+					d.meta.surface, d.meta.length_m, d.meta.difficulty, d.meta.description,
+					d.meta.is_searchable, d.meta.tile_layer, "approved", now
+				)
+			);
+			const poiStmts = batch.map(d =>
+				insertPoi.bind(
+					d.id, d.meta.name, d.meta.category,
+					d.meta.lat, d.meta.lon, d.meta.description,
+					"indexed", now
+				)
+			);
+			try {
+				await c.env.DB.batch([...trailStmts, ...poiStmts]);
+				insertedD1 += batch.length;
+			} catch (e: any) {
+				if (errors.length < 5) errors.push(`batch ${i}: ${e.message || String(e)}`);
+			}
+		}
+
+		await c.env.DB.prepare(
+			`UPDATE import_jobs SET status = ?, finished_at = ?, features_found = ?, features_inserted = ?, vectors_inserted = ?, error_message = ? WHERE id = ?`
+		).bind(
+			errors.length ? "completed_with_errors" : "completed",
+			new Date().toISOString(),
+			docs.length,
+			insertedD1,
+			totalEmbedded,
+			errors.join("; ") || null,
+			jobId
+		).run();
+
+		return c.json({
+			message: `GeoJSON ${region} ingestion complete`,
+			region,
+			features: docs.length,
+			indexed: totalEmbedded,
+			insertedToD1: insertedD1,
+			errors: errors.length ? errors : undefined,
+		});
+	}
+
+	return c.json({ error: `Unknown source: ${source}. Use 'd1', 'osm', or 'geojson'.` }, 400);
 });

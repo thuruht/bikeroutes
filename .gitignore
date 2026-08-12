@@ -20,6 +20,14 @@ worker/public/
 routing/**
 !routing/valhalla/
 !routing/valhalla/Dockerfile.valhalla
+routing/valhalla/valhalla.json
+routing/valhalla/tiles.tar
 
-# Local snapshot / scratch directory (untracked redesign exploration backup)
-clud/
+# Data pipeline build/cache artifacts
+data-pipeline/.build/
+data-pipeline/.cache/
+
+# Baked Valhalla tile context generated during CI (keep the Dockerfile)
+worker/valhalla/valhalla.json
+worker/valhalla/tiles.tar
+

@@ -91,10 +91,11 @@ function valhallaManeuverToTurn(m, coords) {
 
 // ---- config -------------------------------------------------
 export const TILES = {
-  dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+  light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
   attribution: "© OpenStreetMap · © CARTO",
-  trailsOverlay: "https://tile.waymarkedtrails.org/cycling/{z}/{x}/{y}.png",
+  // Midwest bike-infrastructure vector tiles, generated from OSM by the data pipeline.
+  vectorMidwestBike: "/api/tiles/vector/osm-midwest-bike/{z}/{x}/{y}.mvt",
   trailsAttribution: "© waymarkedtrails.org, OpenStreetMap",
 };
 

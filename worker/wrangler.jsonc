@@ -19,10 +19,11 @@
 		{ "pattern": "www.jojomap.kcmo.xyz", "custom_domain": true }
 	],
 	// ─── Triggers ─────────────────────────────────────────
-	// Daily OSM import trigger (3 AM UTC)
+	// Data pipeline trigger: Midwest OSM + Valhalla refresh twice weekly
 	"triggers": {
 		"crons": [
-			"0 3 * * *"
+			"0 6 * * 6",
+			"0 6 * * 1"
 		]
 	},
 	// ─── D1 Database ──────────────────────────────────────
@@ -117,7 +118,7 @@
 	"containers": [
 		{
 			"class_name": "ValhallaContainer",
-			"image": "../routing/valhalla/Dockerfile.valhalla",
+			"image": "./valhalla/Dockerfile.valhalla",
 			"max_instances": 3
 		}
 	],

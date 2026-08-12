@@ -416,7 +416,7 @@ h1, h2, h3, h4,
 
 .modal .wordmark { font-size: 28px; display: flex; justify-content: center; }
 
-/* Cowboy hat wordmark dot — interactive subtle bob */
+/* Brand mark wordmark dot — interactive subtle bob */
 .wordmark .i-slot .head {
   cursor: default;
   animation: hat-bob 3s ease-in-out infinite;

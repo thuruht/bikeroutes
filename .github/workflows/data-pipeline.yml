@@ -1,0 +1,62 @@
+name: Data Pipeline
+
+on:
+  schedule:
+    - cron: '0 6 * * 6'  # Saturday 06:00 UTC
+    - cron: '0 6 * * 1'  # Monday 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build-midwest:
+    runs-on: ubuntu-latest
+    env:
+      REGION: midwest
+      API_BASE: https://bikeroutes.org
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osmium-tool tippecanoe gdal-bin curl
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Download OSM extract
+        run: ./data-pipeline/fetch-osm.sh
+
+      - name: Filter bike tags
+        run: ./data-pipeline/filter-bike-tags.sh
+
+      - name: Build PMTiles
+        run: ./data-pipeline/build-pmtiles.sh
+
+      - name: Build Valhalla tiles
+        run: ./data-pipeline/build-valhalla-tiles.sh
+
+      - name: Stage Valhalla container context
+        run: ./data-pipeline/build-container.sh
+
+      - name: Upload tiles + raw extract to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: ./data-pipeline/upload-r2.sh
+
+      - name: Import named features into D1
+        env:
+          ADMIN_SECRET: ${{ secrets.ADMIN_SECRET }}
+        run: ./data-pipeline/import-d1.sh
+
+      - name: Deploy updated Valhalla container
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: cd worker && npx wrangler deploy
