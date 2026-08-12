@@ -810,8 +810,8 @@ export default function LiveApp() {
             <svg viewBox="0 0 40 40"><use href="#mark-b" /></svg>
           </span>
           <div className="brand-txt">
-            <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
-              <svg className="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true"><use href="#mark-b" /></svg>ikeroutes<span className="tld">.org</span>
+             <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
+               bikeroutes<span className="tld">.org</span>
             </div>
             <div className="tag mono">open cycling maps · midwest</div>
           </div>
@@ -853,8 +853,8 @@ export default function LiveApp() {
         <div className="modal-overlay" onClick={() => setInfoOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setInfoOpen(false)}>{Ic.x}</button>
-            <div className="wordmark" aria-label="bikeroutes.org">
-              <svg className="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true"><use href="#mark-b" /></svg>ikeroutes<span className="tld">.org</span>
+             <div className="wordmark" aria-label="bikeroutes.org">
+               bikeroutes<span className="tld">.org</span>
             </div>
             <div className="modal-nav">
               <a href="#" className={(modalSection === null || modalSection === "main") && view === "plan" ? "active" : ""} onClick={(e) => { e.preventDefault(); setModalSection(null); setView("plan"); setInfoOpen(false); }}>Plan</a>

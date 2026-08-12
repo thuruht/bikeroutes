@@ -8,7 +8,7 @@
       #mark-b        b-wheel logomark (stroke)
       #mark-b-solid  b-wheel logomark (filled, for favicons/small)
       #pin-wing      caduceus-wing destination pin
-      #mark-b is used as the leading letter in the wordmark and as the app tile mark
+      #mark-b is used in the app tile, avatar fallback, and favicon; wordmark is now plain text
 
 
    Kept as raw SVG markup (dangerouslySetInnerHTML) so the

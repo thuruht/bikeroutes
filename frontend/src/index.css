@@ -27,18 +27,7 @@
   letter-spacing: var(--track-tight); line-height: 1; color: var(--ink);
   font-size: 20px;
 }
-.wordmark-mark {
-  height: 1em; width: 1em; flex: none;
-  margin-inline-end: .04em;
-  color: var(--ink);
-  --ac: var(--green);
-  transform: translateY(0.08em);
-}
 .wordmark .tld { color: var(--muted-txt); font-weight: var(--fw-medium); }
-.wordmark .i-slot { position: relative; display: inline-block; width: .2em; height: .74em; vertical-align: baseline; }
-.wordmark .i-slot .stem { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: .135em; height: .5em; background: currentColor; border-radius: .05em; }
-.wordmark .i-slot .head { position: absolute; left: 50%; bottom: .6em; transform: translateX(-50%); line-height: 0; }
-.wordmark .i-slot .head svg { display: block; width: .68em; height: .68em; }
 
 /* maplibre attribution tucked + themed */
 .maplibregl-ctrl-attrib { background: var(--panel) !important; color: var(--muted-txt) !important; font-size: 10px !important; border-radius: 8px !important; }
