@@ -3,6 +3,19 @@
 > This file tracks what still needs finishing, fixing, or deciding across the bikeroutes.org redesign.
 > Update it whenever new TODOs, bugs, placeholders, or shortcuts are introduced.
 
+## Current session snapshot (2026-08-12)
+- Wordmark reverted to plain text `bikeroutes.org`; `#mark-b` logomark kept for app tile/avatar fallback.
+- Header version chip (`v0.9 · RC`) removed.
+- Dropdown menu icons sized to 16px; Messages icon replaced with envelope.
+- Secure direct messages are end-to-end encrypted (RSA-OAEP + AES-GCM) and deployed.
+- Profile modal has passphrase-protected encrypted key backup/restore for cross-device messaging.
+- Public profiles can load by `username` or by `userId` for riders without a username.
+- Community author names/avatars are clickable and open public profile + Message button.
+- Messages composer has live user search.
+- Waymarkedtrails.org cycling raster overlay restored after accidental regression; Midwest vector overlay is on hold until the local pipeline runs.
+- `scripts/install-docker.sh` added to help set up Docker locally.
+- Next: finish Docker install (reboot needed), then run `scripts/run-local-midwest.sh` to generate the first Midwest PMTiles/Valhalla dataset.
+
 ## Recently landed
 - [x] MapView: de-cluster curated points sooner, add hover popups and cluster feature list.
 - [x] Map curated features load correctly; rail/trails overlay layers re-added after theme/style changes.
@@ -64,8 +77,8 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 - [x] Curated feature submission approve/reject now create notifications for the submitter.
 - [ ] Community: no notification for likes (kept quiet by design for now).
 - [ ] Community: no moderation queue or admin tools for reported posts.
-- [ ] Community: user profiles are bare (no avatar upload, bio editing, public profile page).
-- [ ] Valhalla container is **not running in production** because the build machine has no Docker. FOSSGIS fallback handles routing for now.
+- [x] Community: user profiles now support avatar upload, bio editing, public profile page, and direct-message button.
+- [ ] Valhalla container is **not running in production** because the build machine has no Docker. FOSSGIS fallback handles routing for now. Docker install script added; reboot pending.
 - [x] Route source badge fixed to show actual source (Valhalla/FOSSGIS/BRouter) from response header.
 - [ ] Old JKCBIKEMAP reports, checkpoints, comments, and gamification data were not migrated.
 - [x] Route "Save" button now persists routes to D1; users can load and delete saved routes from the Plan panel.
@@ -87,8 +100,9 @@ If this policy is not strong enough to stop a class of mistakes, expand it here.
 ## Data expansion rollout (2026-08-11)
 Pipeline for regional OSM extracts → PMTiles + D1 + Vectorize + baked Valhalla container is implemented for Midwest first. Outstanding items:
 
-- [ ] Apply migration `worker/migrations/0028_expand_trails_and_imports.sql` to production D1.
-- [ ] Run `scripts/run-local-midwest.sh` on a machine with osmium/tippecanoe/Docker to build and deploy the first Midwest dataset.
+- [x] Apply migration `worker/migrations/0028_expand_trails_and_imports.sql` to production D1.
+- [x] Apply migration `worker/migrations/0029_add_key_backup.sql` to production D1.
+- [ ] Finish Docker install (reboot) and run `scripts/run-local-midwest.sh` to build and deploy the first Midwest dataset.
 - [ ] (Optional) Use the `.github/workflows/data-pipeline.yml` GitHub Actions workflow if local machine lacks disk/memory.
 - [ ] Verify `/api/tiles/vector/osm-midwest-bike/{z}/{x}/{y}.mvt` returns MVT tiles after upload to R2.
 - [ ] Verify frontend bike-infrastructure overlay renders with distinct colors for protected / separated / shared / lane / route / track.
@@ -96,7 +110,7 @@ Pipeline for regional OSM extracts → PMTiles + D1 + Vectorize + baked Valhalla
 - [ ] After first container deploy, measure image size and cold-start; decide next region.
 - [ ] Add USFS + state/local ArcGIS layers once Midwest OSM baseline is stable.
 - [ ] Monitor D1 size and Vectorize vector count/costs after first GeoJSON import.
-- [ ] Commit + push all cleanup + data-expansion changes.
+- [x] Commit + push cleanup + data-expansion changes (in progress; pending pipeline run).
 
 ## Files to keep an eye on
 - `worker/src/index.ts` — routing, custom-domain redirect, asset fallthrough.
