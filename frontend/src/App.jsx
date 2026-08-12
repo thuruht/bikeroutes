@@ -331,6 +331,7 @@ export default function LiveApp() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [messageTarget, setMessageTarget] = useState(null);
   const [showModeration, setShowModeration] = useState(false);
   const [showPublicProfile, setShowPublicProfile] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -813,17 +814,16 @@ export default function LiveApp() {
              <div className="wordmark name" aria-label="bikeroutes.org" style={{ cursor: "pointer" }} onClick={() => setInfoOpen(true)}>
                bikeroutes<span className="tld">.org</span>
             </div>
-            <div className="tag mono">open cycling maps · midwest</div>
-          </div>
-          <span className="ver-chip mono" title="Penultimate — release candidate">v0.9 · RC</span>
-        </div>
+             <div className="tag mono">open cycling maps · midwest</div>
+           </div>
+         </div>
         <div className="spacer" />
         <div className="theme-toggle" role="group" aria-label="Map theme">
           <button className={theme === "light" ? "active" : ""} onClick={() => setTheme("light")} title="Daylight" aria-label="Daylight theme">{Ic.sun}</button>
           <button className={theme === "dark" ? "active" : ""} onClick={() => setTheme("dark")} title="Tactical dark" aria-label="Dark theme">{Ic.moon}</button>
         </div>
         <button className="pillbtn" onClick={() => setInfoOpen(true)} title="Info" style={{ padding: "9px 11px" }}>{Ic.info}</button>
-        <UserMenu onSignIn={() => setShowSignIn(true)} onProfile={() => setShowProfile(true)} onMessages={() => setShowMessages(true)} onModeration={() => setShowModeration(true)} />
+        <UserMenu onSignIn={() => setShowSignIn(true)} onProfile={() => setShowProfile(true)} onMessages={() => { setMessageTarget(null); setShowMessages(true); }} onModeration={() => setShowModeration(true)} />
         <button className="pillbtn solid" style={{ userSelect: "none" }}
           title={wps.length > 0 ? "Click remove last stop · Long-press clear route" : (view !== "plan" ? "Switch to plan" : "New route")}
           onMouseDown={() => {
@@ -1067,7 +1067,7 @@ export default function LiveApp() {
             toggleTrails={toggleTrails} toggleRail={toggleRail}
             clearExploreMarkers={clearExploreMarkers} setExploreMarkers={setExploreMarkers} />}
           {view === "map" && mapReady && <MapView mapObj={mapObj} />}
-          {view === "community" && <CommunityView mapObj={mapObj} />}
+          {view === "community" && <CommunityView mapObj={mapObj} onMessage={(username) => { setMessageTarget(username); setShowMessages(true); }} />}
           <div ref={scrollSentinelRef} style={{ height: 1 }} />
           <div className={"panel-fade" + (showScrollHint ? " show" : "")}>
             <span className="scroll-arrow">&darr; more</span>
@@ -1096,11 +1096,12 @@ export default function LiveApp() {
 
       {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
-      {showMessages && <MessagesModal onClose={() => setShowMessages(false)} />}
+      {showMessages && <MessagesModal onClose={() => { setShowMessages(false); setMessageTarget(null); }} initialUsername={messageTarget} />}
       {showModeration && <ModerationModal onClose={() => setShowModeration(false)} />}
       {showPublicProfile && (
         <PublicProfile
           username={showPublicProfile}
+          onMessage={(username) => { setMessageTarget(username); setShowMessages(true); }}
           onClose={() => {
             const url = new URL(window.location.href);
             url.searchParams.delete('profile');

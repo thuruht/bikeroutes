@@ -60,7 +60,7 @@ messageRoutes.get("/conversations", async (c) => {
 
 	const { results } = await c.env.DB.prepare(
 		`SELECT c.id, c.created_at,
-		        u.id as other_user_id, u.display_name, u.username, u.avatar_url,
+		        u.id as other_user_id, u.display_name, u.username, u.avatar_url, u.public_key as other_public_key,
 		        (SELECT body FROM direct_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_body,
 		        (SELECT created_at FROM direct_messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_at
 		 FROM conversations c
@@ -105,7 +105,7 @@ messageRoutes.post("/conversations/:id/messages", async (c) => {
 	if (!user) return c.json({ error: "Unauthorized" }, 401);
 	const convId = c.req.param("id");
 	const { body } = await c.req.json<{ body?: string }>();
-	const text = sanitizeString(body, 4000);
+	const text = sanitizeString(body, 20000);
 	if (!text) return c.json({ error: "Message body required" }, 400);
 
 	const participant = await c.env.DB.prepare(
@@ -124,13 +124,12 @@ messageRoutes.post("/conversations/:id/messages", async (c) => {
 			"SELECT user_id FROM conversation_participants WHERE conversation_id = ? AND user_id != ?"
 		).bind(convId, user.id).all<{ user_id: string }>();
 
-		const senderName = user.display_name || user.username || "Someone";
 		for (const r of recipients.results ?? []) {
 			await createNotification(c.env.DB, {
 				user_id: r.user_id,
 				type: "dm",
 				title: "New message",
-				body: `${senderName}: ${text.slice(0, 80)}${text.length > 80 ? "…" : ""}`,
+				body: "You have a new secure message",
 				link: `/messages?c=${convId}`,
 			});
 		}

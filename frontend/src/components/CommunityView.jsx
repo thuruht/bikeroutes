@@ -223,10 +223,10 @@ function PostCard({ post, me, onOpen, onMutate, mapObj, onShowProfile, onReport 
 
   return (
     <div className="trail" style={{ display: 'block', padding: 14, cursor: 'pointer' }} onClick={() => onOpen(post.id)}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden' }}>
-          {post.author?.avatarUrl ? <img src={post.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : Ic.user}
-        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <button onClick={(e) => { e.stopPropagation(); post.author?.username && onShowProfile?.(post.author.username); }} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
+            {post.author?.avatarUrl ? <img src={post.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : Ic.user}
+          </button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <button
             className="text-btn"
@@ -306,9 +306,9 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile, onReport }) {
         <button className="modal-close" onClick={onClose}>{Ic.x}</button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flex: 'none' }}>
-          <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden' }}>
+          <button onClick={() => p.author?.username && onShowProfile?.(p.author.username)} style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--paper-2)', display: 'grid', placeItems: 'center', color: 'var(--muted-txt)', border: '1px solid var(--line)', overflow: 'hidden', padding: 0, cursor: 'pointer' }}>
             {p.author?.avatarUrl ? <img src={p.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : Ic.user}
-          </div>
+          </button>
           <div>
             <button
               onClick={() => p.author?.username && onShowProfile?.(p.author.username)}
@@ -370,7 +370,7 @@ function PostDetail({ id, onClose, me, mapObj, onShowProfile, onReport }) {
   );
 }
 
-export default function CommunityView({ mapObj }) {
+export default function CommunityView({ mapObj, onMessage }) {
   const { user, refreshUser } = useAuth();
   const [posts, setPosts] = useState([]);
   const [total, setTotal] = useState(0);
@@ -511,7 +511,7 @@ export default function CommunityView({ mapObj }) {
         />
       )}
       {detailId && <PostDetail id={detailId} onClose={() => setDetailId(null)} me={user} mapObj={mapObj} onShowProfile={setProfileUsername} onReport={setReportTarget} />}
-      {profileUsername && <PublicProfile username={profileUsername} onClose={() => setProfileUsername(null)} />}
+      {profileUsername && <PublicProfile username={profileUsername} onClose={() => setProfileUsername(null)} onMessage={(username) => { setProfileUsername(null); onMessage?.(username); }} />}
       {reportTarget && (
         <ReportModal
           targetType={reportTarget.type}

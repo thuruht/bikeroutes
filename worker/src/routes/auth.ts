@@ -157,7 +157,7 @@ authRoutes.get("/users/:username", async (c) => {
 	if (!username) return c.json({ error: "Username required" }, 400);
 
 	const user = await c.env.DB.prepare(
-		"SELECT id, username, display_name, avatar_url, bio, contribution_count FROM users WHERE username = ?"
+		"SELECT id, username, display_name, avatar_url, bio, contribution_count, public_key FROM users WHERE username = ?"
 	).bind(username).first();
 
 	if (!user) return c.json({ error: "User not found" }, 404);
@@ -179,7 +179,7 @@ authRoutes.get("/me", async (c) => {
 	}
 
 	const user = await c.env.DB.prepare(
-		"SELECT id, email_hash, display_name, username, bio, avatar_url, social_links, trust_level, contribution_count, badges, role, created_at, last_active FROM users WHERE id = ?"
+		"SELECT id, email_hash, display_name, username, bio, avatar_url, social_links, trust_level, contribution_count, badges, role, created_at, last_active, public_key FROM users WHERE id = ?"
 	).bind(userId).first();
 
 	if (!user) {
@@ -187,6 +187,22 @@ authRoutes.get("/me", async (c) => {
 	}
 
 	return c.json({ user });
+});
+
+// ─── Register/update device public key for end-to-end encrypted DMs ─
+authRoutes.put("/public-key", async (c) => {
+	const user = await getCurrentUser(c);
+	if (!user) return c.json({ error: "Unauthorized" }, 401);
+
+	const body = await c.req.json<{ public_key?: string }>();
+	const key = typeof body.public_key === "string" ? body.public_key.trim() : "";
+	// SPKI base64 for a 2048-bit RSA key is ~392 chars; allow some slack
+	if (!key || key.length < 64 || key.length > 4096) {
+		return c.json({ error: "Invalid public key" }, 400);
+	}
+
+	await c.env.DB.prepare("UPDATE users SET public_key = ? WHERE id = ?").bind(key, user.id).run();
+	return c.json({ message: "Public key updated" });
 });
 
 // ─── Update Profile ─────────────────────────────────────────────────

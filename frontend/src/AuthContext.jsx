@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import * as BR from './api';
+import { ensureKeys } from './lib/crypto';
 
 const AuthContext = createContext(null);
 
@@ -22,6 +23,11 @@ export function AuthProvider({ children }) {
     setLoading(true);
     refreshUser().finally(() => setLoading(false));
   }, [refreshUser]);
+
+  useEffect(() => {
+    if (!user) return;
+    ensureKeys(user).catch((err) => console.error('key setup failed', err));
+  }, [user]);
 
   const signOut = useCallback(() => {
     localStorage.removeItem('br-session');
