@@ -16,18 +16,21 @@ cd worker && npm run dev            # Wrangler local dev
 # Build (MUST run before deploy)
 cd frontend && npm run build        # SPA → worker/public/
 
-# Verify
+# Verify (app-only; no Valhalla container image is built)
 cd worker && npx tsc --noEmit       # Type-check. Must pass before deploy.
-cd worker && npm run check          # tsc + wrangler deploy --dry-run
+cd worker && npm run check          # tsc + wrangler deploy --dry-run --containers-rollout=none
 
-# Deploy (runs D1 migrations automatically via predeploy)
+# Deploy (runs D1 migrations automatically via predeploy; skips Valhalla container)
 cd worker && npm run deploy
 
-# Deploy when Docker is unavailable (skips Valhalla container build)
-cd worker && npx wrangler deploy --containers-rollout=none
+# Deploy WITH the Valhalla container (requires worker/valhalla/tiles.tar + valhalla.json)
+cd worker && npm run deploy:container
 
 # Tail logs
 cd worker && wrangler tail
+
+# Data pipeline (run locally; no GitHub Actions)
+REGION=midwest ./data-pipeline/run.sh             # local pipeline orchestrator
 ```
 
 ## Git State & Workflow

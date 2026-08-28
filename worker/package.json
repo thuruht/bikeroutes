@@ -4,10 +4,12 @@
 	"private": true,
 	"scripts": {
 		"dev": "wrangler dev",
-		"deploy": "wrangler deploy",
+		"deploy": "wrangler deploy --containers-rollout=none",
+		"deploy:container": "wrangler deploy",
 		"build": "tsc",
 		"cf-typegen": "wrangler types",
-		"check": "tsc && wrangler deploy --dry-run",
+		"check": "tsc && wrangler deploy --dry-run --containers-rollout=none",
+		"check:container": "tsc && wrangler deploy --dry-run",
 		"db:migrate:local": "wrangler d1 migrations apply DB --local",
 		"db:migrate:remote": "wrangler d1 migrations apply DB --remote",
 		"predeploy": "npm run db:migrate:remote"

@@ -97,7 +97,7 @@ tileRoutes.get("/:filename{.+\\.pmtiles}", async (c) => {
 });
 
 /**
- * GET /api/tiles/vector/:layer/:z/:x/:y.mvt
+ * GET /api/tiles/vector/:layer/:z/:x/:y
  * Serves individual vector tiles from a PMTiles archive stored in R2.
  */
 tileRoutes.get("/vector/:layer/:z/:x/:y", async (c) => {
