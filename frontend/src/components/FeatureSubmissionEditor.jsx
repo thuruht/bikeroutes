@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import * as BR from '../api';
 
 const Ic = {
@@ -15,6 +15,13 @@ const Ic = {
 function geomTypeFor(coords) {
   if (!coords || coords.length === 0) return 'point';
   return coords.length === 1 && Array.isArray(coords[0]) ? 'line' : 'point';
+}
+
+function initCoords(f) {
+  if (!f?.geometry) return [];
+  if (f.geometry.type === 'Point') return [f.geometry.coordinates];
+  if (f.geometry.type === 'LineString') return f.geometry.coordinates;
+  return [];
 }
 
 export default function FeatureSubmissionEditor({ mapObj, categories, feature, onClose, onSubmitted }) {
@@ -34,13 +41,6 @@ export default function FeatureSubmissionEditor({ mapObj, categories, feature, o
   const draftMarker = useRef(null);
 
   useEffect(() => { BR.fetchMe().then(setUser); }, []);
-
-  function initCoords(f) {
-    if (!f?.geometry) return [];
-    if (f.geometry.type === 'Point') return [f.geometry.coordinates];
-    if (f.geometry.type === 'LineString') return f.geometry.coordinates;
-    return [];
-  }
 
   function syncDraftLayers() {
     const map = mapObj.current; if (!map) return;
@@ -63,6 +63,8 @@ export default function FeatureSubmissionEditor({ mapObj, categories, feature, o
       draftMarker.current = new maplibregl.Marker({ element: el }).setLngLat(coords[0]).addTo(map);
     }
   }
+
+  const modeRef = useRef(mode);
 
   useEffect(() => {
     const map = mapObj.current; if (!map) return;
@@ -127,7 +129,6 @@ export default function FeatureSubmissionEditor({ mapObj, categories, feature, o
   }, []);
 
   useEffect(() => { syncDraftLayers(); }, [coords, mode]);
-  const modeRef = useRef(mode);
   useEffect(() => { modeRef.current = mode; }, [mode]);
 
   const locateMe = () => {

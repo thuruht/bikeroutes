@@ -6,6 +6,6 @@
     "upload-version": "cd worker && npm ci && npx wrangler versions upload"
   },
   "devDependencies": {
-    "wrangler": "^4.120.0"
+    "wrangler": "^4.127.0"
   }
 }

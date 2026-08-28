@@ -15,6 +15,17 @@ export default function SignInModal({ onClose, prefillEmail = '', prefillCode = 
   const [err, setErr] = useState('');
   const [msg, setMsg] = useState(prefillCode ? 'Finishing sign in…' : '');
 
+  const doVerify = async () => {
+    if (!code.trim()) return;
+    setBusy(true); setErr('');
+    try {
+      await BR.verifyCode(email, code);
+      await refreshUser();
+      onClose();
+    } catch (e) { setErr(e.message || 'Invalid code'); }
+    setBusy(false);
+  };
+
   useEffect(() => {
     if (prefillCode && email && code.length >= 4) {
       doVerify();
@@ -31,17 +42,6 @@ export default function SignInModal({ onClose, prefillEmail = '', prefillCode = 
       setMode('code');
       setMsg('Code sent. Check your inbox.');
     } catch (e) { setErr(e.message || 'Could not send code'); }
-    setBusy(false);
-  };
-
-  const doVerify = async () => {
-    if (!code.trim()) return;
-    setBusy(true); setErr('');
-    try {
-      await BR.verifyCode(email, code);
-      await refreshUser();
-      onClose();
-    } catch (e) { setErr(e.message || 'Invalid code'); }
     setBusy(false);
   };
 

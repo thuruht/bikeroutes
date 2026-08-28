@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import * as BR from '../api';
 import { useAuth } from '../AuthContext';
 import FeatureSubmissionEditor from './FeatureSubmissionEditor';
@@ -86,6 +86,27 @@ export default function MapView({ mapObj }) {
     const el = document.createElement('div');
     el.style.cssText = 'width:14px;height:14px;border-radius:50%;background:var(--green);border:3px solid #fff;box-shadow:0 0 0 4px rgba(122,154,140,.35);';
     markerRef.current = new maplibregl.Marker({ element: el }).setLngLat(center).addTo(map);
+  };
+
+  const selectFeature = (id) => {
+    if (!id) return;
+    const f = featuresRef.current.find(x => x.id === id);
+    setSelected(f || null);
+    if (f) highlight(f.geometry);
+    setDetail(null);
+    setComments([]);
+    setCheckpoints([]);
+    setLoadingDetail(true);
+    Promise.all([
+      fetch(`/api/curated-features/${id}`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/curated-features/${id}/comments`).then(r => r.ok ? r.json() : { comments: [] }).catch(() => ({ comments: [] })),
+      fetch(`/api/curated-features/${id}/checkpoints`).then(r => r.ok ? r.json() : { checkpoints: [] }).catch(() => ({ checkpoints: [] })),
+    ]).then(([d, c, k]) => {
+      setDetail(d);
+      setComments(c.comments || []);
+      setCheckpoints(k.checkpoints || []);
+      setLoadingDetail(false);
+    });
   };
 
   const loadLayers = () => {
@@ -320,27 +341,6 @@ export default function MapView({ mapObj }) {
       map.off('load', load);
     };
   }, []);
-
-  const selectFeature = (id) => {
-    if (!id) return;
-    const f = featuresRef.current.find(x => x.id === id);
-    setSelected(f || null);
-    if (f) highlight(f.geometry);
-    setDetail(null);
-    setComments([]);
-    setCheckpoints([]);
-    setLoadingDetail(true);
-    Promise.all([
-      fetch(`/api/curated-features/${id}`).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch(`/api/curated-features/${id}/comments`).then(r => r.ok ? r.json() : { comments: [] }).catch(() => ({ comments: [] })),
-      fetch(`/api/curated-features/${id}/checkpoints`).then(r => r.ok ? r.json() : { checkpoints: [] }).catch(() => ({ checkpoints: [] })),
-    ]).then(([d, c, k]) => {
-      setDetail(d);
-      setComments(c.comments || []);
-      setCheckpoints(k.checkpoints || []);
-      setLoadingDetail(false);
-    });
-  };
 
   const toggleCat = (cat) => {
     setActiveCats(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);

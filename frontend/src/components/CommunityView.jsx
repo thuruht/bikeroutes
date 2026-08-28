@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import * as BR from '../api';
 import { useAuth } from '../AuthContext';
 import PublicProfile from './PublicProfile';

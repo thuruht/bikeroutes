@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import * as BR from './api';
 import { useAuth } from './AuthContext';
 import './tokens.css';
@@ -462,9 +462,9 @@ export default function LiveApp() {
   const addRailLayer = useCallback(() => {
     const map = mapObj.current; if (!map) return;
     const vis = railOverlay ? "visible" : "none";
-    let src = map.getSource("rail");
+    const src = map.getSource("rail");
     if (!src) {
-      src = map.addSource("rail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+      map.addSource("rail", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
       fetch("/api/features?type=rail").then(r => r.json()).then(data => {
         const s = map.getSource("rail");
         if (s) s.setData(data);
