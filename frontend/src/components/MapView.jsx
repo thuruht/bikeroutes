@@ -403,8 +403,8 @@ export default function MapView({ mapObj }) {
           </div>
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button className="primary" style={{ flex: 1 }} onClick={() => user ? openNewEditor() : alert('Sign in to suggest a feature')}>
-              Suggest a feature
+            <button className="primary" style={{ flex: 1 }} onClick={() => user ? openNewEditor() : alert('Sign in to add a trail or point')}>
+              Add to map
             </button>
             {isModerator && (
               <button className="pillbtn" onClick={() => { setShowReview(s => !s); if (!showReview) loadSubmissions(); }} style={{ flex: 'none' }}>

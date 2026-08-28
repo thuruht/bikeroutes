@@ -19,7 +19,7 @@ const Ic = {
   user: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>,
   x: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>,
   link: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
-  message: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 6H2v12h20V6z"/><path d="M2 8l10 7 10-7"/></svg>,
+  message: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 6H2v12h20V6z"/><path d="M2 8l10 7 10-7"/></svg>,
 };
 
 export default function PublicProfile({ username, userId, onClose, onMessage }) {
@@ -81,7 +81,7 @@ export default function PublicProfile({ username, userId, onClose, onMessage }) 
                 type="button"
                 className="primary"
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 10 }}
-                onClick={() => { onMessage?.(profile.username || profile.id); onClose?.(); }}
+                onClick={() => { onMessage?.(profile.username || profile.display_name || profile.id); onClose?.(); }}
               >
                 {Ic.message} Message
               </button>

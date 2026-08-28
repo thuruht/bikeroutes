@@ -127,6 +127,19 @@ export default function MessagesModal({ onClose, initialUsername = null }) {
     }
   };
 
+  const resolveUser = async (username) => {
+    // try exact username lookup first, then fall back to display-name search
+    const byUsername = await fetch(`/api/auth/users/${encodeURIComponent(username)}`, { headers: authHeaders() });
+    if (byUsername.ok) return (await byUsername.json()).user;
+    const d = await BR.searchUsers(username);
+    const match = (d.users || []).find((u) =>
+      u.username?.toLowerCase() === username.toLowerCase() ||
+      u.display_name?.toLowerCase() === username.toLowerCase()
+    ) || (d.users || [])[0];
+    if (!match) throw new Error('User not found');
+    return match;
+  };
+
   const startConversation = async (target) => {
     if (!user) return;
     let resolved = target;
@@ -135,11 +148,9 @@ export default function MessagesModal({ onClose, initialUsername = null }) {
       if (!username) return;
       setStarting(true); setError('');
       try {
-        const lookup = await fetch(`/api/auth/users/${encodeURIComponent(username)}`, { headers: authHeaders() });
-        if (!lookup.ok) throw new Error('User not found');
-        resolved = (await lookup.json()).user;
+        resolved = await resolveUser(username);
       } catch (err) {
-        setError(err.message || 'Start failed');
+        setError(err.message || 'User not found');
         setStarting(false);
         return;
       }

@@ -170,9 +170,13 @@ authRoutes.get("/users/search", async (c) => {
 
 	const { results } = await c.env.DB.prepare(
 		`SELECT id, username, display_name, avatar_url, public_key FROM users
-		 WHERE username IS NOT NULL AND (username LIKE ? OR display_name LIKE ?)
-		 ORDER BY username ASC LIMIT 10`
-	).bind(`%${q}%`, `%${q}%`).all();
+		 WHERE username LIKE ? OR display_name LIKE ?
+		 ORDER BY
+		   CASE WHEN username LIKE ? THEN 0 ELSE 1 END,
+		   username IS NULL,
+		   display_name ASC
+		 LIMIT 10`
+	).bind(`%${q}%`, `%${q}%`, `${q}%`).all();
 
 	return c.json({ users: results ?? [] });
 });

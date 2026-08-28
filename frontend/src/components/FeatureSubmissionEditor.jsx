@@ -174,7 +174,7 @@ export default function FeatureSubmissionEditor({ mapObj, categories, feature, o
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{feature ? 'Suggest an edit' : 'Suggest a feature'}</div>
+        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)' }}>{feature ? 'Suggest an edit' : 'Add a trail or point'}</div>
         <button className="io-clear" onClick={onClose} style={{ color: 'var(--muted-txt)', width: 22, height: 22, display: 'grid', placeItems: 'center' }}>{Ic.x}</button>
       </div>
 
