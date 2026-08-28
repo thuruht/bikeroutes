@@ -11,19 +11,31 @@ const MAX_VERIFY_ATTEMPTS = 20; // per IP per window
 const VERIFY_WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS_PER_EMAIL = 10; // after this, delete code
 
-async function sendLoginCode(email: string, code: string, env: Env): Promise<boolean> {
+function buildLoginUrl(email: string, code: string, host?: string): string {
+	const isLocal = host && (host.includes("localhost") || host.startsWith("127."));
+	const base = isLocal ? `http://${host}` : "https://bikeroutes.org";
+	const url = new URL(base);
+	url.searchParams.set("login", "1");
+	url.searchParams.set("email", email);
+	url.searchParams.set("code", code);
+	return url.toString();
+}
+
+async function sendLoginCode(email: string, code: string, env: Env, host?: string): Promise<boolean> {
 	try {
+		const loginUrl = buildLoginUrl(email, code, host);
 		await env.EMAIL.send({
 			to: email,
 			from: { email: "noreply@bikeroutes.org", name: "BikeRoutes.org" },
 			replyTo: "hello@bikeroutes.org",
 			subject: `Your BikeRoutes login code: ${code}`,
-			text: `Your one-time login code is: ${code}\n\nIt expires in 15 minutes.\n\n— BikeRoutes.org`,
+			text: `Your one-time login code is: ${code}\n\nIt expires in 15 minutes.\n\nIf you navigated away, open this link to finish signing in:\n${loginUrl}\n\n— BikeRoutes.org`,
 			html: `<div style="font-family:system-ui,sans-serif;max-width:320px;margin:24px auto;">` +
 				`<h2 style="color:#7a9a8c;">BikeRoutes login code</h2>` +
 				`<p style="font-size:16px;">Your one-time code is:</p>` +
 				`<p style="font-size:28px;letter-spacing:4px;font-weight:700;">${code}</p>` +
 				`<p style="color:#666;font-size:13px;">It expires in 15 minutes.</p>` +
+				`<p style="margin-top:20px;"><a href="${loginUrl}" style="color:#4a6fa5;text-decoration:underline;">Sign in to BikeRoutes.org</a></p>` +
 				`<p style="color:#999;font-size:12px;">— BikeRoutes.org</p>` +
 				`</div>`,
 		});
@@ -72,7 +84,7 @@ authRoutes.post("/request", async (c) => {
 	// Store code in KV for 15 minutes
 	await c.env.SESSIONS.put(`login_code:${emailHash}`, code, { expirationTtl: 900 });
 
-	const sent = await sendLoginCode(email, code, c.env);
+	const sent = await sendLoginCode(email, code, c.env, c.req.header("host"));
 	if (!sent) {
 		return c.json({ error: "Could not send email. Try again later." }, 502);
 	}

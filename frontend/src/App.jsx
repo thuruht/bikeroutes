@@ -329,6 +329,7 @@ export default function LiveApp() {
   const [showScrollHint, setShowScrollHint] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [loginInit, setLoginInit] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [messageTarget, setMessageTarget] = useState(null);
@@ -364,6 +365,20 @@ export default function LiveApp() {
     if (['plan', 'explore', 'map', 'community'].includes(pView)) setView(pView);
     const pProfile = params.get('profile');
     if (pProfile) setShowPublicProfile(pProfile);
+
+    // Magic-link fallback: ?login=1&email=...&code=...
+    const login = params.get('login');
+    const loginEmail = params.get('email');
+    const loginCode = params.get('code');
+    if (login === '1' && loginEmail && loginCode) {
+      setLoginInit({ email: loginEmail, code: loginCode });
+      setShowSignIn(true);
+      params.delete('login');
+      params.delete('email');
+      params.delete('code');
+      const qs = params.toString();
+      window.history.replaceState({}, '', `${window.location.pathname}${qs ? '?' + qs : ''}`);
+    }
   }, []);
 
   // Keep URL in sync with route plan so Share copies a working link.
@@ -399,9 +414,7 @@ export default function LiveApp() {
   }, [view]);
 
   const tileArr = (th) => ["a", "b", "c"].map(s =>
-    th === "dark"
-      ? `https://${s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png`
-      : `https://${s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png`);
+    (th === "dark" ? BR.TILES.dark : BR.TILES.light).replace("{s}", s));
   const styleFor = (th) => ({
     version: 8,
     sources: { base: { type: "raster", tiles: tileArr(th), tileSize: 256, attribution: BR.TILES.attribution } },
@@ -848,7 +861,7 @@ export default function LiveApp() {
               <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
                 <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>Map data sources</div>
                 <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />CARTO Voyager / Dark Matter tiles</div>
+                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />OpenStreetMap standard tiles</div>
                   <div><b style={{ color: "var(--ink)" }}>Cycling infrastructure (Midwest)</b><br />OpenStreetMap contributors (ODbL). Updated twice weekly from Geofabrik extracts. Green = protected/separated facilities; blue dashed = painted bike lanes; orange = signed routes.</div>
                   <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors, USGS National Transportation Dataset, and state/local open data portals.</div>
                   <div><b style={{ color: "var(--ink)" }}>Geocoding</b><br />OpenStreetMap Nominatim</div>
@@ -1073,7 +1086,13 @@ export default function LiveApp() {
         <div className="coords mono">{readout.coords || hint}</div>
       </div>
 
-      {showSignIn && <SignInModal onClose={() => setShowSignIn(false)} />}
+      {showSignIn && (
+        <SignInModal
+          onClose={() => setShowSignIn(false)}
+          prefillEmail={loginInit?.email || ''}
+          prefillCode={loginInit?.code || ''}
+        />
+      )}
       {showProfile && <ProfileModal onClose={() => setShowProfile(false)} />}
       {showMessages && <MessagesModal onClose={() => { setShowMessages(false); setMessageTarget(null); }} initialUsername={messageTarget} />}
       {showModeration && <ModerationModal onClose={() => setShowModeration(false)} />}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as BR from '../api';
 import { useAuth } from '../AuthContext';
 
@@ -6,14 +6,21 @@ const Ic = {
   x: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>,
 };
 
-export default function SignInModal({ onClose }) {
+export default function SignInModal({ onClose, prefillEmail = '', prefillCode = '' }) {
   const { refreshUser } = useAuth();
-  const [mode, setMode] = useState('email');
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
+  const [mode, setMode] = useState(prefillCode ? 'code' : 'email');
+  const [email, setEmail] = useState(prefillEmail);
+  const [code, setCode] = useState(prefillCode);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState(prefillCode ? 'Finishing sign in…' : '');
+
+  useEffect(() => {
+    if (prefillCode && email && code.length >= 4) {
+      doVerify();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const request = async (e) => {
     e.preventDefault();
@@ -23,20 +30,24 @@ export default function SignInModal({ onClose }) {
       await BR.requestCode(email);
       setMode('code');
       setMsg('Code sent. Check your inbox.');
-    } catch { setErr('Could not send code'); }
+    } catch (e) { setErr(e.message || 'Could not send code'); }
     setBusy(false);
   };
 
-  const verify = async (e) => {
-    e.preventDefault();
+  const doVerify = async () => {
     if (!code.trim()) return;
     setBusy(true); setErr('');
     try {
       await BR.verifyCode(email, code);
       await refreshUser();
       onClose();
-    } catch { setErr('Invalid code'); }
+    } catch (e) { setErr(e.message || 'Invalid code'); }
     setBusy(false);
+  };
+
+  const verify = async (e) => {
+    e.preventDefault();
+    await doVerify();
   };
 
   return (

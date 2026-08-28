@@ -91,9 +91,9 @@ function valhallaManeuverToTurn(m, coords) {
 
 // ---- config -------------------------------------------------
 export const TILES = {
-  dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-  light: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
-  attribution: "© OpenStreetMap · © CARTO",
+  dark:  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  light: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  attribution: "© OpenStreetMap contributors",
   // Midwest bike-infrastructure vector tiles, generated from OSM by the data pipeline.
   vectorMidwestBike: "/api/tiles/vector/osm-midwest-bike/{z}/{x}/{y}",
   trailsAttribution: "© waymarkedtrails.org, OpenStreetMap",
@@ -256,13 +256,19 @@ export function authHeaders() {
 
 export async function requestCode(email) {
   const r = await fetch("/api/auth/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
-  if (!r.ok) throw new Error("request failed " + r.status);
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    throw new Error(data.error || `request failed ${r.status}`);
+  }
   return r.json();
 }
 
 export async function verifyCode(email, code) {
   const r = await fetch("/api/auth/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, code }) });
-  if (!r.ok) throw new Error("invalid code " + r.status);
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    throw new Error(data.error || `invalid code ${r.status}`);
+  }
   const data = await r.json();
   if (data.session_token) localStorage.setItem("br-session", data.session_token);
   return data;
