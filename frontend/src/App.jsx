@@ -323,7 +323,7 @@ export default function LiveApp() {
   const [exploreBusy, setExploreBusy] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCats, setSelectedCats] = useState([]);
-  const [trailsOverlay, setTrailsOverlay] = useState(() => localStorage.getItem("br-trails") !== "off");
+  const [trailsOverlay, setTrailsOverlay] = useState(() => localStorage.getItem("br-trails") === "on");
   const [railOverlay, setRailOverlay] = useState(() => localStorage.getItem("br-rail") === "on");
   const [modalSection, setModalSection] = useState(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
@@ -863,6 +863,7 @@ export default function LiveApp() {
                 <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
                   <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />OpenStreetMap standard tiles</div>
                   <div><b style={{ color: "var(--ink)" }}>Cycling infrastructure (Midwest)</b><br />OpenStreetMap contributors (ODbL). Updated twice weekly from Geofabrik extracts. Green = protected/separated facilities; blue dashed = painted bike lanes; orange = signed routes.</div>
+                  <div><b style={{ color: "var(--ink)" }}>Bike route shields</b><br />Optional waymarkedtrails.org cycling overlay. The small shields are OSM cycle-route reference codes (e.g. “dnkcg”, “rhtw”); they often don’t match human trail names. Toggle with the Bike routes button.</div>
                   <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors, USGS National Transportation Dataset, and state/local open data portals.</div>
                   <div><b style={{ color: "var(--ink)" }}>Geocoding</b><br />OpenStreetMap Nominatim</div>
                   <div><b style={{ color: "var(--ink)" }}>Routing</b><br />Self-hosted Valhalla (Midwest) with FOSSGIS &amp; BRouter fallback</div>
@@ -1073,7 +1074,7 @@ export default function LiveApp() {
           <button title="Zoom in" aria-label="Zoom in" onClick={() => mapObj.current && mapObj.current.zoomIn()}>+</button>
           <button title="Zoom out" aria-label="Zoom out" onClick={() => mapObj.current && mapObj.current.zoomOut()}>−</button>
         </div>
-        <button className={"ctlbtn" + (trailsOverlay ? " active" : "")} onClick={toggleTrails} title={trailsOverlay ? "Hide trails" : "Show trails"}>{Ic.layers}<span className="ctl-label">Trails</span></button>
+        <button className={"ctlbtn" + (trailsOverlay ? " active" : "")} onClick={toggleTrails} title={trailsOverlay ? "Hide OSM bike route shields" : "Show OSM bike route shields"}>{Ic.layers}<span className="ctl-label">Bike routes</span></button>
         <button className={"ctlbtn" + (railOverlay ? " active" : "")} onClick={toggleRail} title={railOverlay ? "Hide railways" : "Show railways"}>{Ic.layers}<span className="ctl-label">Rail</span></button>
       </div>
 
