@@ -327,7 +327,7 @@ export default function LiveApp() {
   const [railOverlay, setRailOverlay] = useState(() => localStorage.getItem("br-rail") === "on");
   const [modalSection, setModalSection] = useState(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
-  const [mapReady, setMapReady] = useState(false);
+  const [, setMapReady] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [loginInit, setLoginInit] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
@@ -417,7 +417,7 @@ export default function LiveApp() {
     (th === "dark" ? BR.TILES.dark : BR.TILES.light).replace("{s}", s));
   const styleFor = (th) => ({
     version: 8,
-    sources: { base: { type: "raster", tiles: tileArr(th), tileSize: 256, attribution: BR.TILES.attribution } },
+    sources: { base: { type: "raster", tiles: tileArr(th), tileSize: 256, attribution: th === "dark" ? BR.TILES.darkAttribution : BR.TILES.attribution } },
     layers: [{ id: "base", type: "raster", source: "base" }],
   });
 
@@ -861,7 +861,7 @@ export default function LiveApp() {
               <div className="modal-section" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
                 <div style={{ fontWeight: 600, marginBottom: 8, color: "var(--ink)" }}>Map data sources</div>
                 <div style={{ color: "var(--ink-2)", display: "flex", flexDirection: "column", gap: 10 }}>
-                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />OpenStreetMap standard tiles</div>
+                  <div><b style={{ color: "var(--ink)" }}>Basemap</b><br />OpenStreetMap standard tiles (light) · Esri World Dark Gray Base (dark)</div>
                   <div><b style={{ color: "var(--ink)" }}>Cycling infrastructure (Midwest)</b><br />OpenStreetMap contributors (ODbL). Updated twice weekly from Geofabrik extracts. Green = protected/separated facilities; blue dashed = painted bike lanes; orange = signed routes.</div>
                   <div><b style={{ color: "var(--ink)" }}>Bike route shields</b><br />Optional waymarkedtrails.org cycling overlay. The small shields are OSM cycle-route reference codes (e.g. “dnkcg”, “rhtw”); they often don’t match human trail names. Toggle with the Bike routes button.</div>
                   <div><b style={{ color: "var(--ink)" }}>Trail data</b><br />OpenStreetMap contributors (ODbL), MARC ArcGIS, MetroGreen corridors, USGS National Transportation Dataset, and state/local open data portals.</div>
@@ -1059,7 +1059,7 @@ export default function LiveApp() {
             trailsOverlay={trailsOverlay} railOverlay={railOverlay}
             toggleTrails={toggleTrails} toggleRail={toggleRail}
             clearExploreMarkers={clearExploreMarkers} setExploreMarkers={setExploreMarkers} />}
-          {view === "map" && mapReady && <MapView mapObj={mapObj} />}
+          {view === "map" && <MapView mapObj={mapObj} />}
           {view === "community" && <CommunityView mapObj={mapObj} onMessage={(username) => { setMessageTarget(username); setShowMessages(true); }} />}
           <div ref={scrollSentinelRef} style={{ height: 1 }} />
           <div className={"panel-fade" + (showScrollHint ? " show" : "")}>

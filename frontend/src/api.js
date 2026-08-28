@@ -91,9 +91,10 @@ function valhallaManeuverToTurn(m, coords) {
 
 // ---- config -------------------------------------------------
 export const TILES = {
-  dark:  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   light: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  attribution: "© OpenStreetMap contributors",
+  dark:  "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+  attribution:      "© OpenStreetMap contributors",
+  darkAttribution:  "© Esri — Powered by Esri",
   // Midwest bike-infrastructure vector tiles, generated from OSM by the data pipeline.
   vectorMidwestBike: "/api/tiles/vector/osm-midwest-bike/{z}/{x}/{y}",
   trailsAttribution: "© waymarkedtrails.org, OpenStreetMap",
